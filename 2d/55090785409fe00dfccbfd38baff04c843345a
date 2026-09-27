@@ -1,0 +1,15 @@
+Phase 2 Verification Report: Wire into Main.scala and verify overrides take effect
+
+Automated tests: sbt orderService/test — Passed: Total 29, Failed 0, Errors 0.
+
+Manual verification steps presented to user:
+1. Main.scala no longer has any hardcoded ResilienceConfig/RetryConfig/
+   CircuitBreakerConfig literal — Resilience.middleware now takes config.resilience.
+2. Started both services with ORDER_SERVICE_RESILIENCE_FAILURE_THRESHOLD=2 (overriding
+   the default of 5) and INVENTORY_INDUCED_FAILURE_RATE=1.0, POSTed 3 orders.
+3. Confirmed via GET :9090/metrics: purerest_circuit_breaker_state_transitions_total
+   {from_state=CLOSED,to_state=OPEN}=1, state=OPEN, rejected_total=3 — tripping within
+   just 3 requests is only possible with the overridden threshold of 2, not the default
+   of 5.
+
+User confirmation: "Yes, confirmed" — this completes the track.
