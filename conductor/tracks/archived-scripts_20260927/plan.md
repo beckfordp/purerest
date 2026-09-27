@@ -1,6 +1,6 @@
 # Plan: Review archived scripts and recover/rename or delete each based on genuine ongoing use
 
-## Phase 1: Audit
+## Phase 1: Audit [checkpoint: ea4295c]
 - [x] Task: Read each of the 19 scripts in `scripts/archive/` and classify it keep/delete against the agreed criterion (verifies behavior `sbt test` doesn't cover, and that behavior still exists in the current codebase). Record the classification + one-line reasoning for each in this track's plan.md. [b894f49]
 
   **Scope widened to 21**: also moved `scripts/verify-scaladoc-coverage.sh` and `scripts/verify-scaladoc-pages-deploy.sh` (both from the just-completed `scaladoc_20260925` track) into `scripts/archive/` for the same review, rather than exempting them for being recent.
@@ -31,7 +31,7 @@
   - `verify-order-service-config.sh` — narrow one-shot check of a stable, standard PureConfig env-var substitution pattern; low ongoing regression risk.
   - `verify-purerest-consumption.sh` / `verify-purerest-publish.sh` — checked the old local-Ivy2-only publish/consume path; superseded by the now-thoroughly-verified real GitHub Packages release pipeline (`release-pipeline_20260925`) and `smoke-test/build.sbt`'s `-DresolveFromGitHubPackages` mode.
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Audit' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Audit' (Protocol in workflow.md). [ea4295c]
 
 ## Phase 2: Recover keepers
 - [ ] Task: For each script classified "keep": move it to `scripts/`, fix any stale references (module names, ports, paths — some predate the purerestlib rename) so it runs against current code, and run it once to confirm it passes.
