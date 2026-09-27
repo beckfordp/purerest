@@ -1,0 +1,26 @@
+Task: Config schema + application.conf (Phase 1, resilience-config_20260927)
+
+Summary: Extended OrderServiceConfig with a resilience: ResilienceConfig field, loaded
+from a new resilience {retry {...}, circuit-breaker {...}} block in application.conf
+(HOCON duration strings, one env-var override per field, defaults matching today's
+hardcoded values exactly). purerest's own RetryConfig/CircuitBreakerConfig/
+ResilienceConfig case classes are untouched (no PureConfig dependency added to purerest)
+— ConfigReader instances for them are derived locally in OrderServiceConfig.scala via
+semi-auto derivation (ConfigReader.derived).
+
+Followed TDD: extended OrderServiceConfigSuite's fixtures/assertions first (confirmed Red
+— compile failure since OrderServiceConfig had no resilience field), then implemented
+(confirmed Green — all 3 tests pass, then full orderService/test suite: 29 passed, 0
+failed).
+
+One extra fix along the way: initially imported `pureconfig.generic.derivation.default._`
+for semi-auto derivation, but that's deprecated since pureconfig 0.17.7 (derivation works
+natively now) — removed the import once the compiler flagged it.
+
+Files changed:
+- modules/order-service/src/main/resources/application.conf
+- modules/order-service/src/main/scala/orderservice/OrderServiceConfig.scala
+- modules/order-service/src/test/scala/orderservice/OrderServiceConfigSuite.scala
+
+Why: Iteration 3 goal 1 — make purerest's resilience config externally configurable
+instead of hardcoded in Main.scala (Phase 2's job).
