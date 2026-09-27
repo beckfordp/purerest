@@ -1,9 +1,9 @@
 # Plan: Make order-service's resilience config configurable via application.conf
 
-## Phase 1: Config schema + application.conf
+## Phase 1: Config schema + application.conf [checkpoint: 2783557]
 - [x] Task: Write failing tests (Red) — extend `OrderServiceConfigSuite`'s "loads a fully-specified config" test to include a `resilience {...}` block + the expected `ResilienceConfig`, and extend "reads the shipped application.conf defaults" to assert the new defaults (`maxRetries=3, baseDelay=100ms, failureThreshold=5, resetTimeout=30s`). Confirm both fail since `OrderServiceConfig` has no `resilience` field yet. Confirmed: compile error ("does not have a parameter resilience").
 - [x] Task: Implement (Green) — add local `ConfigReader` derivations for `RetryConfig`/`CircuitBreakerConfig`/`ResilienceConfig` in `OrderServiceConfig.scala`, add the `resilience: ResilienceConfig` field, add the `resilience { retry {...}, circuit-breaker {...} }` block (HOCON duration strings, one `${?ENV_VAR}` override per field) to `application.conf`. Run the suite, confirm all tests pass. [2a644b7] All 3 `OrderServiceConfigSuite` tests pass; full `orderService/test` suite: 29 passed, 0 failed. Along the way, removed a deprecated `pureconfig.generic.derivation.default._` import once the compiler flagged it (unneeded since pureconfig 0.17.7 — derivation works natively).
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Config schema + application.conf' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Config schema + application.conf' (Protocol in workflow.md). [2783557]
 
 ## Phase 2: Wire into Main.scala and verify overrides take effect
 - [ ] Task: Remove the hardcoded `resilienceConfig` val from `Main.scala`; pass `config.resilience` into `Resilience.middleware` instead. Run `sbt test` — confirm the full suite (including `OrderServiceIntegrationSuite`/`OrderServicePostgresIntegrationSuite`) still passes unchanged (defaults match today's behavior exactly).
