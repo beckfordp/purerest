@@ -85,6 +85,13 @@ Hands-on use of the finished stack raised the question purerest hasn't actually 
    superseded by `verify-observability-stack.sh` or already covered by the automated test
    suite (`MigrationsSuite`, `InventoryDocsSuite`, `OrderDocsSuite`,
    `OrderServiceTraceContinuitySuite`, etc.).
+4. **Rename the repo/module to `purerest`.** ✅ Answered — the library's own sbt module
+   is now `purerestlib` (Scala packages stay `purerest.*`), freeing the root
+   project/GitHub repo to take the name `purerest` (done 2026-09-25). The larger
+   restructuring this was step one of — recasting `order-service`/`inventory-service`
+   and the load-test/observability stack as supporting tooling for *evaluating* the
+   library rather than a multi-service product in their own right — remains undecided
+   (see Future Direction).
 
 ## Iteration 3 Goals (2026-09-27)
 Iteration 2 proved purerest's resilience/observability behavior is correct under load,
@@ -119,11 +126,8 @@ needs, the way it already tunes its port/DB/induced-failure settings?*
   sufficiency can actually be judged
 
 ## Future Direction (under consideration)
-- **Repo renamed to `purerest`** (2026-09-25) — the library's own sbt module is now
-  `purerestlib` (Scala packages stay `purerest.*`) so the root project/GitHub repo could take
-  the name `purerest`. The larger restructuring this was in service of — recasting
-  `order-service`/`inventory-service` and the load-test/observability stack as supporting
-  tooling for *evaluating* the library rather than a multi-service product in their own right —
-  is still not decided or scheduled, reinforced by moving the service-template idea out to its
-  own `pure-service-generator` project. When that fuller restructuring is picked up, treat it as
-  its own structural track, not a routine backlog item.
+Recasting `order-service`/`inventory-service` and the load-test/observability stack as
+supporting tooling for *evaluating* purerest, rather than a multi-service product in
+their own right — reinforced by moving the service-template idea out to its own
+`pure-service-generator` project. Not decided or scheduled; when picked up, treat it as
+its own structural track, not a routine backlog item.
