@@ -3,7 +3,7 @@
 ## Phase 1: order-service service-name config
 - [x] Task: Write failing tests (Red) — extend `OrderServiceConfigSuite`'s fixtures/assertions to include a `service-name` field. Confirm failure (no `serviceName` field on `OrderServiceConfig` yet). Confirmed: compile error ("does not have a parameter serviceName").
 - [x] Task: Implement (Green) — add `serviceName: String` to `OrderServiceConfig`, add `service-name = "order-service"` (+ `${?ORDER_SERVICE_NAME}` override) to `application.conf`, replace the 3 hardcoded `"order-service"` string literals in `Main.scala` (`Tracing.console`, `Metrics.oteljava`, `Logging.create`) with `config.serviceName`. Run the suite, confirm green. [2fa18f3] `orderService/test`: 29 passed, 0 failed.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: order-service service-name config' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Phase 1: order-service service-name config' (Protocol in workflow.md). Prompting is off (see `/prompt`); satisfied by `scripts/verify-observability-config.sh`, run directly — started order-service with `ORDER_SERVICE_NAME` overridden to a distinctive value and confirmed it appears in the exported span's tracer name, proving the override genuinely propagates. [c31a3ee]
 
 ## Phase 2: Migrate inventory-service to PureConfig
 - [ ] Task: Write failing tests (Red) — create `InventoryServiceConfigSuite` (mirroring `OrderServiceConfigSuite`'s three-test style: full-fixture load, missing-required-field failure, shipped-`application.conf`-defaults load) against a not-yet-existing `InventoryServiceConfig`. Confirm it fails to compile.
