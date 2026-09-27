@@ -1,0 +1,16 @@
+Phase 1 Verification Report: Audit (revised)
+
+Note: supersedes an earlier checkpoint attempt on commit 15516ea, which recorded a
+"confirmed" classification the user then asked to revise before it was acted on.
+
+Automated tests: sbt scalafmtCheck test — Passed: Total 29, Failed 0, Errors 0.
+
+Manual verification steps presented to user:
+1. Review the revised Phase 1 audit entry in plan.md: only run-services.sh classified
+   "keep" (1 script); all other 20 classified "delete", each with a one-line reasoning.
+2. Confirm agreement before proceeding to Phase 2 (recover run-services.sh) and Phase 3
+   (delete the other 20).
+
+User confirmation: "Yes, confirmed" — after revising 5 scripts (verify-order-reservations.sh,
+verify-order-service-postgres-persistence.sh, verify-version-drift-guardrails.sh,
+verify-scaladoc-coverage.sh, verify-scaladoc-pages-deploy.sh) from keep to delete.
