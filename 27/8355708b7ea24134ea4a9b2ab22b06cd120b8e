@@ -1,0 +1,12 @@
+Phase 1 Verification Report: Config schema + application.conf
+
+Automated tests: sbt orderService/test — Passed: Total 29, Failed 0, Errors 0.
+
+Manual verification steps presented to user:
+1. application.conf's new resilience block matches today's defaults exactly
+   (max-retries=3, base-delay=100ms, failure-threshold=5, reset-timeout=30s), each with
+   an env-var override line.
+2. OrderServiceConfig.scala derives ConfigReader instances for purerest's resilience
+   case classes locally — purerest's own source is untouched.
+
+User confirmation: "Yes, confirmed."
