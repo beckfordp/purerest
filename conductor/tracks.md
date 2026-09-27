@@ -2,9 +2,6 @@
 
 This file tracks all major tracks for the project.
 
-- [x] **Track: Review archived scripts and recover/rename or delete each based on genuine ongoing use**
-  *Link: [./tracks/archived-scripts_20260927/](./tracks/archived-scripts_20260927/)*
-
 ---
 
 ## Backlog
