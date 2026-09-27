@@ -13,6 +13,7 @@ class OrderServiceConfigSuite extends CatsEffectSuite {
     """
       |port = 8080
       |metrics-port = 9090
+      |service-name = "order-service"
       |inventory-service-base-url = "http://localhost:8081"
       |postgres {
       |  host = "localhost"
@@ -41,6 +42,7 @@ class OrderServiceConfigSuite extends CatsEffectSuite {
         OrderServiceConfig(
           port = 8080,
           metricsPort = 9090,
+          serviceName = "order-service",
           inventoryServiceBaseUrl = "http://localhost:8081",
           postgres = PostgresConfig(
             host = "localhost",
@@ -80,6 +82,7 @@ class OrderServiceConfigSuite extends CatsEffectSuite {
     OrderServiceConfig.load[IO].map { config =>
       assertEquals(config.port, 8080)
       assertEquals(config.metricsPort, 9090)
+      assertEquals(config.serviceName, "order-service")
       assertEquals(config.inventoryServiceBaseUrl, "http://localhost:8081")
       assertEquals(
         config.postgres,

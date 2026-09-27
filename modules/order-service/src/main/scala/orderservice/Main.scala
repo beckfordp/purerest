@@ -26,10 +26,10 @@ object Main extends IOApp.Simple {
         Uri.fromString(config.inventoryServiceBaseUrl)
       )
       _ <- Migrations.run[IO](config.postgres)
-      _ <- Tracing.console[IO]("order-service").use { tracer =>
-        Metrics.oteljava[IO]("order-service", config.metricsPort).use { meter =>
+      _ <- Tracing.console[IO](config.serviceName).use { tracer =>
+        Metrics.oteljava[IO](config.serviceName, config.metricsPort).use { meter =>
           for {
-            logger <- Logging.create[IO](tracer, "order-service")
+            logger <- Logging.create[IO](tracer, config.serviceName)
             _ <- logger.info(
               Map(
                 "port" -> config.port.toString,

@@ -21,6 +21,7 @@ given ConfigReader[ResilienceConfig] = ConfigReader.derived
 final case class OrderServiceConfig(
     port: Int,
     metricsPort: Int,
+    serviceName: String,
     inventoryServiceBaseUrl: String,
     postgres: PostgresConfig,
     resilience: ResilienceConfig
