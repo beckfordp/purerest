@@ -1,0 +1,16 @@
+Phase 1 Verification Report: Audit
+
+Automated tests: sbt scalafmtCheck test — Passed: Total 29, Failed 0, Errors 0
+(sanity check; this phase changed no Scala source, only moved 2 shell scripts and
+recorded the audit in plan.md).
+
+Manual verification steps presented to user:
+1. Review the Phase 1 audit entry in plan.md: 6 scripts classified "keep"
+   (run-services.sh, verify-order-reservations.sh,
+   verify-order-service-postgres-persistence.sh, verify-version-drift-guardrails.sh,
+   verify-scaladoc-coverage.sh, verify-scaladoc-pages-deploy.sh), 15 classified
+   "delete", each with a one-line reasoning.
+2. Confirm agreement before proceeding to Phase 2 (recover keepers) and Phase 3
+   (delete obsolete scripts + close out docs).
+
+User confirmation: "Yes, confirmed" — classification and reasoning approved as-is.
