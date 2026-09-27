@@ -1,0 +1,12 @@
+Task: Delete obsolete archived scripts (Phase 3, archived-scripts_20260927)
+
+Summary: Deleted all 20 scripts classified "delete" by Phase 1's (user-revised) audit.
+scripts/archive/ is now gone (empty dirs aren't tracked); scripts/ retains only the two
+scripts still in genuine use: run-services.sh and verify-observability-stack.sh.
+
+Files changed: 20 files deleted under scripts/archive/ (see plan.md's Phase 1 audit for
+the full list + per-script reasoning).
+
+Why: Resolves product.md's Iteration 2 goal 3 ("Reduce operational noise") — this repo's
+scripts/ now contains only scripts with genuine ongoing use, not one-shot artifacts from
+completed tracks.
