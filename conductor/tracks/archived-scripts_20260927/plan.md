@@ -41,5 +41,5 @@
 
 ## Phase 3: Delete obsolete scripts + close out docs
 - [x] Task: Delete every script classified "delete" (`scripts/archive/` should end up empty). [7e07c25] All 20 scripts deleted; `scripts/archive/` is gone (git doesn't track empty dirs). `scripts/` retains only `run-services.sh` and `verify-observability-stack.sh`.
-- [ ] Task: Update `conductor/product.md`'s Iteration 2 goal 3 ("Reduce operational noise") to reflect the resolved decision.
+- [x] Task: Update `conductor/product.md`'s Iteration 2 goal 3 ("Reduce operational noise") to reflect the resolved decision. [8fdcbf6] Marked ✅ Answered with the final outcome (1 kept, 19 deleted of 21 reviewed).
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Delete obsolete scripts + close out docs' (Protocol in workflow.md).
