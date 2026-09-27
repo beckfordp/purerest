@@ -109,10 +109,16 @@ needs, the way it already tunes its port/DB/induced-failure settings?*
    measurably changed real circuit-breaker behavior (tripped after 3 requests instead of
    needing 5+). Static (config-at-startup), not live-adjustable like the induced-failure
    endpoint — that's a bigger, separate ask (still parked under Non-Goals).
-2. **Audit observability config for the same treatment.** Beyond resilience, identify
-   any other purerest-consumer-facing settings currently hardcoded in service
-   `Main.scala` files (tracing/metrics instrumentation setup, etc.) that would sensibly
-   belong in `application.conf` too, and apply the same pattern where it makes sense.
+2. **Audit observability config for the same treatment.** ✅ Answered — found two
+   gaps: (a) inventory-service read all its settings via raw `sys.env.get(...)` calls,
+   not PureConfig at all, unlike order-service; (b) both services hardcoded their own
+   service-name string 3x per file (`Tracing.console`/`Metrics.oteljava`/
+   `Logging.create`). Fixed both: inventory-service now has its own `application.conf` +
+   `InventoryServiceConfig` (mirroring order-service's pattern, same env-var names kept),
+   and both services load a `service-name` key instead of a hardcoded literal. Verified
+   live: overriding `INVENTORY_SERVICE_NAME`/`ORDER_SERVICE_NAME` changes the exported
+   span's tracer name; `INVENTORY_INDUCED_FAILURE_RATE=1.0` still deterministically
+   triggers a 500 post-migration.
 
 ## Non-Goals (for now)
 - Authentication/authorization
