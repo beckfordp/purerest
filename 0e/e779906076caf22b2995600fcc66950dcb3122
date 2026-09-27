@@ -1,0 +1,22 @@
+Task: Wire into Main.scala + verify overrides (Phase 2, resilience-config_20260927)
+
+Summary: Removed the hardcoded resilienceConfig val from Main.scala; Resilience.middleware
+now takes config.resilience (loaded from application.conf in Phase 1). Trimmed now-unused
+imports (CircuitBreakerConfig/ResilienceConfig/RetryConfig, scala.concurrent.duration._).
+
+sbt orderService/test: 29 passed, 0 failed (behavior identical since defaults unchanged).
+
+Manually verified the override is genuinely wired end-to-end, not just parsed: started
+both services with ORDER_SERVICE_RESILIENCE_FAILURE_THRESHOLD=2 (overriding the default
+of 5) and INVENTORY_INDUCED_FAILURE_RATE=1.0, then POSTed 3 orders. Confirmed via
+GET :9090/metrics: purerest_circuit_breaker_state_transitions_total{from_state=CLOSED,
+to_state=OPEN}=1, state=OPEN, rejected_total=3 — the breaker tripped within just 3
+requests, which is only possible with the overridden threshold of 2 (the default of 5
+would need at least 5 raw failures, spanning past request 1's own 4-attempt retry
+budget). Cleaned up (docker compose down, killed background sbt session).
+
+Files changed:
+- modules/order-service/src/main/scala/orderservice/Main.scala
+
+Why: Iteration 3 goal 1 — this completes making purerest's resilience config externally
+configurable for order-service.
