@@ -101,13 +101,14 @@ Main.scala literally has `RetryConfig(maxRetries = 3, baseDelay = 100.millis)` a
 next question is *can a consuming service actually tune this infrastructure for its own
 needs, the way it already tunes its port/DB/induced-failure settings?*
 
-1. **Make purerest's resilience config externally configurable.** order-service's
-   `ResilienceConfig` (retry count/backoff, circuit-breaker failure threshold/reset
-   timeout) should load from `application.conf` via PureConfig — matching the existing
-   `port`/`metrics-port`/`postgres`/env-var-override pattern — instead of the hardcoded
-   `val` in `Main.scala` today. Static (config-at-startup), not live-adjustable like the
-   induced-failure endpoint — that's a bigger, separate ask (still parked under
-   Non-Goals).
+1. **Make purerest's resilience config externally configurable.** ✅ Answered —
+   order-service's `ResilienceConfig` (retry count/backoff, circuit-breaker failure
+   threshold/reset timeout) now loads from `application.conf` via PureConfig, matching
+   the existing `port`/`metrics-port`/`postgres`/env-var-override pattern. Verified live:
+   overriding `ORDER_SERVICE_RESILIENCE_FAILURE_THRESHOLD` from its default (5) to 2
+   measurably changed real circuit-breaker behavior (tripped after 3 requests instead of
+   needing 5+). Static (config-at-startup), not live-adjustable like the induced-failure
+   endpoint — that's a bigger, separate ask (still parked under Non-Goals).
 2. **Audit observability config for the same treatment.** Beyond resilience, identify
    any other purerest-consumer-facing settings currently hardcoded in service
    `Main.scala` files (tracing/metrics instrumentation setup, etc.) that would sensibly

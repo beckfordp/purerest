@@ -47,7 +47,12 @@
   blocking thread pool per query).
 - **Flyway** migrations, run automatically on `order-service` startup (`pgjdbc` is a
   build-only dependency solely for Flyway).
-- **PureConfig** for `application.conf`-based settings.
+- **PureConfig** for `application.conf`-based settings — every setting follows the same
+  pattern: a default value plus a `${?ENV_VAR}` override line (e.g. `port`,
+  `metrics-port`, `postgres`, and now `resilience`). For config types owned by a
+  dependency rather than the service itself (e.g. purerest's `ResilienceConfig`),
+  `ConfigReader` instances are derived locally in the consuming service — purerest
+  itself has no PureConfig dependency.
 - **Testcontainers** (`testcontainers-scala-postgresql`) for integration tests; a separate
   `docker-compose.yml` Postgres container for local/manual dev.
 
