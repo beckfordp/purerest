@@ -3,6 +3,9 @@ package orderservice
 import cats.effect.IO
 import munit.CatsEffectSuite
 import pureconfig.ConfigSource
+import purerest.resilience.{CircuitBreakerConfig, ResilienceConfig, RetryConfig}
+
+import scala.concurrent.duration._
 
 class OrderServiceConfigSuite extends CatsEffectSuite {
 
@@ -17,6 +20,16 @@ class OrderServiceConfigSuite extends CatsEffectSuite {
       |  database = "orders"
       |  user = "orders"
       |  password = "orders"
+      |}
+      |resilience {
+      |  retry {
+      |    max-retries = 3
+      |    base-delay = 100ms
+      |  }
+      |  circuit-breaker {
+      |    failure-threshold = 5
+      |    reset-timeout = 30s
+      |  }
       |}
       |""".stripMargin
 
@@ -35,6 +48,11 @@ class OrderServiceConfigSuite extends CatsEffectSuite {
             database = "orders",
             user = "orders",
             password = "orders"
+          ),
+          resilience = ResilienceConfig(
+            retry = RetryConfig(maxRetries = 3, baseDelay = 100.millis),
+            circuitBreaker =
+              CircuitBreakerConfig(failureThreshold = 5, resetTimeout = 30.seconds)
           )
         )
       )
@@ -66,6 +84,14 @@ class OrderServiceConfigSuite extends CatsEffectSuite {
       assertEquals(
         config.postgres,
         PostgresConfig("localhost", 5432, "orders", "orders", "orders")
+      )
+      assertEquals(
+        config.resilience,
+        ResilienceConfig(
+          retry = RetryConfig(maxRetries = 3, baseDelay = 100.millis),
+          circuitBreaker =
+            CircuitBreakerConfig(failureThreshold = 5, resetTimeout = 30.seconds)
+        )
       )
     }
   }
