@@ -64,11 +64,8 @@ Elasticsearch, Kibana, and Filebeat — all networked together. It takes a minut
 run while images are pulled and Elasticsearch/Kibana finish starting.
 
 > Plain `docker compose up -d` (no `--profile`) starts **only Postgres**, unchanged — that's the
-> lightweight path used by `sbt bgRun`/`scripts/archive/run-services.sh` day-to-day dev and by
-> most of `scripts/archive/verify-*.sh`. The full stack above is opt-in. (Most `scripts/` are
-> archived pending a cleanup decision, and still work from their new path;
-> `verify-observability-stack.sh` has been recovered to `scripts/` since this repo actively
-> uses it.)
+> lightweight path used by `sbt bgRun`/`scripts/run-services.sh` for day-to-day dev. The full
+> stack above is opt-in.
 
 Once it's up:
 
@@ -160,7 +157,7 @@ For more information on the sbt-dotty plugin, see the
 docker compose up -d
 ```
 
-Then run the service as usual, e.g. `sbt "order-service/run"` or `./scripts/archive/run-services.sh`
+Then run the service as usual, e.g. `sbt "order-service/run"` or `./scripts/run-services.sh`
 to start both services together. `application.conf` defaults match the compose file
 (`localhost:5432`, db/user/password `orders`) — no manual schema setup is needed, Flyway
 migrations run automatically on startup.
