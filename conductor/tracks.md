@@ -2,11 +2,6 @@
 
 This file tracks all major tracks for the project.
 
-- [x] **Track: Audit services for other observability config worth exposing**
-  *Link: [./tracks/observability-config_20260927/](./tracks/observability-config_20260927/)*
-
----
-
 ## Backlog
 
 Title-only placeholders for future tracks — not yet detailed (no spec/plan, no linked
