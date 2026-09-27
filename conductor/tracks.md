@@ -2,7 +2,7 @@
 
 This file tracks all major tracks for the project.
 
-- [ ] **Track: Audit services for other observability config worth exposing**
+- [~] **Track: Audit services for other observability config worth exposing**
   *Link: [./tracks/observability-config_20260927/](./tracks/observability-config_20260927/)*
 
 ---
