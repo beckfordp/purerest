@@ -1,0 +1,15 @@
+Task: Extend verify script for Phase 2 (observability-config_20260927)
+
+Summary: Extended scripts/verify-observability-config.sh (from Phase 1) to also start
+inventory-service (alongside order-service, single combined sbt session) with
+INVENTORY_SERVICE_NAME and INVENTORY_INDUCED_FAILURE_RATE=1.0 overrides, confirming both
+propagate post-migration: the exported span's tracer name matches the override, and
+POST /inventory/reserve deterministically returns 500 with failure-rate=1.0.
+
+Result: all checks passed on a real run.
+
+Files changed:
+- scripts/verify-observability-config.sh
+
+Why: Phase 2's plan.md task calls for confirming the override still works post-migration,
+matching the resilience-config track's live-verification convention.
