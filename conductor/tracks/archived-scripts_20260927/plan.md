@@ -39,7 +39,7 @@
 - [x] Task: Fix README's existing `./scripts/archive/run-services.sh` reference (line 163) and "lightweight path" callout (lines 67-70) to point at wherever it ends up. [a93fa83] Both references now point to `./scripts/run-services.sh`; also dropped the now-resolved "cleanup decision pending" language from the callout.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Recover keepers' (Protocol in workflow.md). [d6822d5]
 
-## Phase 3: Delete obsolete scripts + close out docs
+## Phase 3: Delete obsolete scripts + close out docs [checkpoint: 56c32ff]
 - [x] Task: Delete every script classified "delete" (`scripts/archive/` should end up empty). [7e07c25] All 20 scripts deleted; `scripts/archive/` is gone (git doesn't track empty dirs). `scripts/` retains only `run-services.sh` and `verify-observability-stack.sh`.
 - [x] Task: Update `conductor/product.md`'s Iteration 2 goal 3 ("Reduce operational noise") to reflect the resolved decision. [8fdcbf6] Marked ✅ Answered with the final outcome (1 kept, 19 deleted of 21 reviewed).
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Delete obsolete scripts + close out docs' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Delete obsolete scripts + close out docs' (Protocol in workflow.md). [56c32ff]
