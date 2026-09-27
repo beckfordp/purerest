@@ -9,23 +9,10 @@ import purerest.client.HttpClient
 import purerest.docs.Docs
 import purerest.logging.Logging
 import purerest.metrics.{ClientMetrics, Metrics, ServerMetrics}
-import purerest.resilience.{
-  CircuitBreakerConfig,
-  Resilience,
-  ResilienceConfig,
-  RetryConfig
-}
+import purerest.resilience.Resilience
 import purerest.tracing.{ClientTracing, ServerTracing, Tracing}
 
-import scala.concurrent.duration._
-
 object Main extends IOApp.Simple {
-
-  private val resilienceConfig = ResilienceConfig(
-    retry = RetryConfig(maxRetries = 3, baseDelay = 100.millis),
-    circuitBreaker =
-      CircuitBreakerConfig(failureThreshold = 5, resetTimeout = 30.seconds)
-  )
 
   val run: IO[Unit] =
     for {
@@ -56,7 +43,7 @@ object Main extends IOApp.Simple {
                 val metricClient =
                   ClientMetrics.middleware[IO](meter)(tracedClient)
                 val resilientClient =
-                  Resilience.middleware[IO](resilienceConfig)(
+                  Resilience.middleware[IO](config.resilience)(
                     logger
                   )(meter)(metricClient)
                 val inventory =
