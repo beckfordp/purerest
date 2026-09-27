@@ -1,0 +1,15 @@
+Task: Fix README's stale scripts/archive/ references (Phase 2, archived-scripts_20260927)
+
+Summary: Fixed two stale README references to run-services.sh's old archive path, and
+removed the now-resolved "cleanup decision pending" language from the lightweight-path
+callout, since this track resolves that decision. Combined this task with the "add a
+one-line README mention" task since run-services.sh already had a full paragraph in
+README (unlike the pass/fail verify-*.sh style) — no additional mention needed beyond
+the path fix.
+
+Files changed:
+- README.md (two ./scripts/archive/run-services.sh references -> ./scripts/run-services.sh;
+  simplified the lightweight-path callout)
+
+Why: README must accurately reflect the final location of every script it mentions, per
+this track's acceptance criteria.
