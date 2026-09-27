@@ -1,0 +1,10 @@
+Task: Update product.md's Iteration 2 goal 3 (Phase 3, archived-scripts_20260927)
+
+Summary: Marked "Reduce operational noise" as resolved, summarizing the final outcome
+(1 kept, 19 deleted of the 21 reviewed, each superseded by verify-observability-stack.sh
+or already covered by the automated test suite).
+
+Files changed: conductor/product.md
+
+Why: This track's acceptance criteria requires product.md to reflect the resolved
+decision.
