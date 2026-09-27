@@ -34,7 +34,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Audit' (Protocol in workflow.md). [ea4295c]
 
 ## Phase 2: Recover keepers
-- [ ] Task: For each script classified "keep": move it to `scripts/`, fix any stale references (module names, ports, paths — some predate the purerestlib rename) so it runs against current code, and run it once to confirm it passes.
+- [x] Task: For each script classified "keep": move it to `scripts/`, fix any stale references (module names, ports, paths — some predate the purerestlib rename) so it runs against current code, and run it once to confirm it passes. [f2b9c1f] `run-services.sh` (the sole keeper after revision) moved to `scripts/`; its `ROOT_DIR` used `../..`, correct for the old two-levels-deep archive path but wrong one level shallower at `scripts/` (resolved to the repo's *parent* directory, breaking sbt entirely) — fixed to `..`, matching `verify-observability-stack.sh`'s existing pattern. Verified by running it: both services started, both `/docs/` Swagger UIs returned 200.
 - [ ] Task: Add a one-line README mention (command + what it checks) for each recovered script, matching `verify-observability-stack.sh`'s existing documentation.
 - [ ] Task: Fix README's existing `./scripts/archive/run-services.sh` reference (line 163) and "lightweight path" callout (lines 67-70) to point at wherever it ends up.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Recover keepers' (Protocol in workflow.md).
