@@ -1,0 +1,10 @@
+Phase 2 Verification Report: Migrate inventory-service to PureConfig
+
+Automated tests: sbt scalafmtCheck test (full repo) — 45+23+29 = 97 passed, 0 failed.
+
+Manual verification (prompting off — done via committed script, per
+.claude/skills/prompt/SKILL.md): Ran scripts/verify-observability-config.sh (extended) —
+started both services with ORDER_SERVICE_NAME, INVENTORY_SERVICE_NAME, and
+INVENTORY_INDUCED_FAILURE_RATE=1.0 overrides; confirmed both exported span tracer names
+matched the overrides, and POST /inventory/reserve deterministically returned 500 with
+failure-rate=1.0. Result: all checks passed.
