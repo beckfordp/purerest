@@ -1,0 +1,8 @@
+{
+  "track_id": "observability-config_20260927",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-09-27T11:42:30Z",
+  "updated_at": "2026-09-27T11:42:30Z",
+  "description": "Audit services for other observability config worth exposing"
+}
