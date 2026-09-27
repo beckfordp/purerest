@@ -86,6 +86,26 @@ Hands-on use of the finished stack raised the question purerest hasn't actually 
    suite (`MigrationsSuite`, `InventoryDocsSuite`, `OrderDocsSuite`,
    `OrderServiceTraceContinuitySuite`, etc.).
 
+## Iteration 3 Goals (2026-09-27)
+Iteration 2 proved purerest's resilience/observability behavior is correct under load,
+but every service that wires it in inherits **hardcoded** settings (order-service's own
+Main.scala literally has `RetryConfig(maxRetries = 3, baseDelay = 100.millis)` and
+`CircuitBreakerConfig(failureThreshold = 5, resetTimeout = 30.seconds)` baked in) — the
+next question is *can a consuming service actually tune this infrastructure for its own
+needs, the way it already tunes its port/DB/induced-failure settings?*
+
+1. **Make purerest's resilience config externally configurable.** order-service's
+   `ResilienceConfig` (retry count/backoff, circuit-breaker failure threshold/reset
+   timeout) should load from `application.conf` via PureConfig — matching the existing
+   `port`/`metrics-port`/`postgres`/env-var-override pattern — instead of the hardcoded
+   `val` in `Main.scala` today. Static (config-at-startup), not live-adjustable like the
+   induced-failure endpoint — that's a bigger, separate ask (still parked under
+   Non-Goals).
+2. **Audit observability config for the same treatment.** Beyond resilience, identify
+   any other purerest-consumer-facing settings currently hardcoded in service
+   `Main.scala` files (tracing/metrics instrumentation setup, etc.) that would sensibly
+   belong in `application.conf` too, and apply the same pattern where it makes sense.
+
 ## Non-Goals (for now)
 - Authentication/authorization
 - Multi-service deployment/orchestration (Kubernetes, etc.) — local/dev focus first

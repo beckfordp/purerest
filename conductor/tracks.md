@@ -10,6 +10,7 @@ Title-only placeholders for future tracks — not yet detailed (no spec/plan, no
 folder), so `/conductor:implement` cannot pick these up by accident. Reorder freely as
 priorities change. When ready to work on one, run `/conductor:newTrack <title>` to go
 through the spec/plan questions and promote it into a real track below.
-- _(empty)_
+- Make order-service's resilience config configurable via application.conf
+- Audit services for other observability config worth exposing
 
 ---
