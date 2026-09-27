@@ -1,0 +1,9 @@
+Phase 1 Verification Report: order-service service-name config
+
+Automated tests: sbt orderService/test — Passed: Total 29, Failed 0, Errors 0.
+
+Manual verification (prompting off — done via committed script, per
+.claude/skills/prompt/SKILL.md): Ran scripts/verify-observability-config.sh — started
+order-service with ORDER_SERVICE_NAME overridden to a distinctive value, generated a
+span, confirmed the exported span's tracer name showed the overridden value. Result: all
+checks passed.
