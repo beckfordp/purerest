@@ -131,3 +131,11 @@ supporting tooling for *evaluating* purerest, rather than a multi-service produc
 their own right — reinforced by moving the service-template idea out to its own
 `pure-service-generator` project. Not decided or scheduled; when picked up, treat it as
 its own structural track, not a routine backlog item.
+
+- **`pure-service-generator` timing decided (2026-09-27)**: once order-service's
+  `application.conf` covers everything Iteration 3 adds (resilience config, plus
+  whatever the observability-config audit turns up), develop order-service further into
+  an ideal-if-not-complete reference service, then copy it into a new
+  `pure-service-generator` project as the starting template for future microservices,
+  continuing to extend it there. Do this once both of Iteration 3's backlog items are
+  done — not before.
