@@ -1,7 +1,7 @@
 # Plan: Review archived scripts and recover/rename or delete each based on genuine ongoing use
 
 ## Phase 1: Audit
-- [x] Task: Read each of the 19 scripts in `scripts/archive/` and classify it keep/delete against the agreed criterion (verifies behavior `sbt test` doesn't cover, and that behavior still exists in the current codebase). Record the classification + one-line reasoning for each in this track's plan.md.
+- [x] Task: Read each of the 19 scripts in `scripts/archive/` and classify it keep/delete against the agreed criterion (verifies behavior `sbt test` doesn't cover, and that behavior still exists in the current codebase). Record the classification + one-line reasoning for each in this track's plan.md. [b894f49]
 
   **Scope widened to 21**: also moved `scripts/verify-scaladoc-coverage.sh` and `scripts/verify-scaladoc-pages-deploy.sh` (both from the just-completed `scaladoc_20260925` track) into `scripts/archive/` for the same review, rather than exempting them for being recent.
 
