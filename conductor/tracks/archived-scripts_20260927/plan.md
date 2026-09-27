@@ -7,21 +7,27 @@
 
   Read every script's full body (not headers) and cross-checked against the current automated test suite (`MigrationsSuite`, `OrderServicePostgresIntegrationSuite`, `InventoryDocsSuite`, `OrderDocsSuite`, `OrderServiceTraceContinuitySuite`, `LoggingSuite`, etc.) and the already-active `verify-observability-stack.sh`.
 
-  **Keep (6) — to be recovered to `scripts/` in Phase 2:**
-  - `run-services.sh` — dev convenience (start both services, no assertions/teardown); no automated-test analog for "just let me poke at running services." README already documents it as the day-to-day tool (currently pointing at the stale archive path). No code changes needed.
-  - `verify-order-reservations.sh` — full order lifecycle (POST → GET by id → GET unknown id → 404) via the real `docker compose up` + `bgRun` local-dev path (the actual documented daily workflow, not Testcontainers). Most comprehensive script covering that path; supersedes the narrower `verify-docker-compose-setup.sh`. No code changes needed.
-  - `verify-order-service-postgres-persistence.sh` — restarts order-service mid-test and confirms previously-created data survives via real Postgres — impossible to replicate with an in-process automated test. No code changes needed.
-  - `verify-version-drift-guardrails.sh` — grep-asserts `build.sbt`'s eviction-error guardrail, `versionScheme`, and the `otel4s-core*` `dependencyOverrides` pins are still in place (confirmed all three still exist), then runs `sbt update` + the full test suite. Protects against silently losing these guardrails in a future dependency bump. **Needs a fix**: line 57 runs `sbt -batch "purerest/test" ...`, a stale module name predating the purerestlib rename — must become `"purerestlib/test"`.
-  - `verify-scaladoc-coverage.sh` — regression check that purerestlib's public API keeps Scaladoc coverage (compile + doc generation succeed, the 12 previously-audited gaps stay documented); nothing else checks this. No code changes needed.
-  - `verify-scaladoc-pages-deploy.sh` — smoke test of the GitHub Pages deploy pipeline's health (Pages configured via Actions, site reachable, a real page returns expected content) — same category of value as `verify-observability-stack.sh` testing its own pipeline's health. No code changes needed.
+  **Revised by user 2026-09-27**: moved `verify-order-reservations.sh`,
+  `verify-order-service-postgres-persistence.sh`, `verify-version-drift-guardrails.sh`,
+  `verify-scaladoc-coverage.sh`, and `verify-scaladoc-pages-deploy.sh` from keep to
+  delete, overriding the reasoning originally recorded for each above. Final result:
+  1 keep, 20 delete.
 
-  **Delete (15) — superseded or already covered by automated tests:**
+  **Keep (1) — to be recovered to `scripts/` in Phase 2:**
+  - `run-services.sh` — dev convenience (start both services, no assertions/teardown); no automated-test analog for "just let me poke at running services." README already documents it as the day-to-day tool (currently pointing at the stale archive path). No code changes needed.
+
+  **Delete (20) — superseded, already covered by automated tests, or not worth keeping per user's revision:**
   - `loadtest-purerest.sh` — explicit predecessor of `verify-observability-stack.sh` (that script's own header says "unlike the old two-pass version of this script"); fully superseded.
-  - `verify-docker-compose-setup.sh` — strict subset of kept `verify-order-reservations.sh` (same setup, only checks the POST half).
+  - `verify-docker-compose-setup.sh` — narrower version of the same docker-compose+bgRun scenario `verify-order-reservations.sh` covered (now also deleted).
+  - `verify-order-reservations.sh` — user decision.
+  - `verify-order-service-postgres-persistence.sh` — user decision.
+  - `verify-version-drift-guardrails.sh` — user decision.
+  - `verify-scaladoc-coverage.sh` — user decision.
+  - `verify-scaladoc-pages-deploy.sh` — user decision.
   - `verify-inventory-service-swagger.sh` / `verify-order-service-swagger.sh` — the tapir/docs.yaml/routes claims are now covered in-process by `InventoryDocsSuite` / `OrderDocsSuite`.
   - `verify-inventory-service-tracing.sh` / `verify-order-service-trace-continuity.sh` — trace/log correlation claims covered in-process by `LoggingSuite`, `TracingSuite`/`ServerTracingSuite`, and `OrderServiceTraceContinuitySuite` (which already does a real HTTP hop to a real bound Ember server).
   - `verify-metrics-end-to-end.sh` / `verify-metrics-wiring.sh` / `verify-resilience-end-to-end.sh` / `verify-resilience-wiring.sh` — the retry/circuit-breaker/metrics business logic they exercise is identical regardless of how the JVM is launched (bgRun vs. container), and `verify-observability-stack.sh` already proves it more rigorously (a full trip-*and*-recovery cycle via real Prometheus queries, not one-way timing thresholds).
-  - `verify-order-reservations-schema.sh` / `verify-order-service-migrations.sh` — Flyway migration application is covered by the automated `MigrationsSuite`, and schema survival is additionally reconfirmed by kept `verify-order-service-postgres-persistence.sh`.
+  - `verify-order-reservations-schema.sh` / `verify-order-service-migrations.sh` — Flyway migration application is covered by the automated `MigrationsSuite`.
   - `verify-order-service-config.sh` — narrow one-shot check of a stable, standard PureConfig env-var substitution pattern; low ongoing regression risk.
   - `verify-purerest-consumption.sh` / `verify-purerest-publish.sh` — checked the old local-Ivy2-only publish/consume path; superseded by the now-thoroughly-verified real GitHub Packages release pipeline (`release-pipeline_20260925`) and `smoke-test/build.sbt`'s `-DresolveFromGitHubPackages` mode.
 
