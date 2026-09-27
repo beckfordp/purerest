@@ -2,9 +2,6 @@
 
 This file tracks all major tracks for the project.
 
-- [x] **Track: Make order-service's resilience config configurable via application.conf**
-  *Link: [./tracks/resilience-config_20260927/](./tracks/resilience-config_20260927/)*
-
 ---
 
 ## Backlog
