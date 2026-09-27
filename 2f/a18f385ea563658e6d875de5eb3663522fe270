@@ -1,0 +1,19 @@
+Task: order-service service-name config (Phase 1, observability-config_20260927)
+
+Summary: Added serviceName: String to OrderServiceConfig, loaded from a new
+service-name key in application.conf (default "order-service",
+${?ORDER_SERVICE_NAME} override). Replaced the 3 hardcoded "order-service" string
+literals in Main.scala (Tracing.console, Metrics.oteljava, Logging.create) with
+config.serviceName.
+
+TDD: extended OrderServiceConfigSuite first (Red — compile failure, no serviceName
+field), then implemented (Green — orderService/test: 29 passed, 0 failed).
+
+Files changed:
+- modules/order-service/src/main/resources/application.conf
+- modules/order-service/src/main/scala/orderservice/OrderServiceConfig.scala
+- modules/order-service/src/main/scala/orderservice/Main.scala
+- modules/order-service/src/test/scala/orderservice/OrderServiceConfigSuite.scala
+
+Why: Iteration 3 goal 2 (observability-config_20260927) — removes a duplicated magic
+string, matches OTel's own service.name convention.
