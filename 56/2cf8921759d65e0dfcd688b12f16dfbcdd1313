@@ -1,0 +1,32 @@
+Task: Migrate inventory-service to PureConfig (Phase 2, observability-config_20260927)
+
+Summary: inventory-service previously read port/metrics-port/induced-failure defaults via
+raw sys.env.get(...) calls in Main.scala, unlike order-service's PureConfig-based
+approach. Added pureconfig-core to inventory-service's build.sbt, created
+InventoryServiceConfig (port, metricsPort, serviceName, inducedFailure: InducedFailureConfig,
+derives ConfigReader, load[F]) and a new application.conf, matching order-service's
+default + ${?ENV_VAR}-override convention. Kept all existing env var names unchanged
+(INVENTORY_SERVICE_PORT, INVENTORY_SERVICE_METRICS_PORT, INVENTORY_INDUCED_FAILURE_RATE,
+INVENTORY_INDUCED_DELAY_MS) plus a new INVENTORY_SERVICE_NAME. Main.scala now loads
+config once and uses config.serviceName at all 3 Tracing/Metrics/Logging call sites,
+replacing the hardcoded "inventory-service" literal. Confirmed Typesafe Config's
+duration parsing treats a bare numeric override (e.g. INVENTORY_INDUCED_DELAY_MS=500) as
+milliseconds by default, preserving the old sys.env contract exactly.
+
+TDD: wrote InventoryServiceConfigSuite first (Red — pureconfig not on the classpath yet,
+InventoryServiceConfig didn't exist), then implemented (Green).
+
+Full repo test suite: 45+23+29 = 97 passed, 0 failed (three separate sbt test-summary
+batches). scalafmt caught real formatting issues in both order-service's and
+inventory-service's Main.scala after edits — fixed via sbt scalafmt before this commit.
+
+Files changed:
+- build.sbt (pureconfig-core added to inventoryService's libraryDependencies)
+- modules/inventory-service/src/main/resources/application.conf (new)
+- modules/inventory-service/src/main/scala/inventoryservice/InventoryServiceConfig.scala (new)
+- modules/inventory-service/src/main/scala/inventoryservice/Main.scala
+- modules/inventory-service/src/test/scala/inventoryservice/InventoryServiceConfigSuite.scala (new)
+- modules/order-service/src/main/scala/orderservice/Main.scala (scalafmt only, from Phase 1)
+
+Why: Iteration 3 goal 2 (observability-config_20260927) — closes the config-approach gap
+between the two services.
