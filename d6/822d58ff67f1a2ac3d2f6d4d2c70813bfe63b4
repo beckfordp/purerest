@@ -1,0 +1,13 @@
+Phase 2 Verification Report: Recover keepers
+
+Automated tests: sbt scalafmtCheck test — Passed: Total 29, Failed 0, Errors 0.
+
+Manual verification steps presented to user:
+1. Confirm scripts/run-services.sh exists (recovered) and scripts/archive/ no longer
+   contains it.
+2. Confirm README.md's references point to ./scripts/run-services.sh, no scripts/archive/
+   mentions remain.
+3. (Already verified live) docker compose up -d + ./scripts/run-services.sh: both
+   services' Swagger UIs returned 200.
+
+User confirmation: "Yes, confirmed."
