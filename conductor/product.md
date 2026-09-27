@@ -78,9 +78,13 @@ Hands-on use of the finished stack raised the question purerest hasn't actually 
    "Consuming purerest as a dependency"). (A service-template generator so adopting purerest
    starts from a working example is planned as a separate `pure-service-generator` project, not
    part of this repo's scope.)
-3. **Reduce operational noise.** `scripts/` has been archived wholesale pending a decision on
-   what's still genuinely useful; most were one-shot verification artifacts from completed
-   tracks, not tools anyone reaches for day to day.
+3. **Reduce operational noise.** ✅ Answered — of the 21 scripts reviewed (19 originally
+   archived wholesale, plus 2 recent additions folded into the same review), only
+   `run-services.sh` and `verify-observability-stack.sh` remain in `scripts/`; the other
+   19 were deleted as one-shot verification artifacts from completed tracks, either
+   superseded by `verify-observability-stack.sh` or already covered by the automated test
+   suite (`MigrationsSuite`, `InventoryDocsSuite`, `OrderDocsSuite`,
+   `OrderServiceTraceContinuitySuite`, etc.).
 
 ## Non-Goals (for now)
 - Authentication/authorization
