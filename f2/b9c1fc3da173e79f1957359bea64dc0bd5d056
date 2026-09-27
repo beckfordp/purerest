@@ -1,0 +1,16 @@
+Task: Recover run-services.sh (Phase 2, archived-scripts_20260927)
+
+Summary: Moved scripts/archive/run-services.sh to scripts/run-services.sh per Phase 1's
+audit (the only script classified "keep"). Discovered and fixed a stale ROOT_DIR
+computation: the script used "../.." (correct for its old two-levels-deep archive
+location) which, one directory level shallower at scripts/, resolved to the repo's
+parent directory instead of the repo root — causing sbt to run against the wrong
+directory entirely. Fixed to ".." (matching verify-observability-stack.sh's existing
+pattern, already at scripts/). Also fixed the header comment's usage line.
+
+Files changed:
+- scripts/archive/run-services.sh -> scripts/run-services.sh (ROOT_DIR + usage comment fixed)
+
+Why: Phase 2 recovers every script classified "keep" in Phase 1, fixing any stale
+references so it runs against current code. Verified by actually running it: both
+inventory-service and order-service started, both /docs/ Swagger UIs returned 200.
