@@ -12,5 +12,6 @@ priorities change. When ready to work on one, run `/conductor:newTrack <title>` 
 through the spec/plan questions and promote it into a real track below.
 - Make order-service's resilience config configurable via application.conf
 - Audit services for other observability config worth exposing
+- Create pure-service-generator project from order-service reference implementation
 
 ---
