@@ -27,47 +27,56 @@ object Main extends IOApp.Simple {
       )
       _ <- Migrations.run[IO](config.postgres)
       _ <- Tracing.console[IO](config.serviceName).use { tracer =>
-        Metrics.oteljava[IO](config.serviceName, config.metricsPort).use { meter =>
-          for {
-            logger <- Logging.create[IO](tracer, config.serviceName)
-            _ <- logger.info(
-              Map(
-                "port" -> config.port.toString,
-                "metrics_port" -> config.metricsPort.toString,
-                "inventory_service_base_url" -> config.inventoryServiceBaseUrl
-              )
-            )("order-service starting")
-            _ <- OrderStore.postgres[IO](config.postgres, meter).use { store =>
-              HttpClient.resource[IO].use { httpClient =>
-                val tracedClient = ClientTracing.middleware(tracer)(httpClient)
-                val metricClient =
-                  ClientMetrics.middleware[IO](meter)(tracedClient)
-                val resilientClient =
-                  Resilience.middleware[IO](config.resilience)(
-                    logger
-                  )(meter)(metricClient)
-                val inventory =
-                  InventoryClient[IO](resilientClient, inventoryServiceBaseUri)
-                val docsRoutes = Docs.routes[IO](
-                  "Order Service",
-                  "1.0",
-                  List(
-                    OrderRoutes.serverEndpoint[IO](store, inventory, logger),
-                    OrderRoutes.getOrderServerEndpoint[IO](store, logger)
-                  )
+        Metrics.oteljava[IO](config.serviceName, config.metricsPort).use {
+          meter =>
+            for {
+              logger <- Logging.create[IO](tracer, config.serviceName)
+              _ <- logger.info(
+                Map(
+                  "port" -> config.port.toString,
+                  "metrics_port" -> config.metricsPort.toString,
+                  "inventory_service_base_url" -> config.inventoryServiceBaseUrl
                 )
-                val tracedRoutes = ServerTracing.middleware(tracer)(docsRoutes)
-                val routes = ServerMetrics.middleware[IO](meter)(tracedRoutes)
-                EmberServerBuilder
-                  .default[IO]
-                  .withHost(host"0.0.0.0")
-                  .withPort(port)
-                  .withHttpApp(routes.orNotFound)
-                  .build
-                  .useForever
+              )("order-service starting")
+              _ <- OrderStore.postgres[IO](config.postgres, meter).use {
+                store =>
+                  HttpClient.resource[IO].use { httpClient =>
+                    val tracedClient =
+                      ClientTracing.middleware(tracer)(httpClient)
+                    val metricClient =
+                      ClientMetrics.middleware[IO](meter)(tracedClient)
+                    val resilientClient =
+                      Resilience.middleware[IO](config.resilience)(
+                        logger
+                      )(meter)(metricClient)
+                    val inventory =
+                      InventoryClient[IO](
+                        resilientClient,
+                        inventoryServiceBaseUri
+                      )
+                    val docsRoutes = Docs.routes[IO](
+                      "Order Service",
+                      "1.0",
+                      List(
+                        OrderRoutes
+                          .serverEndpoint[IO](store, inventory, logger),
+                        OrderRoutes.getOrderServerEndpoint[IO](store, logger)
+                      )
+                    )
+                    val tracedRoutes =
+                      ServerTracing.middleware(tracer)(docsRoutes)
+                    val routes =
+                      ServerMetrics.middleware[IO](meter)(tracedRoutes)
+                    EmberServerBuilder
+                      .default[IO]
+                      .withHost(host"0.0.0.0")
+                      .withPort(port)
+                      .withHttpApp(routes.orNotFound)
+                      .build
+                      .useForever
+                  }
               }
-            }
-          } yield ()
+            } yield ()
         }
       }
     } yield ()

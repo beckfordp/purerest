@@ -231,6 +231,9 @@ lazy val inventoryService = project
       "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
+      // pureconfig: loads application.conf (port, metrics port, service name,
+      // induced-failure defaults) into typed config case classes.
+      "com.github.pureconfig" %% "pureconfig-core" % pureconfigVersion,
       // log4cats-testing: see order-service's identical comment above.
       "org.typelevel" %% "log4cats-testing" % log4catsVersion % Test
     )
