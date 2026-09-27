@@ -1,8 +1,8 @@
 # Plan: Audit services for other observability config worth exposing
 
 ## Phase 1: order-service service-name config
-- [ ] Task: Write failing tests (Red) — extend `OrderServiceConfigSuite`'s fixtures/assertions to include a `service-name` field. Confirm failure (no `serviceName` field on `OrderServiceConfig` yet).
-- [ ] Task: Implement (Green) — add `serviceName: String` to `OrderServiceConfig`, add `service-name = "order-service"` (+ `${?ORDER_SERVICE_NAME}` override) to `application.conf`, replace the 3 hardcoded `"order-service"` string literals in `Main.scala` (`Tracing.console`, `Metrics.oteljava`, `Logging.create`) with `config.serviceName`. Run the suite, confirm green.
+- [x] Task: Write failing tests (Red) — extend `OrderServiceConfigSuite`'s fixtures/assertions to include a `service-name` field. Confirm failure (no `serviceName` field on `OrderServiceConfig` yet). Confirmed: compile error ("does not have a parameter serviceName").
+- [x] Task: Implement (Green) — add `serviceName: String` to `OrderServiceConfig`, add `service-name = "order-service"` (+ `${?ORDER_SERVICE_NAME}` override) to `application.conf`, replace the 3 hardcoded `"order-service"` string literals in `Main.scala` (`Tracing.console`, `Metrics.oteljava`, `Logging.create`) with `config.serviceName`. Run the suite, confirm green. [2fa18f3] `orderService/test`: 29 passed, 0 failed.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: order-service service-name config' (Protocol in workflow.md).
 
 ## Phase 2: Migrate inventory-service to PureConfig
