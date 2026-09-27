@@ -1,0 +1,18 @@
+Task: Audit and classify all archived scripts (Phase 1, archived-scripts_20260927)
+
+Summary: Read the full body of all 19 scripts under scripts/archive/, plus folded in
+scripts/verify-scaladoc-coverage.sh and scripts/verify-scaladoc-pages-deploy.sh (moved
+into scripts/archive/ for the same review) for a total of 21. Classified each keep/delete
+against the criterion "verifies real E2E behavior sbt test doesn't already cover, and
+that behavior still exists" by cross-referencing the current automated test suite
+(MigrationsSuite, OrderServicePostgresIntegrationSuite, InventoryDocsSuite, OrderDocsSuite,
+OrderServiceTraceContinuitySuite, LoggingSuite) and the already-active
+verify-observability-stack.sh. Result: 6 keep, 15 delete.
+
+Files changed:
+- conductor/tracks/archived-scripts_20260927/plan.md (classification recorded)
+- scripts/verify-scaladoc-coverage.sh -> scripts/archive/verify-scaladoc-coverage.sh
+- scripts/verify-scaladoc-pages-deploy.sh -> scripts/archive/verify-scaladoc-pages-deploy.sh
+
+Why: Establishes the concrete disposition plan for Phase 2 (recover keepers) and Phase 3
+(delete obsolete scripts + close out docs), per this track's spec.md.
