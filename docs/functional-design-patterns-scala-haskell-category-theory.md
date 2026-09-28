@@ -1,4 +1,4 @@
-# Functional Design Patterns   — Scala, Explained in Haskell & Category Theory
+# Functional Design Patterns in Scala, Compared and contrasted to Haskell & Category Theory
 
 The design patterns this codebase is built on (tagless final, Kleisli composition, `SemigroupK`,
 `Writer`, ...), explained through the differing terms Scala (cats/cats-effect), Haskell, and
@@ -22,6 +22,7 @@ going on in the code.
 - [http4s' own core typeclasses](#http4s-own-core-typeclasses)
 - [Haskell's http4s equivalent: WAI/Warp and Servant](#haskells-http4s-equivalent-waiwarp-and-servant)
 - [Generating OpenAPI/Swagger docs: http4s vs. tapir](#generating-openapiswagger-docs-http4s-vs-tapir)
+- [Adapting non-tagless-final libraries: log4cats, PureConfig, cats-retry, resilience4j](#adapting-non-tagless-final-libraries-log4cats-pureconfig-cats-retry-resilience4j)
 
 ## Programming-language machinery (no direct CT counterpart)
 
@@ -300,42 +301,60 @@ available separately (`SemigroupK`, `MonoidK`) in addition to the bundled `Alter
 
 ### Where it applies in this project
 
-Honestly: **not currently used** — every service so far has exactly one route match arm
-(`HttpRoutes.of[F] { case POST -> Root / "orders" => ... }`), so there's never been two independent
-`HttpRoutes[F]` values needing combining. But it's the natural next tool the moment `order-service`
-gets a **lookup-by-id endpoint** — not written yet, but a natural near-term addition once Postgres
-persistence lands (`OrderStore` currently only supports `create`, no way to fetch an order back).
-When that happens, keeping the lookup route as its own, separately-defined, separately-testable
-`HttpRoutes[F]` value — rather than folding another `case` arm into `OrderRoutes` itself — and
-combining it only at `Main`'s wiring point is exactly where `<+>` earns its keep. Illustrative, not
-yet in the codebase:
+No longer hypothetical — both services now have multiple independent endpoints that get combined
+into one `HttpRoutes[F]`, and the combining happens via exactly this mechanism, just one layer down
+(inside tapir's interpreter rather than spelled out as `<+>` in our own code).
+
+`InventoryRoutes.routes` combines three separately-defined `ServerEndpoint`s (`reserveServerEndpoint`,
+`getInducedFailureServerEndpoint`, `patchInducedFailureServerEndpoint`); `OrderRoutes.routes` combines
+two (`serverEndpoint`, `getOrderServerEndpoint`). Both do it the same way:
 
 ```scala
-// New: a second, independent routes value — not merged into OrderRoutes itself.
-object OrderLookupRoutes {
-  def routes[F[_]: Concurrent](store: OrderStore[F]): HttpRoutes[F] = {
-    val dsl = new Http4sDsl[F] {}
-    import dsl._
-    HttpRoutes.of[F] { case GET -> Root / "orders" / orderId =>
-      store.find(orderId).flatMap {          // OrderStore would need a `find`, too
-        case Some(order) => Ok(order)
-        case None        => NotFound()
-      }
-    }
-  }
-}
-
-// Main.scala
-val routes = ServerTracing.middleware(tracer)(
-  OrderRoutes.routes[IO](store, inventory, logger) <+> OrderLookupRoutes.routes[IO](store)
-)
+// InventoryRoutes.scala
+def routes[F[_]: Async](
+    store: InventoryStore[F],
+    logger: StructuredLogger[F],
+    configRef: Ref[F, InducedFailureConfig]
+): HttpRoutes[F] =
+  Http4sServerInterpreter[F]().toRoutes(
+    List(
+      reserveServerEndpoint(store, logger, configRef),
+      getInducedFailureServerEndpoint(configRef),
+      patchInducedFailureServerEndpoint(configRef)
+    )
+  )
 ```
-`<+>` is `SemigroupK`'s infix `combineK` — "run `OrderRoutes`'s routes first; if nothing matches
-(an `OptionT.none`), fall through and try `OrderLookupRoutes`'s." Exactly the same
-`SemigroupK[OptionT[F, *]]`-inherited-through-`Kleisli` mechanism already covered above.
-`OrderRoutes` and `OrderLookupRoutes` never need to know about each other — same "compose
-independently-built pieces from outside" spirit as the tracing middleware itself, and it means
-`OrderLookupRoutes` gets its own focused test suite rather than growing `OrderRoutesSuite`.
+
+`purerest.docs.Docs.routes` goes one step further, combining a service's *real* endpoints with the
+ones `SwaggerInterpreter` generates for the OpenAPI UI:
+
+```scala
+// purerest.docs.Docs
+def routes[F[_]: Async](
+    title: String,
+    version: String,
+    endpoints: List[ServerEndpoint[Any, F]]
+): HttpRoutes[F] = {
+  val swaggerEndpoints =
+    SwaggerInterpreter().fromServerEndpoints[F](endpoints, title, version)
+  Http4sServerInterpreter[F]().toRoutes(endpoints ++ swaggerEndpoints)
+}
+```
+
+`Http4sServerInterpreter[F]().toRoutes` takes a `List[ServerEndpoint[R, F]]`, interprets each one to
+its own little `HttpRoutes[F]`, and combines all of them into a single `HttpRoutes[F]` — internally,
+via `combineK`. That's the exact same `SemigroupK[OptionT[F, *]]`-inherited-through-`Kleisli`
+mechanism described above ("try this route; if it says not-mine, fall through to the next"), just
+performed by tapir's interpreter on our behalf rather than written out by hand as `routes1 <+>
+routes2`. We never spell `<+>` ourselves anywhere in this codebase — tapir's `List[ServerEndpoint]`
+API is the idiom we actually reach for — but the reason a `List` of independently-defined endpoints
+can be folded into one `HttpRoutes[F]` at all is precisely because `HttpRoutes[F]` has a `SemigroupK`
+instance. If you ever did combine two `HttpRoutes[F]` values directly instead of going through
+tapir, this is the operator you'd reach for:
+
+```scala
+val combined: HttpRoutes[F] = routes1 <+> routes2   // try routes1; if it 404s, fall through to routes2
+```
 
 ## Cats' `Writer` type
 
@@ -922,3 +941,190 @@ Nothing about http4s needs removing to adopt this: tapir sits on top. `Inventory
 would move from `HttpRoutes.of[F] { case ... }` pattern matches to `Endpoint[...]` values, interpreted
 to `HttpRoutes[F]` for Ember to serve (unchanged runtime) and separately to OpenAPI + Swagger UI —
 not yet done in this codebase, a candidate for its own track if pursued.
+
+## Adapting non-tagless-final libraries: log4cats, PureConfig, cats-retry, resilience4j
+
+The [tagless-final section](#system-design-patterns-tagless-final-vs-the-cake-pattern) above made a
+point of noting that http4s composes cleanly with our own tagless-final code *because* it's already
+`F`-polymorphic (`HttpRoutes[F]`, `Client[F]`) — there's nothing to adapt. The four libraries below
+are the opposite case: none of them were designed as `F[_]`-polymorphic, effect-suspended APIs.
+Each ships a plain synchronous/mutable Java or Scala surface, and purerest's job is to actively wrap
+that surface so it behaves like the rest of this tagless-final codebase — suspended in `F`, composed
+by ordinary function/value passing, never leaking the underlying library's own types.
+
+### `log4cats` — already `F`-polymorphic; the interesting part is composition, not adaptation
+
+Unlike the other three, log4cats needs no wrapping to become tagless-final — it already is one.
+`org.typelevel.log4cats.StructuredLogger[F]` is a trait whose every method returns `F[Unit]`, so a
+log call is already just another effect to sequence via `flatMap`, same as any other capability in
+this codebase.
+
+What purerest actually builds on top, `Logging.traceCorrelated` (`purerest.logging.Logging`), is a
+plain **Decorator**, expressed the tagless-final way: implement the same trait, delegate every method
+to an `underlying: StructuredLogger[F]`, and inject something extra along the way — here, the current
+span's `trace_id`/`span_id` are read via `tracer.currentSpanContext` and merged into the log context
+before delegating:
+
+```scala
+def traceCorrelated[F[_]: Sync](
+    tracer: Tracer[F],
+    underlying: StructuredLogger[F]
+): StructuredLogger[F] =
+  new StructuredLogger[F] {
+    private def withTrace(ctx: Map[String, String]): F[Map[String, String]] =
+      tracer.currentSpanContext.map {
+        case Some(sc) => ctx ++ Map("trace_id" -> sc.traceIdHex, "span_id" -> sc.spanIdHex)
+        case None     => ctx
+      }
+    def info(ctx: Map[String, String])(message: => String): F[Unit] =
+      withTrace(ctx).flatMap(underlying.info(_)(message))
+    // ... same shape for trace/debug/warn/error, each with/without a Throwable
+  }
+```
+Because `StructuredLogger[F]` is just a trait, "wrap and augment" needs nothing beyond ordinary
+subtyping and delegation — no typeclass derivation, no suspension, no adapter layer. This is also
+directly testable: `Logging.traceCorrelated` is exercised against any `StructuredLogger[F]` test
+double, not against real SLF4J.
+
+The one place adaptation *does* happen is one layer further down, where log4cats itself wraps bare
+SLF4J: `Slf4jLogger.fromName[F](name): F[StructuredLogger[F]]`. Plain SLF4J's `Logger.info(String)`
+executes immediately, synchronously, the moment you call it — no effect type in sight. log4cats
+suspends both the logger's *construction* (a classloader/config lookup, itself a side effect) inside
+`F`, and every individual log call as an `F[Unit]` that does nothing until sequenced — the same
+"restore referential transparency around an inherently side-effecting Java API" move that shows up
+again below for PureConfig and resilience4j, just already done for us by log4cats rather than
+something this codebase has to do itself.
+
+### PureConfig — suspending config loading, and Scala 3's Mirror-derived `ConfigReader`
+
+Both services load their `application.conf` the same way (`OrderServiceConfig.load`,
+`InventoryServiceConfig.load`):
+
+```scala
+def load[F[_]: Sync]: F[OrderServiceConfig] =
+  Sync[F].delay(ConfigSource.default.loadOrThrow[OrderServiceConfig])
+```
+
+`ConfigSource.default.loadOrThrow[...]` is PureConfig's own API, and it's a plain, immediately-run,
+possibly-throwing call — it touches the filesystem/classpath and can fail with a parse or
+missing-field error the moment it's invoked, with no effect type of its own. `Sync[F].delay(...)`
+is what turns that into a *description* of loading config, deferred until something actually runs
+`F` — nothing different in kind from the `Logging.create`/`Slf4jLogger.fromName` case above, just a
+different underlying Java-ish side effect being suspended (file/classpath I/O and parsing, instead
+of a logger-registry lookup).
+
+The `ConfigReader[A]` instances themselves come from two places, both covered in more depth
+elsewhere in this session's history but worth restating here since it's genuinely a Scala-3-specific
+piece of machinery: `derives ConfigReader` on a service's own top-level config case class (Scala 3's
+compiler-generated `Mirror`, usable only at a type's own definition site), and
+`given ConfigReader[...] = ConfigReader.derived` for types this project doesn't own the definition
+site of — purerest's `ResilienceConfig`/`RetryConfig`/`CircuitBreakerConfig` (purerest itself has no
+PureConfig dependency at all), and inventory-service's own `InducedFailureConfig` when its reader
+needs to live next to the config-loading code rather than the type itself. Every setting follows the
+same repo-wide convention: `key = <default>` then `key = ${?ENV_VAR}`, and camelCase Scala fields map
+to kebab-case HOCON keys (`serviceName` ↔ `service-name`) by PureConfig's own default naming
+convention — no manual mapping written anywhere in this codebase.
+
+### cats-retry — used only for its backoff *policy* algebra, not its retry loop
+
+cats-retry's headline feature is *running* a retry loop — `retryingOnFailures`, `retryingM`, and
+friends, each of which takes an effectful action and re-runs it according to a `RetryPolicy[F]`.
+`purerest.resilience.Retry` deliberately does **not** use that part. Retrying an http4s `Client[F]`
+call safely means releasing each failed attempt's `Resource`-scoped connection/body before trying
+again — a problem http4s's own `Retry` client middleware already solves correctly — so re-solving it
+via cats-retry's generic effectful retry runner would just be duplicating that work, with more room
+to get the resource-safety subtle enough to get wrong.
+
+What purerest actually reaches for is only cats-retry's **policy value** — the pure description of
+"how long to wait before retry N," with no execution attached:
+
+```scala
+private def backoff(config: RetryConfig): Int => Option[FiniteDuration] = {
+  val policy = RetryPolicies
+    .limitRetries[cats.Id](config.maxRetries)
+    .join(RetryPolicies.exponentialBackoff[cats.Id](config.baseDelay))
+  attempts =>
+    policy.decideNextRetry((), RetryStatus(retriesSoFar = attempts - 1, Duration.Zero, None)) match {
+      case PolicyDecision.DelayAndRetry(delay) => Some(delay)
+      case PolicyDecision.GiveUp               => None
+    }
+}
+```
+Note the policy is built under `cats.Id`, not `F` — `RetryPolicy[M[_]]` is itself effect-polymorphic
+(some policies, like `fullJitter`, need `Random`-effectful jitter, hence the `M[_]`), but http4s's own
+`RetryPolicy[F]` expects a *pure* function `Int => Option[FiniteDuration]` in its backoff slot, so
+`cats.Id` (cats' "no effect" effect — see the [`Reader`/`Kleisli`](#kleisli-readert-and-reader--literally-the-same-type)
+section above for the same trick) is exactly the right instantiation: real composition (`limitRetries`
+`.join` `exponentialBackoff`) and real decision logic (`decideNextRetry`), zero execution machinery.
+`decideNextRetry` is called synchronously, inline, to produce the `Option[FiniteDuration]` http4s's
+`RetryPolicy[F]` wants — cats-retry contributes the *algebra* for describing a backoff schedule;
+http4s's `Retry` middleware contributes the actual, resource-safe *loop*. A genuine "use 10% of this
+library, on purpose" case, not a partial/incomplete integration.
+
+### resilience4j — adapting a mutable, stateful Java engine into a pure combinator
+
+resilience4j is the sharpest case of adaptation in this codebase, because `io.github.resilience4j.
+circuitbreaker.CircuitBreaker` (`R4jCircuitBreaker` in `purerest.resilience.CircuitBreaker`) is
+about as far from tagless-final as a dependency gets: a **mutable, stateful Java object**, created
+once (`R4jCircuitBreaker.of("purerest", r4jConfig)`) and then driven imperatively — you call
+`tryAcquirePermission()` before a request, then `onResult(...)`/`onError(...)` after, and the
+object's internal state (its sliding window, its CLOSED/OPEN/HALF_OPEN status) mutates in place as a
+side effect of those calls. resilience4j's own idiomatic usage in a typical (non-reactive) JVM
+codebase is annotation-driven (`@CircuitBreaker(name = "...")`, wired via Spring AOP) — this
+codebase uses neither the annotations nor any reactive/CompletionStage module; it drives the *core*,
+synchronous, non-reactive engine directly, because that's the only part of resilience4j whose calls
+are synchronous, in-memory, and side-effect-suspendable via a plain `.delay` — no thread-shifting,
+no callback registration, nothing `Async`-specific required beyond `Sync`'s `.delay` itself (the
+middleware is written against `Async[F]` only because it also needs `Temporal`'s `.monotonic` for
+timing, not because of anything resilience4j itself demands).
+
+The adaptation has four distinct moves, all visible in `CircuitBreaker.middleware`:
+
+1. **Suspend every stateful call individually.** Each `breaker.tryAcquirePermission()`,
+   `breaker.onResult(...)`, `breaker.onError(...)`, `breaker.getState` — each one an imperative,
+   side-effecting method call on a shared mutable object — is wrapped in `Async[F].delay(...)`
+   individually, right at the call site, rather than trying to suspend the whole breaker "once."
+   That's deliberate: the breaker's mutation happens at each *individual* call, so each individual
+   call needs its own `.delay` to stay honest about exactly when the side effect occurs relative to
+   the surrounding `F` composition.
+   ```scala
+   Resource.eval(Async[F].delay(breaker.tryAcquirePermission())).flatMap {
+     case false => Resource.eval(recordRejection *> Async[F].raiseError[Response[F]](CircuitBreakerOpen))
+     case true  => /* run the request, then breaker.onResult/.onError, each similarly suspended */
+   }
+   ```
+2. **Never let resilience4j's own types escape.** A rejected call could naturally surface as
+   resilience4j's own `CallNotPermittedException` — this codebase never lets that happen. It's
+   translated immediately into purerest's own `CircuitBreakerOpen`, matching the stated "no
+   third-party types in the public API" rule that also keeps `RetryConfig`/`CircuitBreakerConfig`
+   (our own case classes, not resilience4j's `CircuitBreakerConfig`) as the only config types callers
+   ever see.
+3. **Replace mutable instrument state with `Ref`, not `var`.** Recording metrics needs to
+   lazily create-and-cache otel4s `Counter[F, Long]`/`Gauge[F, Long]` instruments on first use — the
+   OO-idiomatic way to do that is a mutable field checked-then-set. This codebase's version is
+   `Ref[F, Option[Counter[F, Long]]]` plus a small `memoized` helper (`ref.get.flatMap { case Some(i)
+   => i.pure[F]; case None => create.flatTap(i => ref.set(Some(i))) }`) — the FP-native mutable cell,
+   used exactly where a `var` would otherwise have gone, keeping everything inside `F` rather than
+   introducing a genuinely mutable field on the enclosing object.
+4. **Expose the whole thing as a plain function, not a class to instantiate or extend.**
+   `CircuitBreaker.middleware[F: Async](config)(meter)(client): Client[F]` is just
+   `Client[F] => Client[F]` (curried with its other inputs) — an ordinary value, composed with
+   `Retry.middleware` by ordinary function application in `Resilience.middleware`:
+   ```scala
+   def middleware[F[_]: Async](config: ResilienceConfig)(logger: StructuredLogger[F])(meter: Meter[F])(client: Client[F]): Client[F] =
+     Retry.middleware[F](config.retry)(logger)(meter)(
+       CircuitBreaker.middleware[F](config.circuitBreaker)(meter)(client)
+     )
+   ```
+   No subclassing, no DI container, no annotation processor — the same "middleware is just a function
+   between two values of the same type" idiom already covered for http4s' own middleware
+   (`HttpRoutes[F] => HttpRoutes[F]`), applied here to `Client[F] => Client[F]` instead, and to a
+   third-party engine instead of our own code.
+
+Put together: log4cats needed no adaptation (already `F`-polymorphic); PureConfig and cats-retry each
+needed one focused wrap (suspend the load call; borrow only the policy algebra, not the runner);
+resilience4j needed the most — suspending each individual stateful call, translating its exception
+type, replacing its instrumentation state with `Ref`, and exposing the end result as a composable
+function — but all four land in the same place: nothing about the underlying library's own execution
+model is visible from the outside, and everything is just another `F`-shaped value composed the same
+way as the rest of this codebase.
