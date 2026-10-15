@@ -1,0 +1,16 @@
+Task: generic CircuitBreaker.middleware[F, A] (ADR 0010).
+
+Wraps resilience4j-circuitbreaker's core engine as a Guard[F] (see Retry's
+note on 57bec6f for why Guard exists). Simpler than
+purerest.resilience.CircuitBreaker's HTTP version: no isFailureResult
+predicate needed, since a Kafka call has no 'successful-looking value
+that's actually a failure' case (no 5xx-as-value equivalent) - uses
+resilience4j's onSuccess/onError hooks directly instead of the HTTP
+version's value-inspecting onResult. Same CircuitBreakerConfig shape,
+same CircuitBreakerOpen exception (no third-party type leaked), same
+three metrics (state_transitions counter, calls_rejected counter, state
+gauge) under purekafka.circuit_breaker.* instead of purerest.circuit_breaker.*.
+
+Verified: sbt pureKafka/testOnly purekafka.resilience.CircuitBreakerSuite
+- 3 passed, 0 failed (stays-closed-while-succeeding, opens-after-threshold-
+and-fails-fast, half-open-transition-and-reclose).
