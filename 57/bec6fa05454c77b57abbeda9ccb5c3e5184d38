@@ -1,0 +1,35 @@
+Task: new modules/purekafka sbt module + generic Retry.middleware[F, A] (ADR 0010).
+
+Created modules/purekafka from scratch (build.sbt): mirrors purerestlib's
+module block (organization, versionScheme early-semver, GitHub Packages
+publishTo), deps cats-effect/cats-retry/resilience4j-circuitbreaker/
+otel4s-oteljava(+testkit)/log4cats, plus a new fs2-kafka dependency
+(version 3.6.0, matching gluon's generated services). Added to root's
+.aggregate(...). No Gatling deps here - Phase 5's load test goes in the
+existing loadTest module.
+
+Design note - deviates from a literal F[A] => F[A] reading of ADR 0010:
+introduced a shared purekafka.resilience.Guard[F] trait (construct once,
+.apply[A](fa) many times) rather than a plain function value. Necessary
+for correctness, not style: resilience4j's CircuitBreaker engine is
+genuinely stateful (failure counts, open/closed/half-open) and must be
+the SAME instance across calls - a fresh breaker per call would never
+accumulate failures. Guard mirrors how Client[F] is built once and
+.run() called many times in purerest.resilience's HTTP version. Retry
+and Resilience also return Guard[F] for API consistency/composability.
+
+Retry.middleware[F, A](config)(logger)(meter): Guard[F] - hand-rolled via
+cats-retry's retryingOnErrors directly (not delegated to http4s's Retry
+client middleware, which doesn't apply to a non-HTTP call) - same pattern
+gluon's OrderEventPublisher/PaymentEventPublisher already use. Raised-
+error-only failure detection (every error retriable, no isRetriableError
+filter like the HTTP version's connection-error/timeout subset - a Kafka
+producer call always raises on failure, no selective-retry case exists).
+purekafka.retry.attempts metric mirrors purerest.retry.attempts'
+retried-vs-final-outcome shape exactly, with the same once-constructed,
+cached-via-Ref.unsafe counter instrument convention.
+
+Verified: sbt pureKafka/testOnly purekafka.resilience.RetrySuite - 6
+passed, 0 failed (success-first-try, retry-then-succeed, exhausted-then-
+raise, retries-any-error-type, and two metrics assertions covering both
+outcomes and instrument reuse across calls).
