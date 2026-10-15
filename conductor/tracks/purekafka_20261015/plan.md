@@ -1,8 +1,8 @@
 # Plan — `purekafka`: Kafka resilience + observability module (ADR 0010)
 
 ## Phase 1 — Generic call resilience
-- [ ] Task: Write failing `RetrySuite` test: generic `Retry.middleware[F, A]` retries a failing `F[A]` up to `maxRetries` then gives up, raised-error-only (Red)
-- [ ] Task: Implement generic `Retry.middleware[F, A]` (cats-retry `RetryPolicies`, same `RetryConfig` shape, own `purekafka.retry.attempts` metric) (Green)
+- [x] Task: Write failing `RetrySuite` test: generic `Retry.middleware[F, A]` retries a failing `F[A]` up to `maxRetries` then gives up, raised-error-only (Red) `57bec6f`
+- [x] Task: Implement generic `Retry.middleware[F, A]` (cats-retry `RetryPolicies`, same `RetryConfig` shape, own `purekafka.retry.attempts` metric) (Green) `57bec6f` — deviation: introduced a shared `Guard[F]` trait (construct once, `.apply[A]` many times) instead of a literal `F[A] => F[A]` function value; see git note on `57bec6f`
 - [ ] Task: Write failing `CircuitBreakerSuite` test: breaker opens after `failureThreshold` consecutive raised errors, rejects with `CircuitBreakerOpen` until `resetTimeout` elapses (Red)
 - [ ] Task: Implement generic `CircuitBreaker.middleware[F, A]` (resilience4j-core, same `CircuitBreakerConfig` shape, state-transition/rejection/state metrics) (Green)
 - [ ] Task: Write failing `ResilienceSuite` test: `Resilience.middleware[F, A]` composes Retry (outer) + CircuitBreaker (inner); a breaker-open rejection isn't itself retried (Red)
