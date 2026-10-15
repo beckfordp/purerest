@@ -20,6 +20,10 @@ val testcontainersScalaVersion = "0.43.6"
 val catsRetryVersion = "4.0.0"
 val resilience4jVersion = "2.3.0"
 val logstashLogbackEncoderVersion = "9.0"
+// fs2-kafka: pure-FP, FS2-native Kafka client — same version/groupId gluon's
+// own generated services pin (e.g. services/order-service/build.sbt), for
+// ecosystem consistency.
+val fs2KafkaVersion = "3.6.0"
 
 ThisBuild / evictionErrorLevel := Level.Error
 
@@ -138,6 +142,68 @@ lazy val purerestlib = project
       // incubating OTel component, hence the "-alpha" qualifier tracking the main
       // opentelemetry-java release train.
       "io.opentelemetry" % "opentelemetry-exporter-prometheus" % s"$openTelemetryVersion-alpha"
+    )
+  )
+
+// purekafka: Kafka resilience + observability building blocks — generic
+// F[A] call resilience, consumer stream supervision, dead-letter routing,
+// and tracing/metrics/logs across the Kafka boundary (ADR 0010 in gluon).
+// Sibling to purerestlib, not folded into it: services that don't touch
+// Kafka (catalog-service, cart-service) shouldn't pull in fs2-kafka
+// transitively. Deliberately has no dependency on purerestlib itself —
+// reuses the same cats-retry/resilience4j-core/otel4s/log4cats
+// dependencies, not purerestlib's own http4s-coupled resilience code.
+lazy val pureKafka = project
+  .in(file("modules/purekafka"))
+  .settings(commonSettings)
+  .settings(
+    name := "purekafka",
+    // Real Maven/Ivy coordinate for publishing purekafka as a jar, derived
+    // from this project's own GitHub remote (github.com/beckfordp/purerest).
+    organization := "io.github.beckfordp",
+    // early-semver: same reasoning as purerestlib's own versionScheme note
+    // above — communicates binary compatibility once this is a real
+    // published jar, instead of a future consumer having to guess.
+    versionScheme := Some("early-semver"),
+    // Publishes to this repo's GitHub Packages Maven registry on a tag push
+    // (see .github/workflows/release.yml). Credentials come from env vars
+    // the workflow sets from its built-in GITHUB_TOKEN — unset locally, so
+    // `publishLocal` (which ignores publishTo/credentials entirely) is
+    // unaffected.
+    publishTo := Some("GitHub Packages" at "https://maven.pkg.github.com/beckfordp/purerest"),
+    credentials += Credentials(
+      "GitHub Package Registry",
+      "maven.pkg.github.com",
+      sys.env.getOrElse("GITHUB_ACTOR", ""),
+      sys.env.getOrElse("GITHUB_TOKEN", "")
+    ),
+    libraryDependencies ++= Seq(
+      "org.typelevel" %% "cats-effect" % catsEffectVersion,
+      "com.github.fd4s" %% "fs2-kafka" % fs2KafkaVersion,
+      // otel4s (oteljava backend): same tracing/metrics API purerestlib uses
+      // for HTTP, now across the Kafka boundary.
+      "org.typelevel" %% "otel4s-oteljava" % otel4sVersion,
+      // In-memory metrics/span testkit — compile-scoped (not Test), same
+      // reasoning as purerestlib's own otel4s-oteljava-testkit dependency:
+      // a public testing helper other modules' test suites may need too,
+      // and Test-scope deps don't propagate to consuming modules.
+      "org.typelevel" %% "otel4s-oteljava-testkit" % otel4sVersion,
+      // log4cats: structured, tagless-final logging, same MDC convention
+      // purerestlib uses for HTTP (trace_id/span_id), extended here to
+      // topic/partition/offset/eventType/correlationId.
+      "org.typelevel" %% "log4cats-core" % log4catsVersion,
+      "org.typelevel" %% "log4cats-slf4j" % log4catsVersion,
+      // In-memory capturing logger, for asserting on log output in tests.
+      "org.typelevel" %% "log4cats-testing" % log4catsVersion % Test,
+      // cats-retry: composable retry policies, same engine purerestlib's
+      // HTTP Retry middleware uses — here wrapping a generic F[A] directly
+      // instead of delegating to http4s's own Retry client middleware (not
+      // applicable to a non-HTTP call).
+      "com.github.cb372" %% "cats-retry" % catsRetryVersion,
+      // resilience4j-circuitbreaker: same mature circuit-breaker state
+      // machine (core, non-reactive module only) purerestlib's HTTP
+      // CircuitBreaker wraps, reused here for a generic F[A].
+      "io.github.resilience4j" % "resilience4j-circuitbreaker" % resilience4jVersion
     )
   )
 
@@ -265,7 +331,7 @@ lazy val loadTest = project
 // them; not published itself.
 lazy val root = project
   .in(file("."))
-  .aggregate(purerestlib, orderService, inventoryService)
+  .aggregate(purerestlib, pureKafka, orderService, inventoryService)
   .settings(
     name := "purerest",
     publish / skip := true
