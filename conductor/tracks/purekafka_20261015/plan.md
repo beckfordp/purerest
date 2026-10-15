@@ -1,0 +1,34 @@
+# Plan — `purekafka`: Kafka resilience + observability module (ADR 0010)
+
+## Phase 1 — Generic call resilience
+- [ ] Task: Write failing `RetrySuite` test: generic `Retry.middleware[F, A]` retries a failing `F[A]` up to `maxRetries` then gives up, raised-error-only (Red)
+- [ ] Task: Implement generic `Retry.middleware[F, A]` (cats-retry `RetryPolicies`, same `RetryConfig` shape, own `purekafka.retry.attempts` metric) (Green)
+- [ ] Task: Write failing `CircuitBreakerSuite` test: breaker opens after `failureThreshold` consecutive raised errors, rejects with `CircuitBreakerOpen` until `resetTimeout` elapses (Red)
+- [ ] Task: Implement generic `CircuitBreaker.middleware[F, A]` (resilience4j-core, same `CircuitBreakerConfig` shape, state-transition/rejection/state metrics) (Green)
+- [ ] Task: Write failing `ResilienceSuite` test: `Resilience.middleware[F, A]` composes Retry (outer) + CircuitBreaker (inner); a breaker-open rejection isn't itself retried (Red)
+- [ ] Task: Implement `Resilience.middleware[F, A]` composition (Green)
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Generic call resilience' (Protocol in workflow.md)
+
+## Phase 2 — Consumer stream supervision
+- [ ] Task: Write failing `StreamSupervisorSuite` test: an erroring `Stream[F, O]` restarts with exponential backoff, capped at 30s, unbounded attempts (Red)
+- [ ] Task: Implement the stream-supervision combinator, own restart-counter metric (Green)
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Consumer stream supervision' (Protocol in workflow.md)
+
+## Phase 3 — Dead-letter routing
+- [ ] Task: Write failing `DeadLetterSuite` test: after a capped number of per-message retries, the record is published to `<topic>-dlq` and the stream continues with the next message (Red)
+- [ ] Task: Implement the self-contained dead-letter combinator (owns its own small producer internally), own DLQ-publish-counter metric (Green)
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Dead-letter routing' (Protocol in workflow.md)
+
+## Phase 4 — Cross-cutting observability
+- [ ] Task: Write failing tracing test: producer injects W3C trace context into Kafka message headers; consumer extracts it and links its span to the producer's (Red)
+- [ ] Task: Implement produce/consume trace-context propagation (Green)
+- [ ] Task: Write failing consumer-lag test: the lag gauge reports correctly for a topic/partition/consumer-group with unconsumed messages (Red)
+- [ ] Task: Implement the consumer-lag gauge (Green)
+- [ ] Task: Write failing structured-logging test: a Kafka log line carries topic/partition/offset/`eventType`/`correlationId` (Red)
+- [ ] Task: Implement the structured-logging helper (Green)
+- [ ] Task: Conductor - User Manual Verification 'Phase 4: Cross-cutting observability' (Protocol in workflow.md)
+
+## Phase 5 — Load test
+- [ ] Task: Write a new Gatling simulation in `modules/load-test` (sibling to `OrderPlacementSimulation.scala`): sustained produce/consume traffic plus three induced failures (poison message, paused consumer, broker blip)
+- [ ] Task: Run it (`sbt loadTest/Gatling/test`), confirm DLQ routing fires, the lag gauge climbs, and stream supervision restarts correctly under real load
+- [ ] Task: Conductor - User Manual Verification 'Phase 5: Load test' (Protocol in workflow.md)

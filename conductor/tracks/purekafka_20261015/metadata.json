@@ -1,0 +1,8 @@
+{
+  "track_id": "purekafka_20261015",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-10-15T22:14:00Z",
+  "updated_at": "2026-10-15T22:14:00Z",
+  "description": "New modules/purekafka module (sibling to purerestlib): generic F[A] call resilience, consumer stream supervision with DLQ routing, and tracing/metrics/logs observability across the Kafka boundary, plus a load-test simulation proving it under sustained load. Decided in gluon's ADR 0010."
+}
