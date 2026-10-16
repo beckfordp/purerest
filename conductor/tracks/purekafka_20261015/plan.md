@@ -10,9 +10,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Generic call resilience' (Protocol in workflow.md)
 
 ## Phase 2 — Consumer stream supervision
-- [ ] Task: Write failing `StreamSupervisorSuite` test: an erroring `Stream[F, O]` restarts with exponential backoff, capped at 30s, unbounded attempts (Red)
-- [ ] Task: Implement the stream-supervision combinator, own restart-counter metric (Green)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Consumer stream supervision' (Protocol in workflow.md)
+- [x] Task: Write failing `StreamSupervisorSuite` test: an erroring `Stream[F, O]` restarts with exponential backoff, capped at 30s, unbounded attempts (Red) `92b95a1` — deviation: committed separately from the Green step below (Phase 1 committed Red+Green pairs together); see git note on `92b95a1`
+- [x] Task: Implement the stream-supervision combinator, own restart-counter metric (Green) `a08383d` — required `Async[F]` rather than `Temporal[F]` as the bound (`Ref.unsafe` needs `Sync[F]`); see git note on `a08383d`
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Consumer stream supervision' (Protocol in workflow.md)
 
 ## Phase 3 — Dead-letter routing
 - [ ] Task: Write failing `DeadLetterSuite` test: after a capped number of per-message retries, the record is published to `<topic>-dlq` and the stream continues with the next message (Red)
