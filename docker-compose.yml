@@ -144,5 +144,40 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
 
+  # Single-node, KRaft-mode broker, same image/version and config shape as
+  # gluon's own infra/k8s/local-infra/kafka.yaml (adapted to compose syntax)
+  # — not used by order-service/inventory-service, only by kafka-harness
+  # below (purekafka's Grafana-visible demo, see scripts/verify-kafka-observability.sh).
+  kafka:
+    image: apache/kafka:3.8.0
+    profiles: ["observability"]
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9093"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+
+  kafka-harness:
+    image: kafka-harness:latest
+    profiles: ["observability"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      METRICS_PORT: "9093"
+    ports:
+      - "9093:9093"
+
 volumes:
   postgres-data:

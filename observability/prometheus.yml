@@ -9,3 +9,7 @@ scrape_configs:
   - job_name: inventory-service
     static_configs:
       - targets: ["inventory-service:9091"]
+
+  - job_name: kafka-harness
+    static_configs:
+      - targets: ["kafka-harness:9093"]
