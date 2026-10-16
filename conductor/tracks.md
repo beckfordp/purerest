@@ -2,7 +2,7 @@
 
 This file tracks all major tracks for the project.
 
-- [ ] **Track: `purekafka`: Kafka resilience + observability module (ADR 0010)**
+- [x] **Track: `purekafka`: Kafka resilience + observability module (ADR 0010)**
   *Link: [./tracks/purekafka_20261015/](./tracks/purekafka_20261015/)*
 
 ---
