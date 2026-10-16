@@ -1,0 +1,77 @@
+Phase 1 verification report (purekafka: Kafka resilience + observability
+module, ADR 0010) - Generic call resilience.
+
+Reduced-prompting mode active: automated-test verification only, no
+interactive manual-verification walkthrough.
+
+Automated test command: sbt scalafmtCheck test (run at the repo root,
+covering every aggregated module - purerestlib, purekafka, order-service,
+inventory-service).
+Result: 110 passed, 0 failed, 0 errors across all four modules
+(purekafka 13, purerestlib 45, inventoryService 23, orderService 29).
+scalafmtCheck: clean, no reformatting needed.
+
+What this proves: the new modules/purekafka sbt module exists, resolves
+its dependencies (cats-effect, fs2-kafka, cats-retry,
+resilience4j-circuitbreaker, otel4s-oteljava(+testkit), log4cats), and is
+aggregated into the root build. Three generic, non-HTTP-coupled
+combinators are implemented and tested:
+
+- Retry.middleware[F, A]: retries any raised error (by default), up to
+  RetryConfig.maxRetries with exponential backoff, recording a
+  purekafka.retry.attempts metric with the same retried/succeeded/
+  exhausted shape purerest.resilience.Retry uses. Hand-rolled via
+  cats-retry's retryingOnErrors (not delegated to http4s's Retry client
+  middleware, which doesn't apply to a non-HTTP call) - the same pattern
+  gluon's OrderEventPublisher/PaymentEventPublisher already use directly.
+  Gained an optional nonRetriable: Throwable => Boolean hook (default
+  _ => false) during this phase, needed for correct composition with
+  CircuitBreaker (see below).
+
+- CircuitBreaker.middleware[F, A]: wraps resilience4j-circuitbreaker's
+  core engine, same CircuitBreakerConfig/CircuitBreakerOpen shape as the
+  HTTP version, simplified to use resilience4j's onSuccess/onError hooks
+  directly (no isFailureResult value-inspecting predicate needed, since a
+  Kafka-style F[A] call has no "successful-looking value that's actually
+  a failure" case the way an HTTP 5xx response does). Three metrics:
+  purekafka.circuit_breaker.state_transitions / calls_rejected / state.
+
+- Resilience.middleware[F, A]: composes Retry (outer) around
+  CircuitBreaker (inner), mirroring purerest.resilience.Resilience's
+  documented ordering exactly, including that a breaker-open rejection is
+  not itself retried (via Retry's new nonRetriable hook, set to
+  _ == CircuitBreakerOpen).
+
+Design deviation from a literal reading of ADR 0010's "F[A] => F[A]"
+phrasing, made for correctness: introduced a shared purekafka.resilience.Guard[F]
+trait (construct once per config/meter, apply[A] many times) rather than
+a plain function value. Necessary because resilience4j's CircuitBreaker
+engine is genuinely stateful (failure counts, open/closed/half-open) and
+must be the SAME instance across every call it guards - a fresh breaker
+constructed per call would never accumulate failures, making the whole
+breaker a no-op. Guard mirrors how Client[F] is built once and .run()
+called many times in purerest.resilience's own HTTP version; Retry and
+Resilience also return Guard[F] for API consistency and so they compose
+cleanly.
+
+Two bugs found and fixed via TDD before this checkpoint, not left for a
+later phase:
+1. Retry originally retried every error unconditionally, which would
+   have retried a CircuitBreakerOpen rejection too when composed -
+   directly contradicting this track's own plan.md. Fixed by adding the
+   nonRetriable hook described above.
+2. ResilienceSuite's first draft of its "breaker opens after threshold"
+   test assumed each top-level guard(fa) call maps to exactly one
+   circuit-breaker failure event. Actually false: Retry retries by
+   re-running the entire breaker-wrapped computation, not just the inner
+   fa, so each individual retry attempt hits the breaker separately too.
+   Rewrote that test with maxRetries=0 to isolate the scenario cleanly,
+   and rewrote the "not retried" test to assert on the breaker's own
+   calls_rejected metric (1 rejection, not 2) rather than on the
+   underlying fa-call count, which can't distinguish "retried and
+   rejected again" from "failed fast" (fa never runs on a rejected
+   attempt either way).
+
+Not yet built (Phases 2-5, per plan.md): consumer stream supervision,
+dead-letter routing, cross-cutting observability (tracing/consumer-lag/
+structured logging), and the load test. This phase is resilience only.
