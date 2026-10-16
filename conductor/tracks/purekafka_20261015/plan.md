@@ -1,13 +1,13 @@
 # Plan — `purekafka`: Kafka resilience + observability module (ADR 0010)
 
-## Phase 1 — Generic call resilience
+## Phase 1 — Generic call resilience [checkpoint: PENDING]
 - [x] Task: Write failing `RetrySuite` test: generic `Retry.middleware[F, A]` retries a failing `F[A]` up to `maxRetries` then gives up, raised-error-only (Red) `57bec6f`
 - [x] Task: Implement generic `Retry.middleware[F, A]` (cats-retry `RetryPolicies`, same `RetryConfig` shape, own `purekafka.retry.attempts` metric) (Green) `57bec6f` — deviation: introduced a shared `Guard[F]` trait (construct once, `.apply[A]` many times) instead of a literal `F[A] => F[A]` function value; see git note on `57bec6f`
 - [x] Task: Write failing `CircuitBreakerSuite` test: breaker opens after `failureThreshold` consecutive raised errors, rejects with `CircuitBreakerOpen` until `resetTimeout` elapses (Red) `359102b`
 - [x] Task: Implement generic `CircuitBreaker.middleware[F, A]` (resilience4j-core, same `CircuitBreakerConfig` shape, state-transition/rejection/state metrics) (Green) `359102b`
-- [ ] Task: Write failing `ResilienceSuite` test: `Resilience.middleware[F, A]` composes Retry (outer) + CircuitBreaker (inner); a breaker-open rejection isn't itself retried (Red)
-- [ ] Task: Implement `Resilience.middleware[F, A]` composition (Green)
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Generic call resilience' (Protocol in workflow.md)
+- [x] Task: Write failing `ResilienceSuite` test: `Resilience.middleware[F, A]` composes Retry (outer) + CircuitBreaker (inner); a breaker-open rejection isn't itself retried (Red) `e6a5b18`
+- [x] Task: Implement `Resilience.middleware[F, A]` composition (Green) `e6a5b18` — also required adding a `nonRetriable` hook to `Retry.middleware` (see git note on `e6a5b18`); first draft of the "breaker opens" test had incorrect arithmetic, corrected before this commit
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Generic call resilience' (Protocol in workflow.md)
 
 ## Phase 2 — Consumer stream supervision
 - [ ] Task: Write failing `StreamSupervisorSuite` test: an erroring `Stream[F, O]` restarts with exponential backoff, capped at 30s, unbounded attempts (Red)
