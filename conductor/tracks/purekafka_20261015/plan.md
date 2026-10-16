@@ -19,14 +19,14 @@
 - [x] Task: Implement the self-contained dead-letter combinator (owns its own small producer internally), own DLQ-publish-counter metric (Green) `4a06a76` — reuses `purekafka.resilience.Retry`/`Guard` internally for the bounded-retry half rather than hand-rolling a second mechanism; split into `DeadLetter.fromPublish` (testable core logic, fake publish function) + `DeadLetter.resource` (real fs2-kafka-backed constructor) so the decision logic is tested without a real broker
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Dead-letter routing' (Protocol in workflow.md) `a058e73` — reduced-prompting mode: automated-test verification only (119 passed), no interactive walkthrough; see git note on `a058e73`
 
-## Phase 4 — Cross-cutting observability
+## Phase 4 — Cross-cutting observability [checkpoint: 3d5c0f0]
 - [x] Task: Write failing tracing test: producer injects W3C trace context into Kafka message headers; consumer extracts it and links its span to the producer's (Red) `5d9cc55`
 - [x] Task: Implement produce/consume trace-context propagation (Green) `5d9cc55` — deviation: committed together with the test (Phase 1's style), not split (Phase 2/3's style); see git note on `5d9cc55`
 - [x] Task: Write failing consumer-lag test: the lag gauge reports correctly for a topic/partition/consumer-group with unconsumed messages (Red) `c68a42e`
 - [x] Task: Implement the consumer-lag gauge (Green) `c68a42e` — deviation: no `endOffsets` exists in fs2-kafka 3.6.0's API; reads Kafka's own `records-lag` metric via `consumer.metrics()` instead of hand-deriving from offsets; see git note on `c68a42e`
-- [ ] Task: Write failing structured-logging test: a Kafka log line carries topic/partition/offset/`eventType`/`correlationId` (Red)
-- [ ] Task: Implement the structured-logging helper (Green)
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Cross-cutting observability' (Protocol in workflow.md)
+- [x] Task: Write failing structured-logging test: a Kafka log line carries topic/partition/offset/`eventType`/`correlationId` (Red) `379b664`
+- [x] Task: Implement the structured-logging helper (Green) `379b664` — deviation: audited all of Phases 1-3, only `DeadLetter` had topic/key in scope to retrofit (Retry/CircuitBreaker/StreamSupervisor are fully generic, no per-record Kafka context available at all); deliberately did not add `eventType`/`correlationId` extraction anywhere — that requires decoding a service-specific payload, out of scope per this module's own non-functional requirements; see git note on `379b664`
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Cross-cutting observability' (Protocol in workflow.md) `3d5c0f0` — reduced-prompting mode: automated-test verification only (125 passed), no interactive walkthrough; see git note on `3d5c0f0`
 
 ## Phase 5 — Load test
 - [ ] Task: Write a new Gatling simulation in `modules/load-test` (sibling to `OrderPlacementSimulation.scala`): sustained produce/consume traffic plus three induced failures (poison message, paused consumer, broker blip)
