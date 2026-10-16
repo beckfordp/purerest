@@ -20,8 +20,8 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Dead-letter routing' (Protocol in workflow.md) `a058e73` — reduced-prompting mode: automated-test verification only (119 passed), no interactive walkthrough; see git note on `a058e73`
 
 ## Phase 4 — Cross-cutting observability
-- [ ] Task: Write failing tracing test: producer injects W3C trace context into Kafka message headers; consumer extracts it and links its span to the producer's (Red)
-- [ ] Task: Implement produce/consume trace-context propagation (Green)
+- [x] Task: Write failing tracing test: producer injects W3C trace context into Kafka message headers; consumer extracts it and links its span to the producer's (Red) `5d9cc55`
+- [x] Task: Implement produce/consume trace-context propagation (Green) `5d9cc55` — deviation: committed together with the test (Phase 1's style), not split (Phase 2/3's style); see git note on `5d9cc55`
 - [ ] Task: Write failing consumer-lag test: the lag gauge reports correctly for a topic/partition/consumer-group with unconsumed messages (Red)
 - [ ] Task: Implement the consumer-lag gauge (Green)
 - [ ] Task: Write failing structured-logging test: a Kafka log line carries topic/partition/offset/`eventType`/`correlationId` (Red)
