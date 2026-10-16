@@ -1,0 +1,32 @@
+Phase 5 verification report (purekafka track, ADR 0010) - Load test.
+
+Reduced-prompting mode active: automated-test verification only, no
+interactive manual-verification walkthrough.
+
+Automated test commands:
+- sbt loadTest/testOnly loadtest.KafkaResilienceLoadTest (DOCKER_HOST
+  pointed at the OrbStack socket): 1 passed, 0 failed - against a real
+  Testcontainers-launched Kafka broker (apache/kafka:3.8.0), confirmed
+  clean on a final run with all debug instrumentation stripped.
+- sbt scalafmtCheck test (root-aggregated: purekafka, purerestlib,
+  inventoryService, orderService): 125 passed, 0 failed, scalafmtCheck
+  clean.
+
+What this proves: KafkaResilienceLoadTest drives sustained produce/consume
+traffic through Phases 1-4's real combinators together (Resilience,
+StreamSupervisor, DeadLetter, ConsumerLag, KafkaTracing) against a live
+broker, with all three induced failures genuinely firing and asserted via
+the real otel4s in-memory testkit (not mocked): a poison message is routed
+to <topic>-dlq after DeadLetter's retries exhaust; a burst of extra
+production racing ahead of steady consumption makes Kafka's own
+records-lag metric climb (confirmed via raw MetricData, up to ~50 before
+decaying); a deliberately-injected processing error crashes and restarts
+the real consumer.stream via StreamSupervisor's restart-with-backoff. The
+full-suite run separately confirms the testcontainersScalaVersion 0.44.1
+bump (needed to unblock this phase at all - see git note on 564235a)
+introduced no regressions in the other four modules.
+
+This closes the purekafka_20261015 track end to end: all five phases are
+complete. The commit at 564235a carries the detailed bug-fix history
+(broker-blip timing, backpressure-vs-lag-metric interaction) for anyone
+revisiting this test's design later.
