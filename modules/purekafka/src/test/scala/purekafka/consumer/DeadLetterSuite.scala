@@ -3,6 +3,8 @@ package purekafka.consumer
 import cats.effect.{IO, Ref}
 import munit.CatsEffectSuite
 import org.typelevel.log4cats.noop.NoOpLogger
+import org.typelevel.log4cats.testing.StructuredTestingLogger
+import org.typelevel.log4cats.testing.StructuredTestingLogger.ERROR
 import org.typelevel.otel4s.metrics.Meter
 import org.typelevel.otel4s.oteljava.testkit.metrics.{
   MetricExpectation,
@@ -88,6 +90,35 @@ class DeadLetterSuite extends CatsEffectSuite {
         s"expected guard to swallow the error, got $result"
       )
       assertEquals(log, List(("orders-dlq", "k1", "v1")))
+    }
+  }
+
+  test(
+    "logs the DLQ routing with structured topic/dlq_topic/key context, not just interpolated into the message"
+  ) {
+    for {
+      published <- Ref.of[IO, List[(String, String, String)]](Nil)
+      testLogger = StructuredTestingLogger.impl[IO]()
+      deadLetter <- DeadLetter.fromPublish[IO, String, String](
+        fastConfig,
+        recordingPublish(published)
+      )(testLogger)(Meter.noop[IO])
+      _ <- deadLetter
+        .guard("orders", "k1", "v1")(
+          IO.raiseError(new RuntimeException("poison"))
+        )
+        .attempt
+      logged <- testLogger.logged
+    } yield {
+      val errors = logged.collect { case m: ERROR => m }
+      assert(
+        errors.exists(m =>
+          m.ctx.get("topic").contains("orders") &&
+            m.ctx.get("dlq_topic").contains("orders-dlq") &&
+            m.ctx.get("key").contains("k1")
+        ),
+        s"expected an ERROR line with topic/dlq_topic/key structured context, got: $errors"
+      )
     }
   }
 

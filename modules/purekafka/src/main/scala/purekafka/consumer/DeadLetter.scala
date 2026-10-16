@@ -57,8 +57,15 @@ object DeadLetter {
             val dlqTopic = s"$topic-dlq"
             publish(dlqTopic, key, value) *>
               counter.inc() *>
-              logger.error(error)(
-                s"Routed unprocessable message to $dlqTopic after exhausting retries (key=$key)"
+              logger.error(
+                Map(
+                  "topic" -> topic,
+                  "dlq_topic" -> dlqTopic,
+                  "key" -> key.toString
+                ),
+                error
+              )(
+                "Routed unprocessable message to DLQ after exhausting retries"
               )
           }
       }
