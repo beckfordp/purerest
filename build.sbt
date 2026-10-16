@@ -214,6 +214,44 @@ lazy val pureKafka = project
     )
   )
 
+// kafka-harness: a small, continuously-running fixture app demonstrating
+// purekafka's combinators under real, sustained Kafka traffic with a real
+// Prometheus exporter (unlike purekafka's own Testcontainers-based
+// KafkaResilienceLoadTest, which uses otel4s's in-memory testkit and tears
+// down after one assertion run) - so purekafka's metrics become visible in
+// Grafana locally, the same way order-service/inventory-service already are
+// for the HTTP story. Docker-packaged and added to docker-compose's
+// "observability" profile alongside them; see scripts/verify-kafka-observability.sh.
+// Depends on purerestlib (not just pureKafka) specifically to reuse
+// purerest.metrics.Metrics.oteljava and purerest.tracing.Tracing.console —
+// the real exporters order-service/inventory-service's own Main.scala
+// already build this exact way — rather than hand-rolling a second copy of
+// that OtelJava/SdkMeterProvider/PrometheusHttpServer wiring here. This app
+// is a standalone demo, not something other Kafka-touching services
+// depend on, so it's exempt from pureKafka's own "no purerestlib
+// dependency" rule (that rule is about pureKafka-the-library staying
+// decoupled, not about every future consumer).
+lazy val kafkaHarness = project
+  .in(file("modules/kafka-harness"))
+  .dependsOn(purerestlib, pureKafka)
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
+  .settings(commonSettings)
+  .settings(
+    name := "kafka-harness",
+    Docker / packageName := "kafka-harness",
+    dockerBaseImage := "eclipse-temurin:21-jre",
+    dockerUpdateLatest := true,
+    // Docker tags can't contain '+', but sbt-dynver's untagged-history format
+    // does (e.g. "0.0.0+300-2be9b9c0+...") — sanitize before it becomes an
+    // (invalid) image tag. Same as order-service/inventory-service.
+    Docker / version := version.value.replace("+", "-"),
+    dockerExposedPorts := Seq(9093),
+    libraryDependencies ++= Seq(
+      "org.typelevel" %% "cats-effect" % catsEffectVersion,
+      "com.github.fd4s" %% "fs2-kafka" % fs2KafkaVersion
+    )
+  )
+
 // order-service: REST API that places orders, calling inventory-service via
 // purerest's client to reserve stock. Depends on inventoryService in Test
 // scope only, to run a real inventory-service in-process for integration
@@ -356,7 +394,7 @@ lazy val loadTest = project
 // them; not published itself.
 lazy val root = project
   .in(file("."))
-  .aggregate(purerestlib, pureKafka, orderService, inventoryService)
+  .aggregate(purerestlib, pureKafka, orderService, inventoryService, kafkaHarness)
   .settings(
     name := "purerest",
     publish / skip := true
