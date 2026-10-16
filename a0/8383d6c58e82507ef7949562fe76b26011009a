@@ -1,0 +1,38 @@
+Task: implement generic consumer stream supervision (Green phase), Phase
+2 of purekafka (ADR 0010).
+
+Added modules/purekafka/src/main/scala/purekafka/consumer/StreamSupervisor.scala:
+- StreamSupervisorConfig(baseDelay, maxDelay) - explicit config, same
+  style as Phase 1's RetryConfig/CircuitBreakerConfig, no hidden
+  defaults.
+- StreamSupervisor.nextDelay: pure delay-doubling-capped-at-maxDelay
+  function, factored out so the cap/growth logic is testable without
+  any real waiting.
+- StreamSupervisor.supervise[F, O](config)(logger)(meter)(build: => F[Stream[F, O]]): Stream[F, O] -
+  hand-rolled restart-with-backoff loop via Stream.eval/handleErrorWith/
+  Stream.sleep, since no existing fs2/Typelevel combinator does this
+  directly (Stream.retry retries a single effectful value, not a
+  long-running stream). Takes the stream as a by-name F[Stream[F, O]]
+  build action, not a plain Stream[F, O] value, since restarting means
+  rebuilding from scratch (e.g. re-subscribing a Kafka consumer), not
+  resuming a half-consumed stream. Deliberately unbounded attempts, no
+  circuit breaker - matches spec.md's explicit decision (giving up
+  recreates TD-2's exact symptom; there's no "downstream being hammered"
+  concept on the consume side).
+- Own purekafka.stream.restarts counter metric, same
+  construct-once-reuse-many-times convention as Phase 1's
+  purekafka.retry.attempts/purekafka.circuit_breaker.* metrics.
+
+Required Async[F] rather than Temporal[F] as the type bound - Ref.unsafe
+needs Sync[F], which Temporal alone doesn't provide (Temporal extends
+Concurrent + Clock, not Sync); Async extends both Temporal and Sync, and
+is what every other purekafka combinator already uses, so this keeps the
+module's constraint consistent rather than introducing a second pattern.
+
+Verification: sbt pureKafka/scalafmtAll + scalafmtCheck + test - 18
+passed (13 Phase 1 + 5 new), 0 failed. Full root `sbt test` across all
+four aggregated modules (purekafka/purerestlib/inventoryService/
+orderService): 115 passed, 0 failed - no regressions elsewhere.
+Incidentally reformatted Phase 1's CircuitBreakerSuite/ResilienceSuite/
+RetrySuite via scalafmtAll - confirmed cosmetic only (line-wrapping),
+included in this commit rather than left uncommitted.
