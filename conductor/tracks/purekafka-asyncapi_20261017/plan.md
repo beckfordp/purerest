@@ -1,0 +1,31 @@
+# Plan — AsyncAPI documentation for `modules/purekafka`
+
+## Phase 1 — Registration primitive
+- [ ] Task: Write failing `AsyncApiChannelSuite` test: `AsyncApiChannel[A](topic, eventType)` constructs from an implicit tapir `Schema[A]`, exposing topic/eventType/schema (Red)
+- [ ] Task: Implement `AsyncApiChannel[A]` in `purekafka.docs` — generic, no kafka-harness-specific coupling (Green)
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Registration primitive' (Protocol in workflow.md)
+
+## Phase 2 — Document generation
+- [ ] Task: Write failing `AsyncApiDocSuite` test: generating from a single-channel list produces a valid AsyncAPI 2.x document (circe `Json`) with the correct channel name, a `subscribe`/`publish` operation, and a JSON-Schema-shaped payload matching the registered `Schema[A]` (Red)
+- [ ] Task: Implement the hand-rolled AsyncAPI 2.x document builder (Green)
+- [ ] Task: Write failing test: multiple registered channels each appear as distinct entries (Red)
+- [ ] Task: Extend the builder to fold over `List[AsyncApiChannel[_]]` (Green)
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Document generation' (Protocol in workflow.md)
+
+## Phase 3 — Serving the raw spec
+- [ ] Task: Write failing `DocsSuite` test: `purekafka.docs.Docs.routes(title, version, channels)` serves the generated spec as YAML/JSON at a fixed route, 200 + correct content-type — signature takes an explicit channel list, like `purerest.docs.Docs.routes` takes an explicit endpoint list (Red)
+- [ ] Task: Implement `purekafka.docs.Docs.routes[F]` (Green)
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Serving the raw spec' (Protocol in workflow.md)
+
+## Phase 4 — Reference consumer (`kafka-harness` retrofit)
+- [ ] Task: Introduce `DemoEvent(message: String)` (circe codec + tapir `Schema`) replacing `kafka-harness`'s raw `String` payload
+- [ ] Task: Register `kafka-harness-demo`'s topic/eventType/`DemoEvent` schema via `AsyncApiChannel`
+- [ ] Task: Add an HTTP server to `kafka-harness` (currently metrics-only) mounting `purekafka.docs.Docs`'s raw-spec route (e.g. `/docs/asyncapi.yaml`)
+- [ ] Task: Conductor - User Manual Verification 'Phase 4: Reference consumer' (Protocol in workflow.md)
+
+## Phase 5 — Static HTML generation, serving, verification + docs
+- [ ] Task: Write `scripts/generate-kafka-asyncapi-docs.sh`: fetch the running spec, run `npx @asyncapi/generator` + `@asyncapi/html-template` to render static HTML to a known output path
+- [ ] Task: Add a second `kafka-harness` route (e.g. `/docs/asyncapi`) serving that generated HTML file as a static asset — sibling to the raw-spec route, same split as Swagger's `/docs` vs `/docs/docs.yaml`
+- [ ] Task: Write `scripts/verify-kafka-asyncapi-docs.sh`: run the generation script end-to-end and assert the demo topic/eventType/`message` field appear in both the raw spec and the served HTML
+- [ ] Task: Update README with a "View Kafka AsyncAPI docs" section, and note order-service/`pure-service-generator` migration as planned future work
+- [ ] Task: Conductor - User Manual Verification 'Phase 5: Static HTML generation, serving, verification + docs' (Protocol in workflow.md)

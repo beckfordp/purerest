@@ -1,0 +1,8 @@
+{
+  "track_id": "purekafka-asyncapi_20261017",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-10-17T00:00:00Z",
+  "updated_at": "2026-10-17T00:00:00Z",
+  "description": "AsyncAPI documentation for modules/purekafka"
+}
