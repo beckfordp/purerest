@@ -1,0 +1,28 @@
+Task: structured-logging audit + retrofit (Phase 4c, ADR 0010).
+
+Audited every log line Phases 1-3 emit, per the scope boundary agreed
+before starting this task: this module's own combinators only know
+generic things about a Kafka record (topic/partition/offset at most) -
+never eventType/correlationId, which require decoding a service-specific
+payload and stay the calling service's job.
+
+Retry/CircuitBreaker (purekafka.resilience): fully generic over F[A], no
+Kafka-specific context (not even topic) available at all - nothing to
+retrofit.
+StreamSupervisor (purekafka.consumer): generic over Stream[F, O], also
+has no per-record context available (it restarts a whole stream-build
+action, not a single record) - nothing to retrofit.
+DeadLetter.guard (purekafka.consumer): the only combinator that actually
+has topic/key in scope. Its log line used plain string interpolation
+(s"...$dlqTopic...$key") rather than structured context - retrofitted
+to logger.error(Map(topic, dlq_topic, key), error)(message), matching
+this codebase's existing structured-logging convention.
+
+No generic eventType/correlationId extraction logic was added anywhere -
+confirmed out of scope and left that way.
+
+Files: modules/purekafka/src/main/scala/purekafka/consumer/DeadLetter.scala (edited),
+modules/purekafka/src/test/scala/purekafka/consumer/DeadLetterSuite.scala (new test added).
+
+Tests: 1 new, asserting the ERROR log line carries topic/dlq_topic/key as
+structured ctx. Full DeadLetterSuite: 5/5 pass.
