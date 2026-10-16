@@ -1,0 +1,41 @@
+Task: Resilience.middleware composition (ADR 0010), plus a correction to Retry discovered while writing this task's own test.
+
+Resilience.middleware[F, A](config)(logger)(meter): Guard[F] composes
+Retry (outer) around CircuitBreaker (inner), mirroring purerest.resilience.Resilience's
+own documented ordering and reasoning exactly.
+
+Correction folded into this commit (not a separate task - discovered via
+TDD while writing ResilienceSuite, before Phase 1's checkpoint): the
+original Retry.middleware (committed 57bec6f) retried every raised error
+unconditionally. Composed naively as retryGuard(breakerGuard(fa)), that
+would retry a CircuitBreakerOpen rejection too, directly contradicting
+this track's own plan.md ('a breaker-open rejection isn't itself
+retried'). Fixed by adding an optional nonRetriable: Throwable => Boolean
+parameter to Retry.middleware (default _ => false, preserving existing
+retry-everything behavior and all of RetrySuite's prior assertions
+unchanged), added to the existing meter parameter list rather than a new
+curried list (Scala requires every parameter in a list to be supplied or
+defaulted together - appending to an existing list keeps every current
+3-arg call site source-compatible). Resilience.middleware passes
+nonRetriable = _ == CircuitBreakerOpen. Uses cats-retry's
+ResultHandler.retryOnSomeErrors (not retryOnAllErrors) - confirmed its
+real parameter name is , not , by decompiling the
+resolved cats-retry_3-4.0.0 jar directly (javap) rather than guessing.
+
+Also caught and fixed a flawed first draft of ResilienceSuite's own
+'breaker opens' test before this commit: naively assumed each top-level
+guard(fa) call maps to exactly one circuit-breaker failure event, but
+since Retry retries by re-running the ENTIRE breaker-wrapped computation
+(not just the inner fa), each individual retry attempt hits the breaker
+separately too - so a single top-level call with maxRetries=2 can itself
+trip the breaker after only 2 of its own 3 attempts. Rewrote the
+'opens after threshold' test with maxRetries=0 to isolate that scenario
+cleanly, and the 'not retried' test to assert on the breaker's own
+purekafka.circuit_breaker.calls_rejected metric (1 rejection, not 2) -
+the fa-call count alone can't distinguish 'retried-and-rejected-again'
+from 'failed-fast', since fa never runs on a rejected attempt either way.
+
+Verified: sbt pureKafka/test (scoped to this module) - 13 passed, 0
+failed, 0 errors (CircuitBreakerSuite 3, ResilienceSuite 3, RetrySuite
+7 - RetrySuite grew by one test covering nonRetriable directly, in
+addition to the 6 already covered by 57bec6f).
