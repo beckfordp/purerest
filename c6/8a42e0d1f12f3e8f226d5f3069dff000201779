@@ -1,0 +1,26 @@
+Task: Consumer lag gauge (Phase 4b, ADR 0010).
+
+Added purekafka.consumer.ConsumerLag (record, fromConsumer). Checked
+fs2-kafka 3.6.0's real API first (javap against the resolved jar) rather
+than assuming an endOffsets method exists - it doesn't; KafkaOffsets/
+KafkaOffsetsV2 only expose position/committed. Instead reads Kafka's own
+already-tracked per-partition records-lag metric via KafkaMetrics[F].metrics
+(wraps the Java client's own consumer.metrics()) - confirmed the exact
+metric name (records-lag), group (consumer-fetch-manager-metrics), and
+tags (topic, partition) by decompiling kafka-clients' FetchMetricsRegistry/
+FetchMetricsManager classes directly, not guessed.
+
+Split into ConsumerLag.record (core polling/gauge-recording logic,
+parameterized over F[Map[(String,Int),Double]]) and ConsumerLag.fromConsumer
+(the real constructor extracting that map from a live KafkaConsumer) - same
+testable-core/real-constructor split DeadLetter.fromPublish/resource
+established in Phase 3.
+
+Files: modules/purekafka/src/main/scala/purekafka/consumer/ConsumerLag.scala (new),
+modules/purekafka/src/test/scala/purekafka/consumer/ConsumerLagSuite.scala (new).
+
+Tests: 1 new, asserting the gauge records the right value with the right
+attributes (topic/partition/group) against a synthetic lag supplier - no
+real broker needed. Passes.
+
+Deviation: same as the tracing commit - Red+Green committed together.
