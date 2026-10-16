@@ -1,0 +1,23 @@
+Task: Implement the self-contained dead-letter combinator (ADR 0010, Phase 3 Green step).
+
+Summary: DeadLetter[F, K, V].guard(topic, key, value)(process) runs process
+with bounded retry, reusing purekafka.resilience.Retry/Guard directly rather
+than hand-rolling a second bounded-retry mechanism - the only new behavior
+here is what happens on exhaustion (publish (key, value) to <topic>-dlq and
+swallow the error, instead of raising). Own purekafka.dlq.published counter
+metric, same instrument-naming convention as Phases 1-2.
+
+Split into two layers for testability: DeadLetter.fromPublish takes the
+actual "how to send" action as a plain function parameter, so DeadLetterSuite
+tests the retry-then-dlq decision logic against a fake recording publish
+function with no real Kafka broker involved - same "test the logic, not the
+broker" convention this module's other suites already use. DeadLetter.resource
+is the real, public, fs2-kafka-backed constructor built on top of fromPublish
+- owns its own KafkaProducer.resource internally, callers never construct or
+pass one in.
+
+Files:
+- modules/purekafka/src/main/scala/purekafka/consumer/DeadLetter.scala (new)
+- modules/purekafka/src/test/scala/purekafka/consumer/DeadLetterSuite.scala (Red commit 3dd0217, this commit makes it Green)
+
+Full sbt scalafmtCheck test at repo root: 119 passed (pureKafka 22, purerestlib 45, inventoryService 23, orderService 29), 0 failed, 0 errors.
