@@ -1,0 +1,41 @@
+Phase 4 verification report (purekafka, ADR 0010) - Cross-cutting observability
+
+Reduced-prompting mode active: automated-test verification only, no
+interactive manual-verification walkthrough.
+
+Automated test command: sbt scalafmtCheck test
+Result: 125 passed, 0 failed, 0 errors across all four aggregated modules
+(pureKafka 28, purerestlib 45, inventoryService 23, orderService 29).
+scalafmtCheck clean.
+
+What this proves:
+- Tracing: KafkaTracing.injectHeaders/traced correctly propagate W3C trace
+  context through Kafka message headers - a consumer span created via
+  traced() is confirmed (via otel4s's in-memory trace testkit) to be a
+  child of the producer span whose headers it read, and is tagged with
+  OpenTelemetry's messaging.system/messaging.destination.name semantic
+  attributes. No hand-rolled TextMapPropagator needed - otel4s's own
+  Tracer.propagate/joinOrRoot already resolve an implicit carrier codec
+  for Map[String, String], the same mechanism purerestlib's HTTP
+  ClientTracing/ServerTracing already rely on.
+- Consumer lag: ConsumerLag.record/fromConsumer read Kafka's own
+  already-tracked per-partition records-lag metric (via
+  KafkaConsumer.metrics(), confirmed against the real fs2-kafka 3.6.0 and
+  kafka-clients 3.8.1 APIs directly, not guessed) and republish it as an
+  otel4s gauge (purekafka.consumer.lag) tagged by
+  topic/partition/consumer-group. fs2-kafka 3.6.0 has no endOffsets method
+  at all - confirmed by checking its real API before assuming otherwise.
+- Structured logging: audited every log line Phases 1-3 emit. Only
+  DeadLetter.guard actually had Kafka-specific context (topic/key) in
+  scope to retrofit - Retry/CircuitBreaker (fully generic F[A]) and
+  StreamSupervisor (generic over Stream[F, O]) have no per-record context
+  available at all. DeadLetter's log line now carries topic/dlq_topic/key
+  as structured ctx instead of string-interpolated. No eventType/
+  correlationId extraction was added anywhere in this module - that
+  requires decoding a service-specific payload, which stays the calling
+  service's job per this module's own non-functional requirements
+  (confirmed, not assumed, by re-reading spec.md before starting this
+  piece).
+
+This closes Phase 4 of the purekafka track. Remaining work: Phase 5 (load
+test proving all of this under sustained load).
