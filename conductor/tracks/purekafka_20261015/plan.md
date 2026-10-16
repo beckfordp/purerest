@@ -15,8 +15,8 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Consumer stream supervision' (Protocol in workflow.md)
 
 ## Phase 3 — Dead-letter routing
-- [ ] Task: Write failing `DeadLetterSuite` test: after a capped number of per-message retries, the record is published to `<topic>-dlq` and the stream continues with the next message (Red)
-- [ ] Task: Implement the self-contained dead-letter combinator (owns its own small producer internally), own DLQ-publish-counter metric (Green)
+- [x] Task: Write failing `DeadLetterSuite` test: after a capped number of per-message retries, the record is published to `<topic>-dlq` and the stream continues with the next message (Red) `3dd0217`
+- [x] Task: Implement the self-contained dead-letter combinator (owns its own small producer internally), own DLQ-publish-counter metric (Green) `4a06a76` — reuses `purekafka.resilience.Retry`/`Guard` internally for the bounded-retry half rather than hand-rolling a second mechanism; split into `DeadLetter.fromPublish` (testable core logic, fake publish function) + `DeadLetter.resource` (real fs2-kafka-backed constructor) so the decision logic is tested without a real broker
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Dead-letter routing' (Protocol in workflow.md)
 
 ## Phase 4 — Cross-cutting observability
