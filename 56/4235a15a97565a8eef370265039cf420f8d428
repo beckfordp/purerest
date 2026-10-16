@@ -1,0 +1,66 @@
+Fix-up task, resuming Phase 5 (load test) of the purekafka track after the
+coordinator diagnosed and fixed the Testcontainers/Docker-API-version
+blocker reported earlier (bumped testcontainersScalaVersion 0.43.6 ->
+0.44.1, pulling testcontainers-java 2.0.3 instead of 1.21.1 - 1.21.1's
+shaded docker-java client hardcoded Docker API version 1.32 and ignored
+DOCKER_API_VERSION/DOCKER_HOST overrides, which this machine's OrbStack/
+Docker 29.8.2 rejects outright; the coordinator also switched
+KafkaResilienceLoadTest's containerDef image from confluentinc/cp-kafka:7.7.1
+to apache/kafka:3.8.0, since testcontainers-java 2.0.3 flipped the default
+compatible-image-family check to the official Apache images).
+
+With that blocker resolved, running the test for the first time surfaced
+two real logic bugs in the load test itself (not infra):
+
+1. Broker-blip scenario never fired (purekafka.stream.restarts stayed 0).
+   Added debug instrumentation (temporary, removed before this commit) and
+   found the blip message (index 300) was being produced but never
+   consumed within the test's time budget - consumption throughput
+   (~17msg/s, due to per-message offset.commit + tracing-span overhead)
+   is genuinely slower than production (~25msg/s), and a separate bug
+   (below) meant the whole test was being killed by munit's actual 30s
+   default IO-timeout before my own internal 32s budget ever got a
+   chance to finish. Fixed by moving the blip trigger from message index
+   400 to 300 (comfortably within reach) and, more importantly, fixing
+   the timeout override itself: `munitTimeout` (what I'd originally
+   overridden) doesn't bound a CatsEffectSuite's IO-based test body at
+   all - decompiled CatsEffectSuite directly to confirm the actual method
+   is `munitIOTimeout`, switched to overriding that instead.
+
+2. Lag-gauge scenario never recorded a positive value
+   (purekafka.consumer.lag stayed 0.0) even once the above was fixed.
+   Root cause: Kafka's own `records-lag` metric only updates on an actual
+   FetchResponse for that partition. My original "pause" mechanism
+   blocked downstream processing (a Ref-gated wait inside the per-record
+   handler), which backpressures fs2-kafka's own fetch loop too - no new
+   fetches happen while paused, so the metric just freezes at whatever it
+   last was instead of growing to reflect the real, growing gap. Fixed by
+   replacing the pause with a burst: at t=15s (deliberately *after* the
+   blip at message-index 300 has already been produced and consumed -
+   an earlier attempt at t=5s pushed the blip's actual broker offset past
+   what the consumer could reach in time, since the burst's 500 extra
+   messages land on the same topic/offsets), fire 500 extra messages as
+   fast as the producer can send them. This keeps the consumer's fetch
+   loop actively polling throughout (no backpressure-freeze), so the next
+   real FetchResponse legitimately reports the widened gap, which
+   `ConsumerLag.fromConsumer` then correctly surfaces as a rising gauge
+   value (confirmed via raw MetricData inspection during debugging,
+   observed values up to ~50 before decaying back toward 0 as the
+   consumer caught up).
+
+Verification:
+- `sbt loadTest/testOnly loadtest.KafkaResilienceLoadTest` (with
+  DOCKER_HOST pointed at the OrbStack socket): all three induced-failure
+  assertions pass - dlqPublished >= 1, streamRestarts >= 1, maxLagSeen > 0
+  - against a real Testcontainers Kafka broker, confirmed clean on a
+  final run with all debug instrumentation stripped.
+- Full `sbt scalafmtCheck test` (root-aggregated: purekafka, purerestlib,
+  inventoryService, orderService - loadTest is deliberately excluded from
+  the aggregate, run separately above): 125 passed, 0 failed, scalafmtCheck
+  clean - confirms the testcontainers-scala version bump introduced no
+  regressions elsewhere.
+- Deliberately did NOT include scalafmtAll's reformatting of four
+  unrelated, pre-existing files it touched incidentally
+  (InventoryServiceConfigSuite, OrderServiceConfigSuite, ConsumerLagSuite,
+  KafkaTracingSuite) - reverted them before this commit to keep scope to
+  what this task actually changed; scalafmtCheck passes without them.
