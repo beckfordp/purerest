@@ -82,6 +82,25 @@ class RetrySuite extends CatsEffectSuite {
     }
   }
 
+  test("does not retry an error excluded via nonRetriable") {
+    for {
+      counter <- Ref.of[IO, Int](0)
+      guard = Retry.middleware[IO](fastConfig)(NoOpLogger[IO])(
+        Meter.noop[IO],
+        nonRetriable = _.getMessage == "stop"
+      )
+      result <- guard(
+        counter.update(_ + 1) *> IO.raiseError[Int](
+          new RuntimeException("stop")
+        )
+      ).attempt
+      attempts <- counter.get
+    } yield {
+      assert(result.isLeft)
+      assertEquals(attempts, 1) // never retried
+    }
+  }
+
   private def assertOutcomeCounts(
       metrics: List[io.opentelemetry.sdk.metrics.data.MetricData],
       retried: Long,

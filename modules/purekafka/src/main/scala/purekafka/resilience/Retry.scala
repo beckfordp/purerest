@@ -17,12 +17,14 @@ import scala.concurrent.duration.FiniteDuration
   */
 final case class RetryConfig(maxRetries: Int, baseDelay: FiniteDuration)
 
-/** Retries a generic `F[A]` call on *any* raised error. Unlike
+/** Retries a generic `F[A]` call on *any* raised error, by default. Unlike
   * `purerest.resilience.Retry` (HTTP-specific — retries only 5xx responses and
   * connection/timeout exceptions, since a 5xx is a normal returned value, not a
   * thrown exception), a Kafka producer call has no "successful-looking value
   * that's actually a failure" case: a failed send always raises, so every error
-  * is retriable here.
+  * is retriable here *unless* the caller opts a specific error out via
+  * `nonRetriable` — used by [[Resilience]] to exclude [[CircuitBreakerOpen]]
+  * (retrying a breaker-open rejection would defeat its fail-fast purpose).
   *
   * Hand-rolled directly via cats-retry's `retryingOnErrors` rather than
   * delegating to http4s's `Retry` client middleware (not applicable to a
@@ -42,7 +44,10 @@ object Retry {
       config: RetryConfig
   )(
       logger: StructuredLogger[F]
-  )(meter: Meter[F]): Guard[F] = {
+  )(
+      meter: Meter[F],
+      nonRetriable: Throwable => Boolean = _ => false
+  ): Guard[F] = {
     val policy = RetryPolicies
       .limitRetries[F](config.maxRetries)
       .join(RetryPolicies.exponentialBackoff[F](config.baseDelay))
@@ -80,11 +85,14 @@ object Retry {
           retry
             .retryingOnErrors(counted)(
               policy,
-              ResultHandler.retryOnAllErrors[F, A] { (error, details) =>
-                logger.warn(error)(
-                  s"Call failed (attempt ${details.retriesSoFar + 1}), retrying"
-                )
-              }
+              ResultHandler.retryOnSomeErrors[F, A](
+                isWorthRetrying = error => !nonRetriable(error),
+                log = { (error, details) =>
+                  logger.warn(error)(
+                    s"Call failed (attempt ${details.retriesSoFar + 1}), retrying"
+                  )
+                }
+              )
             )
             .attempt
             .flatMap { result =>
