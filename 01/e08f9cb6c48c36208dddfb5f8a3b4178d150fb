@@ -1,0 +1,23 @@
+Phase 2 verification report (purekafka, ADR 0010) - Consumer stream
+supervision.
+
+Reduced-prompting mode active: automated-test verification only, no
+interactive manual-verification walkthrough.
+
+Automated test command: sbt pureKafka/scalafmtAll pureKafka/scalafmtCheck pureKafka/test, then sbt test (full root aggregate)
+Result: purekafka module 18 passed, 0 failed (13 from Phase 1 + 5 new).
+Full root test run across all four aggregated modules (purekafka/
+purerestlib/inventoryService/orderService): 115 passed, 0 failed - no
+regressions in Phase 1's code or anywhere else in the repo.
+
+What this proves: StreamSupervisor.supervise restarts a failing
+consumer Stream[F, O] with exponential backoff (doubling, capped at
+maxDelay - proven both as a pure function and via an integration test
+using tiny real delays), survives well past any bounded-retry-style
+limit with no hidden attempt cap (25 consecutive failures, still
+recovers), and records each restart via a purekafka.stream.restarts
+otel4s counter. No circuit breaker on this path, as decided - only a
+restart loop.
+
+This closes Phase 2 of the purekafka track. Phase 3 (dead-letter
+routing) is next, not yet started.
