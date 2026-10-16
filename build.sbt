@@ -16,7 +16,14 @@ val skunkVersion = "1.0.0"
 val flywayVersion = "11.8.2"
 val postgresqlJdbcVersion = "42.7.13"
 val pureconfigVersion = "0.17.10"
-val testcontainersScalaVersion = "0.43.6"
+// Bumped 0.43.6 -> 0.44.1 (testcontainers-java 1.21.1 -> 2.0.3, a major
+// version jump) specifically to fix Testcontainers-Kafka startup against
+// this machine's OrbStack/Docker 29.8.2: 1.21.1's shaded docker-java client
+// hardcodes Docker API version 1.32 and ignores DOCKER_API_VERSION/
+// DOCKER_HOST overrides, which a modern Docker Engine (minimum supported
+// API 1.40) rejects outright. Confirmed Postgres-based suites still pass
+// after this bump (see purekafka_20261015 track's Phase 5 work).
+val testcontainersScalaVersion = "0.44.1"
 val catsRetryVersion = "4.0.0"
 val resilience4jVersion = "2.3.0"
 val logstashLogbackEncoderVersion = "9.0"
@@ -317,13 +324,31 @@ lazy val inventoryService = project
 // scripts/loadtest-purerest.sh.
 lazy val loadTest = project
   .in(file("modules/load-test"))
+  .dependsOn(pureKafka)
   .enablePlugins(GatlingPlugin)
   .settings(
     scalaVersion := scala3Version,
     name := "load-test",
     libraryDependencies ++= Seq(
       "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.15.1" % Test,
-      "io.gatling" % "gatling-test-framework" % "3.15.1" % Test
+      "io.gatling" % "gatling-test-framework" % "3.15.1" % Test,
+      // purekafka's own sustained-load harness (KafkaResilienceLoadTest) is a
+      // plain munit suite, not a Gatling simulation - checked Maven Central
+      // directly: io.gatling ships no Kafka protocol module at all (http,
+      // jms, mqtt, grpc, jdbc, redis, graphql, but no kafka); the only
+      // third-party options (org.galaxio/ru.tinkoff/com.github.mnogu) are
+      // Scala 2.x-only, and even cross-version-shimmed in, their DSL only
+      // drives raw Kafka send/receive - not purekafka's own wrapped
+      // combinators, which is the actual point of this load test. See
+      // KafkaResilienceLoadTest's own doc comment for the full reasoning.
+      "org.scalameta" %% "munit" % munitVersion % Test,
+      "org.typelevel" %% "munit-cats-effect" % munitCatsEffectVersion % Test,
+      // testcontainers-scala-kafka: a real, ephemeral Kafka broker for this
+      // sustained-load run - same "test the logic against a real broker, not
+      // a fake" convention this project's Postgres integration tests already
+      // use via testcontainers-scala-postgresql.
+      "com.dimafeng" %% "testcontainers-scala-kafka" % testcontainersScalaVersion % Test,
+      "com.dimafeng" %% "testcontainers-scala-munit" % testcontainersScalaVersion % Test
     )
   )
 
