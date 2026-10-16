@@ -1,0 +1,26 @@
+Phase 3 verification report (ADR 0010) - Dead-letter routing
+
+Reduced-prompting mode active: automated-test verification only, no
+interactive manual-verification walkthrough.
+
+Automated test command: sbt scalafmtCheck test
+Result: 119 passed, 0 failed, 0 errors (pureKafka 22, purerestlib 45,
+inventoryService 23, orderService 29). scalafmtCheck clean.
+
+What this proves: a message that fails processing after RetryConfig's
+bounded retry budget is exhausted is routed to <topic>-dlq (confirmed via
+DeadLetterSuite's fake-publish recording test) instead of raising - so a
+consumer built on DeadLetter.guard + StreamSupervisor.supervise never has
+one poison message crash/restart the whole stream (Phase 2's supervisor is
+for genuine stream-level failures, not per-message ones) or block a
+partition indefinitely. Own purekafka.dlq.published metric confirmed via
+the otel4s in-memory testkit, same pattern Phase 1's RetrySuite uses.
+
+Design note carried into Phase 4+: DeadLetter deliberately reuses
+purekafka.resilience.Retry/Guard internally for its bounded-retry half
+instead of a second implementation - the only new logic is the
+on-exhaustion action (publish+swallow vs. raise).
+
+This closes the dead-letter-routing third of TD-2.4 (dead-letter routing
+across all four Kafka-consuming services) - adoption in each service is
+separate, out of scope for this track per spec.md.
