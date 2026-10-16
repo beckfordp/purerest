@@ -3,7 +3,6 @@ package purekafka.consumer
 import cats.effect.{IO, Ref}
 import munit.CatsEffectSuite
 import org.typelevel.log4cats.noop.NoOpLogger
-import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.metrics.Meter
 import org.typelevel.otel4s.oteljava.testkit.metrics.{
   MetricExpectation,
@@ -15,9 +14,9 @@ import purekafka.resilience.RetryConfig
 
 import scala.concurrent.duration._
 
-/** Tests [[DeadLetter.fromPublish]] directly, against a fake `publish`
-  * function rather than a real Kafka producer — same "test the logic, not the
-  * broker" convention `purekafka.resilience.Retry`/`purekafka.consumer.
+/** Tests [[DeadLetter.fromPublish]] directly, against a fake `publish` function
+  * rather than a real Kafka producer — same "test the logic, not the broker"
+  * convention `purekafka.resilience.Retry`/`purekafka.consumer.
   * StreamSupervisor` already use for their own synthetic-`F[A]`/synthetic-
   * `Stream` tests. [[DeadLetter.resource]] (the real fs2-kafka-backed
   * constructor) is a thin wrapper over this, not exercised against a real
@@ -84,7 +83,10 @@ class DeadLetterSuite extends CatsEffectSuite {
         .attempt
       log <- published.get
     } yield {
-      assert(result.isRight, s"expected guard to swallow the error, got $result")
+      assert(
+        result.isRight,
+        s"expected guard to swallow the error, got $result"
+      )
       assertEquals(log, List(("orders-dlq", "k1", "v1")))
     }
   }
