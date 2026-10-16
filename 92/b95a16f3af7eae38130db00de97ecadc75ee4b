@@ -1,0 +1,18 @@
+Task: write failing StreamSupervisorSuite test (Red phase), Phase 2 of
+purekafka (ADR 0010).
+
+Added modules/purekafka/src/test/scala/purekafka/consumer/StreamSupervisorSuite.scala:
+5 tests covering pure backoff-doubling-with-cap logic, a never-failing
+stream (no restarts), a failing-then-recovering stream (restarts with
+backoff), an "unbounded attempts" proof (survives 25 failures with no
+hidden limit), and a purekafka.stream.restarts metric assertion.
+
+Confirmed Red: compilation failed with "Not found: StreamSupervisor" (the
+type doesn't exist yet) - the expected failure mode for this step, not a
+logic failure, since the type itself is new.
+
+Deviation from Phase 1's commit style, noted for transparency: Phase 1
+committed each Red+Green task pair together in one commit. This task's
+Red step is committed separately from its Green step (next commit) -
+not a process error, just a different valid granularity; plan.md records
+both SHAs distinctly.
