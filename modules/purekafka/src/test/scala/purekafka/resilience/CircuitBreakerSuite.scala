@@ -64,9 +64,8 @@ class CircuitBreakerSuite extends CatsEffectSuite {
       counter <- Ref.of[IO, Int](0)
       shouldFail <- Ref.of[IO, Boolean](true)
       error = new RuntimeException("boom")
-      flaky = counter.updateAndGet(_ + 1) *> shouldFail.get.flatMap {
-        fail =>
-          if (fail) IO.raiseError[Int](error) else IO.pure(0)
+      flaky = counter.updateAndGet(_ + 1) *> shouldFail.get.flatMap { fail =>
+        if (fail) IO.raiseError[Int](error) else IO.pure(0)
       }
       guard = CircuitBreaker.middleware[IO](
         CircuitBreakerConfig(failureThreshold = 1, resetTimeout = 50.millis)

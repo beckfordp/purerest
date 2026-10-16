@@ -65,7 +65,10 @@ class ResilienceSuite extends CatsEffectSuite {
     } yield {
       assertEquals(attemptsBeforeOpen, 2)
       assertEquals(resultWhileOpen, Left(CircuitBreakerOpen))
-      assertEquals(attemptsAfterOpen, 2) // 3rd call never reached the underlying fa
+      assertEquals(
+        attemptsAfterOpen,
+        2
+      ) // 3rd call never reached the underlying fa
     }
   }
 

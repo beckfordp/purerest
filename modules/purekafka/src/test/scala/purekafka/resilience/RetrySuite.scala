@@ -141,9 +141,13 @@ class RetrySuite extends CatsEffectSuite {
         meter <- testkit.meterProvider.get("purekafka-retry-metrics-test")
         counter <- Ref.of[IO, Int](0)
         guard = Retry.middleware[IO](fastConfig)(NoOpLogger[IO])(meter)
-        _ <- guard(failingNTimes(counter, failures = 2)) // 2 retried, 1 succeeded
+        _ <- guard(
+          failingNTimes(counter, failures = 2)
+        ) // 2 retried, 1 succeeded
         counter2 <- Ref.of[IO, Int](0)
-        _ <- guard(failingNTimes(counter2, failures = 0)) // 1 succeeded, no retries
+        _ <- guard(
+          failingNTimes(counter2, failures = 0)
+        ) // 1 succeeded, no retries
         metrics <- testkit.collectMetrics
       } yield assertOutcomeCounts(
         metrics,
