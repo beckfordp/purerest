@@ -9,7 +9,7 @@
 - [x] Task: Implement `Resilience.middleware[F, A]` composition (Green) `e6a5b18` — also required adding a `nonRetriable` hook to `Retry.middleware` (see git note on `e6a5b18`); first draft of the "breaker opens" test had incorrect arithmetic, corrected before this commit
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Generic call resilience' (Protocol in workflow.md)
 
-## Phase 2 — Consumer stream supervision
+## Phase 2 — Consumer stream supervision [checkpoint: 01e08f9]
 - [x] Task: Write failing `StreamSupervisorSuite` test: an erroring `Stream[F, O]` restarts with exponential backoff, capped at 30s, unbounded attempts (Red) `92b95a1` — deviation: committed separately from the Green step below (Phase 1 committed Red+Green pairs together); see git note on `92b95a1`
 - [x] Task: Implement the stream-supervision combinator, own restart-counter metric (Green) `a08383d` — required `Async[F]` rather than `Temporal[F]` as the bound (`Ref.unsafe` needs `Sync[F]`); see git note on `a08383d`
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Consumer stream supervision' (Protocol in workflow.md)
