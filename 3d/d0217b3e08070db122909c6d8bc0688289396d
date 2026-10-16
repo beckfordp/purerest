@@ -1,0 +1,9 @@
+Task: Write failing DeadLetterSuite test (ADR 0010, Phase 3 Red step).
+
+4 test cases against a not-yet-existing DeadLetter.fromPublish: succeeds
+without DLQ publish when the call never fails; retries and recovers without
+DLQ publish; routes to <topic>-dlq and swallows the error once retries are
+exhausted; records a purekafka.dlq.published metric only when routed.
+
+Confirmed Red for the right reason: compile failure ("Not found: DeadLetter"),
+not a runtime assertion failure - the type doesn't exist yet.
