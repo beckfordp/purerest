@@ -14,10 +14,10 @@
 - [x] Task: Implement the stream-supervision combinator, own restart-counter metric (Green) `a08383d` — required `Async[F]` rather than `Temporal[F]` as the bound (`Ref.unsafe` needs `Sync[F]`); see git note on `a08383d`
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Consumer stream supervision' (Protocol in workflow.md)
 
-## Phase 3 — Dead-letter routing
+## Phase 3 — Dead-letter routing [checkpoint: a058e73]
 - [x] Task: Write failing `DeadLetterSuite` test: after a capped number of per-message retries, the record is published to `<topic>-dlq` and the stream continues with the next message (Red) `3dd0217`
 - [x] Task: Implement the self-contained dead-letter combinator (owns its own small producer internally), own DLQ-publish-counter metric (Green) `4a06a76` — reuses `purekafka.resilience.Retry`/`Guard` internally for the bounded-retry half rather than hand-rolling a second mechanism; split into `DeadLetter.fromPublish` (testable core logic, fake publish function) + `DeadLetter.resource` (real fs2-kafka-backed constructor) so the decision logic is tested without a real broker
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Dead-letter routing' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Dead-letter routing' (Protocol in workflow.md) `a058e73` — reduced-prompting mode: automated-test verification only (119 passed), no interactive walkthrough; see git note on `a058e73`
 
 ## Phase 4 — Cross-cutting observability
 - [ ] Task: Write failing tracing test: producer injects W3C trace context into Kafka message headers; consumer extracts it and links its span to the producer's (Red)
