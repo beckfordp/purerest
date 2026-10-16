@@ -1,0 +1,27 @@
+Task: Kafka produce/consume trace-context propagation (Phase 4a, ADR 0010).
+
+Added purekafka.tracing.KafkaTracing (injectHeaders, traced), mirroring
+purerestlib's ClientTracing/ServerTracing shape and reasoning but for
+Kafka message headers instead of HTTP headers. Confirmed otel4s's
+Tracer[F].propagate/joinOrRoot already resolve an implicit
+TextMapGetter/TextMapUpdater for a plain Map[String,String] carrier (same
+mechanism the HTTP versions rely on) - no hand-rolled TextMapPropagator
+needed, only the carrier representation (fs2-kafka Headers, UTF-8 byte
+values via HeaderSerializer.string/HeaderDeserializer.string) is new.
+Verified the real fs2-kafka 3.6.0 Header/Headers API via javap against
+the resolved jar directly rather than guessing (append takes the
+serializer as an implicit parameter, not positional - caught and fixed a
+compile error from assuming otherwise). Spans tagged with OpenTelemetry's
+messaging.system/messaging.destination.name semantic attributes via
+Tracer.spanBuilder(...).addAttributes(...).build.use(...), confirmed via
+javap against otel4s-core-trace directly (SpanBuilderMacro.addAttribute(s)).
+
+Files: modules/purekafka/src/main/scala/purekafka/tracing/KafkaTracing.scala (new),
+modules/purekafka/src/test/scala/purekafka/tracing/KafkaTracingSuite.scala (new).
+
+Tests: 4 new (inject-with-span, inject-no-span no-op, consumer-span-is-child-of-producer-span,
+messaging-semantic-attributes-tagged). All pass.
+
+Deviation: committed Red+Green together, not split into two commits -
+both the test and implementation were written together and verified in
+one pass, matching Phase 1's commit granularity rather than Phase 2/3's.
