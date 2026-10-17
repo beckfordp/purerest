@@ -1,0 +1,28 @@
+Task: AsyncApiSpecWriter (Phase 1, Tasks 3-4 of sbt-asyncapi-plugin_20261017)
+
+Summary: Added AsyncApiSpecWriter.main(providerClass, title, version,
+outputPath) - reflectively loads a consuming service's AsyncApiChannelsProvider
+singleton by class name, generates its AsyncAPI document via the existing
+AsyncApiDoc.generate, and writes the JSON to disk via plain java.nio.file
+(no new dependency). This is the entry point the sbt plugin's
+asyncApiGenerateSpec task (Phase 3) will invoke via Compile/runMain in the
+consuming service's own JVM.
+
+Files:
+- modules/purekafka/src/main/scala/purekafka/docs/AsyncApiSpecWriter.scala (new)
+- modules/purekafka/src/test/scala/purekafka/docs/AsyncApiSpecWriterSuite.scala (new)
+
+Why: Replaces the shell-script-based spec generation step with a pure-Scala
+one the sbt plugin can run directly, no Node toolchain needed for the JSON
+half (Node is only needed later, in Phase 4, for the HTML rendering step).
+
+Applied the $-suffix reflection fix documented on commit 71eaeb4's git note
+directly (Class.forName(providerClass + "$")) rather than rediscovering it.
+
+TDD: Red confirmed via `sbt "pureKafka/testOnly purekafka.docs.AsyncApiSpecWriterSuite"`
+(compile failure: "Not found: AsyncApiSpecWriter"), then Green after
+implementing the writer. Full `pureKafka/test` suite (36 tests) passes.
+scalafmtCheck on the two new files is clean; pre-existing formatting drift
+in 5 unrelated test files (DocsSuite, ConsumerLagSuite, KafkaTracingSuite,
+AsyncApiDocSuite, AsyncApiChannelSuite) left untouched, out of scope for
+this task.
