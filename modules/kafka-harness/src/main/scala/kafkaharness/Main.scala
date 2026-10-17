@@ -2,8 +2,13 @@ package kafkaharness
 
 import cats.effect.{IO, IOApp, Ref}
 import cats.syntax.all._
+import com.comcast.ip4s._
 import fs2.Stream
 import fs2.kafka._
+import io.circe.parser.decode
+import io.circe.syntax._
+import org.http4s.ember.server.EmberServerBuilder
+import org.http4s.implicits._
 import org.typelevel.log4cats.noop.NoOpLogger
 import purerest.metrics.Metrics
 import purerest.tracing.Tracing
@@ -14,6 +19,7 @@ import purekafka.consumer.{
   StreamSupervisor,
   StreamSupervisorConfig
 }
+import purekafka.docs.{AsyncApiChannel, Docs}
 import purekafka.resilience.{
   CircuitBreakerConfig,
   Resilience,
@@ -55,6 +61,8 @@ object Main extends IOApp.Simple {
     sys.env.getOrElse("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
   private val metricsPort =
     sys.env.get("METRICS_PORT").flatMap(_.toIntOption).getOrElse(9093)
+  private val httpPort =
+    sys.env.get("HTTP_PORT").flatMap(_.toIntOption).getOrElse(8080)
   private val serviceName = "kafka-harness"
   private val topic = "kafka-harness-demo"
   private val groupId = "kafka-harness-group"
@@ -109,7 +117,9 @@ object Main extends IOApp.Simple {
                   Stream
                     .awakeEvery[IO](100.millis)
                     .evalMap(_ => counterStream(ref))
-                    .evalMap(i => send(s"key-$i", s"message-$i"))
+                    .evalMap(i =>
+                      send(s"key-$i", DemoEvent(s"message-$i").asJson.noSpaces)
+                    )
                 }
 
               // Every 20s - frequent enough to see a steady purekafka.dlq.published
@@ -119,7 +129,12 @@ object Main extends IOApp.Simple {
                   Stream
                     .fixedDelay[IO](20.seconds)
                     .evalMap(_ => counterStream(ref))
-                    .evalMap(i => send(s"poison-key-$i", poisonMarker))
+                    .evalMap(i =>
+                      send(
+                        s"poison-key-$i",
+                        DemoEvent(poisonMarker).asJson.noSpaces
+                      )
+                    )
                 }
 
               // Every 45s. A given blip *key* is only ever allowed to crash the
@@ -139,7 +154,12 @@ object Main extends IOApp.Simple {
                   Stream
                     .fixedDelay[IO](45.seconds)
                     .evalMap(_ => counterStream(ref))
-                    .evalMap(i => send(s"blip-key-$i", blipMarker))
+                    .evalMap(i =>
+                      send(
+                        s"blip-key-$i",
+                        DemoEvent(blipMarker).asJson.noSpaces
+                      )
+                    )
                 }
 
               // Every 90s: makes real lag appear, same reasoning
@@ -156,7 +176,10 @@ object Main extends IOApp.Simple {
                     .evalMap(_ => counterStream(ref))
                     .evalMap { cycle =>
                       (1 to 300).toList.traverse_ { n =>
-                        send(s"burst-key-$cycle-$n", s"burst-$cycle-$n")
+                        send(
+                          s"burst-key-$cycle-$n",
+                          DemoEvent(s"burst-$cycle-$n").asJson.noSpaces
+                        )
                       }
                     }
                 }
@@ -178,8 +201,22 @@ object Main extends IOApp.Simple {
                       val value = record.record.value
                       val headers = record.record.headers
 
-                      def handle: IO[Unit] = value match {
-                        case v if v == blipMarker =>
+                      // Decode the wire-level JSON string into DemoEvent
+                      // first (ADR 0010's AsyncAPI follow-up, Phase 4 —
+                      // kafka-harness's payload is no longer a raw marker
+                      // string). A genuine decode failure is itself an
+                      // "unprocessable message" case, routed to the DLQ the
+                      // same way a recognized-but-bad payload already was.
+                      def handle: IO[Unit] = decode[DemoEvent](value) match {
+                        case Left(decodeError) =>
+                          dlq.guard(topic, key, value)(
+                            IO.raiseError(
+                              new RuntimeException(
+                                s"undecodable message: $decodeError"
+                              )
+                            )
+                          )
+                        case Right(event) if event.message == blipMarker =>
                           blippedKeysRef
                             .modify { seen =>
                               if (seen.contains(key)) (seen, false)
@@ -194,13 +231,16 @@ object Main extends IOApp.Simple {
                                 )
                               else IO.unit
                             }
-                        case v if v == poisonMarker =>
+                        case Right(event) if event.message == poisonMarker =>
                           dlq.guard(topic, key, value)(
                             IO.raiseError(
-                              new RuntimeException(s"unprocessable message: $v")
+                              new RuntimeException(
+                                s"unprocessable message: ${event.message}"
+                              )
                             )
                           )
-                        case _ => dlq.guard(topic, key, value)(IO.unit)
+                        case Right(_) =>
+                          dlq.guard(topic, key, value)(IO.unit)
                       }
 
                       KafkaTracing.traced(tracer)(
@@ -230,14 +270,36 @@ object Main extends IOApp.Simple {
                         )
                       )(meter)(consumer)
 
-                    List(
-                      normalLoop.compile.drain,
-                      poisonLoop.compile.drain,
-                      blipLoop.compile.drain,
-                      burstLoop.compile.drain,
-                      consumeLoop.compile.drain,
-                      lagLoop.compile.drain
-                    ).parSequence_
+                    // Registers this harness's one topic/eventType/payload
+                    // for AsyncAPI documentation (ADR 0010's AsyncAPI
+                    // follow-up, Phase 4) and serves the generated spec
+                    // alongside the existing metrics port — kafka-harness
+                    // was metrics-port-only before this track.
+                    val demoChannel = AsyncApiChannel[DemoEvent](
+                      topic = topic,
+                      eventType = "DemoEvent"
+                    )
+                    val docsRoutes =
+                      Docs.routes[IO]("kafka-harness", "1.0", List(demoChannel))
+                    val boundHttpPort =
+                      Port.fromInt(httpPort).getOrElse(port"8080")
+
+                    EmberServerBuilder
+                      .default[IO]
+                      .withHost(host"0.0.0.0")
+                      .withPort(boundHttpPort)
+                      .withHttpApp(docsRoutes.orNotFound)
+                      .build
+                      .use { _ =>
+                        List(
+                          normalLoop.compile.drain,
+                          poisonLoop.compile.drain,
+                          blipLoop.compile.drain,
+                          burstLoop.compile.drain,
+                          consumeLoop.compile.drain,
+                          lagLoop.compile.drain
+                        ).parSequence_
+                      }
                   }
                 }
             }

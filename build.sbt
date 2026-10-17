@@ -277,10 +277,24 @@ lazy val kafkaHarness = project
     // does (e.g. "0.0.0+300-2be9b9c0+...") — sanitize before it becomes an
     // (invalid) image tag. Same as order-service/inventory-service.
     Docker / version := version.value.replace("+", "-"),
-    dockerExposedPorts := Seq(9093),
+    // 8080: the new AsyncAPI-docs HTTP server (ADR 0010's AsyncAPI
+    // follow-up, Phase 4) - not present before this track, kafka-harness
+    // was metrics-port-only (9093) until now.
+    dockerExposedPorts := Seq(8080, 9093),
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-effect" % catsEffectVersion,
-      "com.github.fd4s" %% "fs2-kafka" % fs2KafkaVersion
+      "com.github.fd4s" %% "fs2-kafka" % fs2KafkaVersion,
+      // circe: encodes/decodes DemoEvent as the Kafka message value (JSON
+      // string over the wire, same hand-rolled-codec convention every
+      // gluon service already uses for its own payloads - no shared
+      // typed-Kafka-codec library).
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion,
+      // http4s-ember-server: the new AsyncAPI-docs HTTP server mounting
+      // purekafka.docs.Docs.routes - kafka-harness was metrics-port-only
+      // (via purerest.metrics.Metrics.oteljava's own internal Prometheus
+      // server) before this track.
+      "org.http4s" %% "http4s-ember-server" % http4sVersion
     )
   )
 
