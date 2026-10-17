@@ -17,7 +17,7 @@
 - [x] Task: Implement `purekafka.docs.Docs.routes[F]` (Green) `a6366ae` — committed Red+Green together; deviation: serves JSON at `/docs/asyncapi.json`, not YAML — spec.md's own wording allowed either ("asyncapi.yaml/.json"), and JSON avoids adding a new YAML-encoding dependency this phase didn't otherwise need; see git note on `a6366ae`
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Serving the raw spec' (Protocol in workflow.md) — reduced-prompting mode: automated-test verification only (130 passed across all 4 modules, `scalafmtCheck` clean), no interactive walkthrough
 
-## Phase 4 — Reference consumer (`kafka-harness` retrofit) [checkpoint: TBD]
+## Phase 4 — Reference consumer (`kafka-harness` retrofit) [checkpoint: 255ef11]
 - [x] Task: Introduce `DemoEvent(message: String)` (circe codec + tapir `Schema`) replacing `kafka-harness`'s raw `String` payload `d52de2d`
 - [x] Task: Register `kafka-harness-demo`'s topic/eventType/`DemoEvent` schema via `AsyncApiChannel` `d52de2d`
 - [x] Task: Add an HTTP server to `kafka-harness` (currently metrics-only) mounting `purekafka.docs.Docs`'s raw-spec route (e.g. `/docs/asyncapi.yaml`) `d52de2d` — deviation: served at `/docs/asyncapi.json` (JSON, not YAML — same Phase 3 wording/rationale), new port 8080; see git note on `d52de2d` for the decode-failure/DLQ bonus fix too
