@@ -5,9 +5,6 @@ This file tracks all major tracks for the project.
 - [x] **Track: `purekafka`: Kafka resilience + observability module (ADR 0010)**
   *Link: [./tracks/purekafka_20261015/](./tracks/purekafka_20261015/)*
 
-- [x] **Track: AsyncAPI documentation for `modules/purekafka`**
-  *Link: [./tracks/purekafka-asyncapi_20261017/](./tracks/purekafka-asyncapi_20261017/)*
-
 ---
 
 ## Backlog
