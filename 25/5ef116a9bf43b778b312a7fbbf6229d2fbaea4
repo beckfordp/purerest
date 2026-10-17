@@ -1,0 +1,20 @@
+Phase 4 verification report (AsyncAPI documentation track) - Reference consumer
+
+Reduced-prompting mode active: automated-test verification only, no
+interactive manual-verification walkthrough.
+
+Automated checks: sbt kafkaHarness/compile (clean), sbt scalafmtCheck
+test (130 passed, 0 failed, 0 errors across all four aggregated
+modules, scalafmtCheck clean). kafka-harness itself has no dedicated
+test suite (by design - a continuously-running demo app, verified
+end-to-end via a script rather than unit tests); that script is
+Phase 5's own deliverable, not yet built.
+
+What this proves: kafka-harness compiles and the rest of the repo's
+test suite is unaffected by its retrofit. Full end-to-end proof (the
+served /docs/asyncapi.json actually containing the DemoEvent schema
+when kafka-harness runs for real against a live broker) is deferred
+to Phase 5's verify-kafka-asyncapi-docs.sh, as planned.
+
+This closes Phase 4. Phase 5 (static HTML generation, serving,
+verification + README) remains.
