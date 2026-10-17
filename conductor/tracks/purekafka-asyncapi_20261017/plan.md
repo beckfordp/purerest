@@ -5,12 +5,12 @@
 - [x] Task: Implement `AsyncApiChannel[A]` in `purekafka.docs` — generic, no kafka-harness-specific coupling (Green) `4a3b023` — committed Red+Green together; deviation: dropped a custom companion `apply` that collided with the case class's auto-generated one, see git note on `4a3b023`
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Registration primitive' (Protocol in workflow.md) `be7eec0` — reduced-prompting mode: automated-test verification only (126 passed), no interactive walkthrough; see git note on `be7eec0`
 
-## Phase 2 — Document generation
+## Phase 2 — Document generation [checkpoint: c422c20]
 - [x] Task: Write failing `AsyncApiDocSuite` test: generating from a single-channel list produces a valid AsyncAPI 2.x document (circe `Json`) with the correct channel name, a `subscribe`/`publish` operation, and a JSON-Schema-shaped payload matching the registered `Schema[A]` (Red) `fece777`
 - [x] Task: Implement the hand-rolled AsyncAPI 2.x document builder (Green) `fece777` — deviation: not hand-rolled; `tapir-apispec-docs` transitively ships `asyncapi-model`, a real typed AsyncAPI 2.6.0 model from the same library family, used instead via `asyncapi-circe`'s `Encoder[AsyncAPI]`. See git note on `fece777`.
 - [x] Task: Write failing test: multiple registered channels each appear as distinct entries (Red) `fece777` — committed together with the single-channel test/implementation above, not split
 - [x] Task: Extend the builder to fold over `List[AsyncApiChannel[_]]` (Green) `fece777`
-- [x] Task: Conductor - User Manual Verification 'Phase 2: Document generation' (Protocol in workflow.md) — reduced-prompting mode: automated-test verification only (128 passed across all 4 modules, `scalafmtCheck` clean), no interactive walkthrough
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Document generation' (Protocol in workflow.md) `c422c20` — reduced-prompting mode: automated-test verification only (128 passed across all 4 modules, `scalafmtCheck` clean), no interactive walkthrough; see git note on `c422c20`
 
 ## Phase 3 — Serving the raw spec
 - [ ] Task: Write failing `DocsSuite` test: `purekafka.docs.Docs.routes(title, version, channels)` serves the generated spec as YAML/JSON at a fixed route, 200 + correct content-type — signature takes an explicit channel list, like `purerest.docs.Docs.routes` takes an explicit endpoint list (Red)
