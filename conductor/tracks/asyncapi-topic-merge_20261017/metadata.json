@@ -1,0 +1,8 @@
+{
+  "track_id": "asyncapi-topic-merge_20261017",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-10-17T17:31:28Z",
+  "updated_at": "2026-10-17T17:31:28Z",
+  "description": "Fix purekafka.docs.AsyncApiDoc.generate's same-topic channel merging: registering two AsyncApiChannels with different eventTypes but the same topic currently silently drops all but the last one (ListMap keyed by topic); group by topic and emit an AsyncAPI OneOfMessage for topics with 2+ registered channels. Prerequisite for order-service's asyncapi-docs_20261017 track."
+}
