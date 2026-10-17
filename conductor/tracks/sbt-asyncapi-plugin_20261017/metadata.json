@@ -1,0 +1,8 @@
+{
+  "track_id": "sbt-asyncapi-plugin_20261017",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-10-17T20:43:25Z",
+  "updated_at": "2026-10-17T20:43:25Z",
+  "description": "Shared sbt plugin (new modules/sbt-purekafka-docs, Scala 2.12, sbtPlugin := true) that generates AsyncAPI static HTML documentation at build time (chained after Compile/compile), replacing each consuming service's own copy of generate-kafka-asyncapi-docs.sh/verify-kafka-asyncapi-docs.sh. Adds AsyncApiChannelsProvider trait + AsyncApiSpecWriter main-class to purekafka.docs. Verified end-to-end against kafka-harness."
+}
