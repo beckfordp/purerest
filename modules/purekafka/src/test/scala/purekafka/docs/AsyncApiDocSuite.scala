@@ -102,4 +102,45 @@ class AsyncApiDocSuite extends FunSuite {
       .toOption
     assertEquals(otherEventName, Some("OtherEvent"))
   }
+
+  test(
+    "two channels registered on the same topic with different eventTypes both appear, as a oneOf, neither dropped"
+  ) {
+    val demo = AsyncApiChannel[DemoPayload](
+      topic = "shared-topic",
+      eventType = "DemoEvent"
+    )
+    val other = AsyncApiChannel[OtherPayload](
+      topic = "shared-topic",
+      eventType = "OtherEvent"
+    )
+
+    val doc =
+      AsyncApiDoc.generate("purekafka demo", "1.0", List(demo, other))
+    val channelCursor = doc.hcursor.downField("channels").downField("shared-topic")
+
+    val publishMessageNames = channelCursor
+      .downField("publish")
+      .downField("message")
+      .downField("oneOf")
+      .values
+      .toList
+      .flatten
+      .flatMap(_.hcursor.downField("name").as[String].toOption)
+    assertEquals(
+      publishMessageNames.toSet,
+      Set("DemoEvent", "OtherEvent"),
+      "expected both eventTypes registered on the shared topic to appear, not just the last one"
+    )
+
+    val subscribeMessageNames = channelCursor
+      .downField("subscribe")
+      .downField("message")
+      .downField("oneOf")
+      .values
+      .toList
+      .flatten
+      .flatMap(_.hcursor.downField("name").as[String].toOption)
+    assertEquals(subscribeMessageNames.toSet, Set("DemoEvent", "OtherEvent"))
+  }
 }

@@ -33,19 +33,35 @@ import scala.collection.immutable.ListMap
   */
 object AsyncApiDoc {
 
-  /** Converts one [[AsyncApiChannel]] into an AsyncAPI `ChannelItem`: a
-    * `SingleMessage` named after the channel's `eventType`, with its payload
-    * schema derived from the channel's own tapir `Schema[A]` via
-    * `TapirSchemaToJsonSchema` — the same JSON-Schema-shaped derivation
-    * `purerest.docs.Docs` already uses for REST, not a second schema story.
+  /** Converts one [[AsyncApiChannel]] into a `SingleMessage` named after the
+    * channel's `eventType`, with its payload schema derived from the
+    * channel's own tapir `Schema[A]` via `TapirSchemaToJsonSchema` — the same
+    * JSON-Schema-shaped derivation `purerest.docs.Docs` already uses for
+    * REST, not a second schema story.
     */
-  private def toChannelItem(channel: AsyncApiChannel[?]): ChannelItem = {
+  private def toMessage(channel: AsyncApiChannel[?]): SingleMessage = {
     val payloadSchema =
       TapirSchemaToJsonSchema(channel.schema, markOptionsAsNullable = true)
-    val message = SingleMessage(
+    SingleMessage(
       name = Some(channel.eventType),
       payload = Some(Right(payloadSchema))
     )
+  }
+
+  /** Converts all [[AsyncApiChannel]]s registered on one topic into an
+    * AsyncAPI `ChannelItem`. A topic carrying a single registered channel
+    * (the common case) gets a plain `SingleMessage`; a topic multiplexing
+    * several event types (e.g. an envelope pattern) gets a `OneOfMessage`
+    * listing each as a distinct alternative, so registering more than one
+    * channel on the same topic no longer silently drops all but the last.
+    */
+  private def toChannelItem(
+      channelsForTopic: List[AsyncApiChannel[?]]
+  ): ChannelItem = {
+    val message = channelsForTopic.map(toMessage) match {
+      case single :: Nil => single
+      case messages       => OneOfMessage(oneOf = messages)
+    }
     ChannelItem(
       publish = Some(Operation.inlineMessage(message)),
       subscribe = Some(Operation.inlineMessage(message))
@@ -58,9 +74,13 @@ object AsyncApiDoc {
       version: String,
       channels: List[AsyncApiChannel[?]]
   ): Json = {
+    val topicsInRegistrationOrder = channels.map(_.topic).distinct
+    val channelsByTopic = channels.groupBy(_.topic)
     val channelEntries: ListMap[String, ReferenceOr[ChannelItem]] =
       ListMap.from(
-        channels.map(channel => channel.topic -> Right(toChannelItem(channel)))
+        topicsInRegistrationOrder.map(topic =>
+          topic -> Right(toChannelItem(channelsByTopic(topic)))
+        )
       )
     val doc = AsyncAPI(
       info = Info(title = title, version = version),
