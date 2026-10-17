@@ -17,11 +17,11 @@
 - [x] Task: Implement `purekafka.docs.Docs.routes[F]` (Green) `a6366ae` — committed Red+Green together; deviation: serves JSON at `/docs/asyncapi.json`, not YAML — spec.md's own wording allowed either ("asyncapi.yaml/.json"), and JSON avoids adding a new YAML-encoding dependency this phase didn't otherwise need; see git note on `a6366ae`
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Serving the raw spec' (Protocol in workflow.md) — reduced-prompting mode: automated-test verification only (130 passed across all 4 modules, `scalafmtCheck` clean), no interactive walkthrough
 
-## Phase 4 — Reference consumer (`kafka-harness` retrofit)
-- [ ] Task: Introduce `DemoEvent(message: String)` (circe codec + tapir `Schema`) replacing `kafka-harness`'s raw `String` payload
-- [ ] Task: Register `kafka-harness-demo`'s topic/eventType/`DemoEvent` schema via `AsyncApiChannel`
-- [ ] Task: Add an HTTP server to `kafka-harness` (currently metrics-only) mounting `purekafka.docs.Docs`'s raw-spec route (e.g. `/docs/asyncapi.yaml`)
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Reference consumer' (Protocol in workflow.md)
+## Phase 4 — Reference consumer (`kafka-harness` retrofit) [checkpoint: TBD]
+- [x] Task: Introduce `DemoEvent(message: String)` (circe codec + tapir `Schema`) replacing `kafka-harness`'s raw `String` payload `d52de2d`
+- [x] Task: Register `kafka-harness-demo`'s topic/eventType/`DemoEvent` schema via `AsyncApiChannel` `d52de2d`
+- [x] Task: Add an HTTP server to `kafka-harness` (currently metrics-only) mounting `purekafka.docs.Docs`'s raw-spec route (e.g. `/docs/asyncapi.yaml`) `d52de2d` — deviation: served at `/docs/asyncapi.json` (JSON, not YAML — same Phase 3 wording/rationale), new port 8080; see git note on `d52de2d` for the decode-failure/DLQ bonus fix too
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Reference consumer' (Protocol in workflow.md) — reduced-prompting mode: `sbt kafkaHarness/compile` clean + full `sbt scalafmtCheck test` (130 passed, 0 failed), no interactive walkthrough; no dedicated kafka-harness test suite exists (by design, verified end-to-end via Phase 5's script instead)
 
 ## Phase 5 — Static HTML generation, serving, verification + docs
 - [ ] Task: Write `scripts/generate-kafka-asyncapi-docs.sh`: fetch the running spec, run `npx @asyncapi/generator` + `@asyncapi/html-template` to render static HTML to a known output path
