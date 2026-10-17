@@ -1,0 +1,7 @@
+Task: AsyncApiChannel[A](topic, eventType)(implicit schema: Schema[A]) registration primitive, new purekafka.docs package (Phase 1 of purekafka-asyncapi_20261017, ADR 0010).
+
+Added tapir-core as a new purekafka dependency (Schema[A] derivation only - not the full OpenAPI/Swagger stack, that lands in a later phase once there's a route to serve). Case class with a curried implicit second parameter list, matching the spec's exact constructor shape. No kafka-harness-specific coupling, per the track's own portability NFR.
+
+Files: build.sbt, modules/purekafka/src/main/scala/purekafka/docs/AsyncApiChannel.scala, modules/purekafka/src/test/scala/purekafka/docs/AsyncApiChannelSuite.scala.
+
+Deviation caught before commit: first draft also wrote a custom companion-object apply to prevent positional-argument swaps, which collided with the case class's own auto-generated apply (same erased signature). Removed - the case class's default apply is sufficient; named-argument safety isn't worth the duplicate-definition cost here.
