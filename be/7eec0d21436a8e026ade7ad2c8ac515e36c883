@@ -1,0 +1,10 @@
+Phase 1 verification report (purekafka-asyncapi_20261017, ADR 0010) - Registration primitive.
+
+Reduced-prompting mode active: automated-test verification only, no interactive manual-verification walkthrough.
+
+Automated test command: sbt scalafmtCheck test
+Result: 126 passed, 0 failed, 0 errors across all four aggregated modules (purerestlib 45, inventoryService 23, orderService 29, pureKafka 29 - up from 28, +1 new AsyncApiChannelSuite). scalafmtCheck clean.
+
+What this proves: AsyncApiChannel[A](topic, eventType)(implicit schema: Schema[A]) exists in a new purekafka.docs package, constructs correctly from an implicit tapir Schema[A], and exposes topic/eventType/schema as stated in spec.md's requirement 1. No regressions in the existing 125 tests from Phases 1-5 of the earlier purekafka_20261015 track.
+
+Not yet built: document generation (Phase 2), route serving (Phase 3), kafka-harness retrofit (Phase 4), static HTML + verification script (Phase 5) - all per plan.md, none started.
