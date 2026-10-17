@@ -4,7 +4,7 @@ This file tracks all major tracks for the project.
 
 - [x] **Track: `purekafka`: Kafka resilience + observability module (ADR 0010)**
   *Link: [./tracks/purekafka_20261015/](./tracks/purekafka_20261015/)*
-- [ ] **Track: Shared sbt plugin for AsyncAPI doc generation at build time**
+- [~] **Track: Shared sbt plugin for AsyncAPI doc generation at build time**
   *Link: [./tracks/sbt-asyncapi-plugin_20261017/](./tracks/sbt-asyncapi-plugin_20261017/)*
 
 ---
