@@ -1,9 +1,9 @@
 # Plan — AsyncAPI documentation for `modules/purekafka`
 
-## Phase 1 — Registration primitive
+## Phase 1 — Registration primitive [checkpoint: be7eec0]
 - [x] Task: Write failing `AsyncApiChannelSuite` test: `AsyncApiChannel[A](topic, eventType)` constructs from an implicit tapir `Schema[A]`, exposing topic/eventType/schema (Red) `4a3b023`
 - [x] Task: Implement `AsyncApiChannel[A]` in `purekafka.docs` — generic, no kafka-harness-specific coupling (Green) `4a3b023` — committed Red+Green together; deviation: dropped a custom companion `apply` that collided with the case class's auto-generated one, see git note on `4a3b023`
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Registration primitive' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Registration primitive' (Protocol in workflow.md) `be7eec0` — reduced-prompting mode: automated-test verification only (126 passed), no interactive walkthrough; see git note on `be7eec0`
 
 ## Phase 2 — Document generation
 - [ ] Task: Write failing `AsyncApiDocSuite` test: generating from a single-channel list produces a valid AsyncAPI 2.x document (circe `Json`) with the correct channel name, a `subscribe`/`publish` operation, and a JSON-Schema-shaped payload matching the registered `Schema[A]` (Red)
