@@ -1,0 +1,28 @@
+Task: AsyncApiChannelsProvider trait + reflective-loading test (Phase 1, Tasks 1-2 of sbt-asyncapi-plugin_20261017)
+
+Summary: Added AsyncApiChannelsProvider, a trait a consuming service's
+singleton object implements to expose its registered AsyncApiChannel list.
+This is the contract the sbt plugin's future AsyncApiSpecWriter (Task 3) will
+load reflectively by fully-qualified class name, so purekafka never needs a
+compile-time dependency back onto the consuming service.
+
+Files:
+- modules/purekafka/src/main/scala/purekafka/docs/AsyncApiChannelsProvider.scala (new)
+- modules/purekafka/src/test/scala/purekafka/docs/AsyncApiChannelsProviderSuite.scala (new)
+
+Why: Step one of replacing the shell-script AsyncAPI generation flow
+(generate-kafka-asyncapi-docs.sh) with a real sbt plugin that any
+consuming service can add and auto-chain to `compile`.
+
+Deviation: spec.md's reflection snippet (`Class.forName(name).getField("MODULE$")`)
+needed a `$`-suffixed class name — Scala compiles a plain top-level `object`
+into both a module class (name + "$", holding the real MODULE$ field) and a
+separate static-forwarder "mirror" class (plain name, no MODULE$ field).
+`Class.forName(name)` resolves the mirror class, so `getField("MODULE$")`
+threw NoSuchFieldException until the test was fixed to look up `name + "$"`.
+Same fix will be needed in AsyncApiSpecWriter's own reflection call (Task 3).
+
+TDD: Red confirmed via `sbt "pureKafka/testOnly purekafka.docs.AsyncApiChannelsProviderSuite"`
+(compile failure: "Not found: type AsyncApiChannelsProvider"), then Green
+after implementing the trait and fixing the reflection bug above. Full
+`pureKafka/test` suite (35 tests) passes; scalafmt clean.
