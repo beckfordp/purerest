@@ -1,0 +1,11 @@
+Task: AsyncAPI document generation (Phase 2 of purekafka-asyncapi_20261017, ADR 0010).
+
+Implements requirement 2 (spec.md): a pure function building an AsyncAPI 2.x document from List[AsyncApiChannel[_]].
+
+Deviation from spec.md, found and verified during implementation: the spec assumed no good JVM/Scala AsyncAPI library exists and planned to hand-roll circe Json directly. Checked tapir-apispec-docs' own published POM and found it already transitively depends on com.softwaremill.sttp.apispec:asyncapi-model_3:0.11.9 — a real, typed AsyncAPI 2.6.0 document model (AsyncAPI/ChannelItem/Operation/SingleMessage case classes) from the same sttp/tapir library family already in use. Added asyncapi-circe_3 pinned to the identical 0.11.9 for its circe Encoder[AsyncAPI]. Built AsyncApiDoc.generate against this typed model instead of hand-assembling Json — removes an entire class of document-shape bugs, and the payload schema for each channel reuses TapirSchemaToJsonSchema (also from tapir-apispec-docs) against the channel's own tapir Schema[A], consistent with ADR 0003's JSON-Schema decision.
+
+Design choice not specified by spec.md: each channel is registered with BOTH a publish and a subscribe operation carrying the same message, since AsyncApiChannel itself carries no producer/consumer direction (by its own design — generic, no service-specific coupling). This describes the full bidirectional topic contract rather than guessing a direction.
+
+Files: build.sbt (tapir-apispec-docs + asyncapi-circe deps on modules/purekafka), modules/purekafka/src/main/scala/purekafka/docs/AsyncApiDoc.scala (new), modules/purekafka/src/test/scala/purekafka/docs/AsyncApiDocSuite.scala (new, 2 tests: single-channel shape, multi-channel distinctness).
+
+Verification: sbt scalafmtCheck test — 128 passed (31 pureKafka, 45 purerestlib, 23 inventoryService, 29 orderService), 0 failed.
