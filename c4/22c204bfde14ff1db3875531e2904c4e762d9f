@@ -1,0 +1,12 @@
+Phase 2 verification report (AsyncAPI documentation track, ADR 0010) - Document generation.
+
+Reduced-prompting mode active: automated-test verification only, no interactive manual-verification walkthrough.
+
+Automated test command: sbt scalafmtCheck test
+Result: 128 passed, 0 failed, 0 errors (31 pureKafka, 45 purerestlib, 23 inventoryService, 29 orderService - up from 126 at Phase 1's checkpoint, +2 for this phase's new AsyncApiDocSuite). scalafmtCheck clean.
+
+What this proves: purekafka.docs.AsyncApiDoc.generate builds a real, valid AsyncAPI 2.6.0 document (circe Json) from a List[AsyncApiChannel[_]] - correct channel keyed by topic name, both publish and subscribe operations present, payload schema correctly derived from the registered tapir Schema[A] via TapirSchemaToJsonSchema. Multiple channels each get their own distinct entry.
+
+Real deviation from spec.md, verified not guessed: the spec assumed no good AsyncAPI library exists for the JVM and planned to hand-roll circe Json directly. Checked tapir-apispec-docs' own published POM directly and found it already transitively depends on com.softwaremill.sttp.apispec:asyncapi-model_3:0.11.9 - a real typed AsyncAPI 2.6.0 document model. Used that plus asyncapi-circe (pinned to the identical 0.11.9) instead of hand-rolling. See the git note on fece777 (the task commit) for full detail.
+
+This closes Phase 2 of the AsyncAPI documentation track. Remaining: Phase 3 (serving the raw spec via purekafka.docs.Docs.routes), Phase 4 (kafka-harness reference-consumer retrofit), Phase 5 (static HTML generation/serving/verification + README).
