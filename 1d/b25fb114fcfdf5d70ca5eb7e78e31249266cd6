@@ -1,0 +1,8 @@
+Phase 1 verification report.
+
+Automated test command: sbt scalafmtCheck test
+Result: scalafmtCheck clean; 131 tests passing across all 4 modules (pureKafka 34, up from 33 — the new same-topic test), 0 failed.
+
+Additional end-to-end check: ./scripts/verify-kafka-asyncapi-docs.sh (kafka-harness's single-channel DemoEvent reference case) — all checks passed, confirming no regression to the existing single-eventType-per-topic path.
+
+Manual verification: skipped per reduced-prompting mode (.claude/prompt-off) — automated-test verification only, consistent with this repo's prior purekafka tracks.
