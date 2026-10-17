@@ -1,0 +1,14 @@
+Phase 1 Checkpoint: AsyncApiChannelsProvider + AsyncApiSpecWriter
+
+Automated test command: sbt pureKafka/test
+Result: 36 tests, 0 failed, 0 errors.
+
+Manual verification steps presented to user:
+1. sbt 'pureKafka/Test/runMain purekafka.docs.AsyncApiSpecWriter purekafka.docs.AsyncApiChannelsProviderFixture "fixture title" 1.0 /tmp/asyncapi-manual-check.json'
+2. cat /tmp/asyncapi-manual-check.json
+3. Confirm presence of "asyncapi":"2.6.0", info.title/version, and a "fixture-topic" channel entry with event "FixtureEvent".
+
+User confirmation: Yes (confirmed via AskUserQuestion).
+
+Commits this phase: 71eaeb4 (AsyncApiChannelsProvider trait + test),
+8eb7164 (AsyncApiSpecWriter + test).
