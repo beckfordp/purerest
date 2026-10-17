@@ -140,6 +140,34 @@ See `conductor/tech-stack.md`'s "Local Observability Stack" section for how this
 (containerization, compose profile gating, JSON logging, Filebeat log flattening) and its design
 tradeoffs.
 
+## View Kafka AsyncAPI docs
+
+`purekafka` (this repo's Kafka resilience module — retry, circuit-breaker, stream supervision,
+dead-letter routing, consumer lag, tracing) also generates
+[AsyncAPI](https://www.asyncapi.com/) documentation for the topics/event types a service
+registers, the same way tapir generates OpenAPI docs for HTTP endpoints. `kafka-harness` (this
+repo's standalone Kafka demo app, used for the Grafana resilience dashboards above) registers one
+such channel and serves both the raw spec and a rendered static-HTML viewer:
+
+```
+docker compose --profile observability up -d kafka kafka-harness
+```
+
+- **Raw spec** — http://localhost:8085/docs/asyncapi.json
+- **Rendered HTML** — generate it once (fetches the running spec and renders it via the
+  [AsyncAPI CLI](https://github.com/asyncapi/cli)), then view it at
+  http://localhost:8085/docs/asyncapi/index.html:
+  ```
+  ./scripts/generate-kafka-asyncapi-docs.sh
+  ```
+
+`./scripts/verify-kafka-asyncapi-docs.sh` runs this end-to-end (fresh stack, generate, then checks
+the demo topic/event/payload actually show up in both the raw spec and the served HTML) and tears
+the stack down afterward — CI-style, unlike `verify-kafka-observability.sh` above.
+
+Adopting this in a real service (order-service, etc.) and reverse-engineering it into
+`pure-service-generator`'s templates is tracked separately — see `PLAN.md`'s Rework 3 section.
+
 ## sbt project compiled with Scala 3
 
 ### Usage
