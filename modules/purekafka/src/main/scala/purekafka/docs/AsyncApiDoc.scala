@@ -66,6 +66,14 @@ object AsyncApiDoc {
       info = Info(title = title, version = version),
       channels = channelEntries
     )
-    doc.asJson
+    // asyncapi-circe's derived Encoder serializes every unset Option field
+    // as a literal JSON `null` rather than omitting the key - harmless to
+    // circe itself, but AsyncAPI's own spec validator (used by
+    // scripts/generate-kafka-asyncapi-docs.sh's `@asyncapi/cli` downstream)
+    // rejects `null` for fields typed as array/object ("examples" property
+    // type must be array", etc. - found while building Phase 5, a real
+    // generation failure, not a false validator complaint). Found via
+    // deepDropNullValues, circe's standard fix for exactly this.
+    doc.asJson.deepDropNullValues
   }
 }
