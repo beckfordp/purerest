@@ -210,7 +210,15 @@ lazy val pureKafka = project
       // resilience4j-circuitbreaker: same mature circuit-breaker state
       // machine (core, non-reactive module only) purerestlib's HTTP
       // CircuitBreaker wraps, reused here for a generic F[A].
-      "io.github.resilience4j" % "resilience4j-circuitbreaker" % resilience4jVersion
+      "io.github.resilience4j" % "resilience4j-circuitbreaker" % resilience4jVersion,
+      // tapir-core: just the Schema[A] derivation, for purekafka.docs'
+      // AsyncApiChannel registration primitive (ADR 0010's AsyncAPI
+      // follow-up) — reuses the same JSON-Schema-shaped derivation
+      // purerestlib's REST docs already use, not a second schema story.
+      // Not tapir-http4s-server/-openapi-docs/-swagger-ui-bundle yet —
+      // those land in a later phase of this same track, once there's an
+      // actual route to serve.
+      "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion
     )
   )
 
