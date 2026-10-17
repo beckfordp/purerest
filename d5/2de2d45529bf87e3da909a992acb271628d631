@@ -1,0 +1,25 @@
+Task: Phase 4 (Reference consumer / kafka-harness retrofit) of
+purekafka-asyncapi_20261017.
+
+Introduced DemoEvent(message: String) (circe codec + tapir Schema)
+replacing the raw String payload; registered the kafka-harness-demo
+topic/"DemoEvent" eventType via AsyncApiChannel; added an
+http4s-ember-server HTTP server (kafka-harness had none before -
+metrics-port-only via Metrics.oteljava's internal Prometheus server)
+mounting Docs.routes at /docs/asyncapi.json on a new port 8080.
+
+Kept the existing poison/blip marker mechanism intact, now operating
+on DemoEvent.message after a JSON decode instead of the raw String
+value directly - preserves the exact same demonstrated behavior
+(poison -> DLQ, blip -> one-time stream restart) with a typed payload
+instead of a bare string. A genuine decode failure (not expected from
+this harness's own traffic, since it only ever produces well-formed
+DemoEvent JSON) is also routed to the DLQ as a bonus correctness
+improvement, not separately asked for.
+
+No dedicated kafka-harness test suite exists (by design - it's a
+continuously-running demo app, verified end-to-end via a script, not
+unit tests; Phase 5 builds that script). Verified instead via
+`sbt kafkaHarness/compile` (clean) and a full `sbt scalafmtCheck test`
+run proving no regressions elsewhere: 130 passed (33 pureKafka, 45
+purerestlib, 23 inventoryService, 29 orderService), 0 failed.
