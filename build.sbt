@@ -215,10 +215,27 @@ lazy val pureKafka = project
       // AsyncApiChannel registration primitive (ADR 0010's AsyncAPI
       // follow-up) — reuses the same JSON-Schema-shaped derivation
       // purerestlib's REST docs already use, not a second schema story.
-      // Not tapir-http4s-server/-openapi-docs/-swagger-ui-bundle yet —
-      // those land in a later phase of this same track, once there's an
-      // actual route to serve.
-      "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion
+      // Not tapir-http4s-server/-swagger-ui-bundle yet — those land in a
+      // later phase of this same track, once there's an actual route to
+      // serve.
+      "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
+      // tapir-apispec-docs: brings `TapirSchemaToJsonSchema` — a
+      // standalone tapir Schema[A] -> sttp.apispec.Schema (JSON Schema)
+      // converter, factored out of tapir-openapi-docs specifically because
+      // it's format-agnostic (OpenAPI and AsyncAPI both build on the same
+      // sttp.apispec.Schema). Deliberate deviation from this track's own
+      // spec.md, which assumed "no good library fit exists" for AsyncAPI
+      // generation and planned to hand-roll circe Json directly — found
+      // while implementing Phase 2 that tapir-apispec-docs already
+      // transitively depends on asyncapi-model (see its own published POM),
+      // meaning the sttp/tapir ecosystem already ships a real, typed
+      // AsyncAPI 2.6.0 document model + circe codecs (asyncapi-circe,
+      // pinned to the exact same 0.11.9 tapir-apispec-docs itself uses, to
+      // avoid a version mismatch) - using those instead of hand-rolling is
+      // strictly better: type-safe document construction instead of
+      // manually-assembled JSON, and no new JSON-shape bugs to maintain.
+      "com.softwaremill.sttp.tapir" %% "tapir-apispec-docs" % tapirVersion,
+      "com.softwaremill.sttp.apispec" %% "asyncapi-circe" % "0.11.9"
     )
   )
 
