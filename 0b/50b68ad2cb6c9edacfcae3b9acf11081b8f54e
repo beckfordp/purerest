@@ -1,0 +1,19 @@
+Phase 3 verification report (AsyncAPI documentation track) - Serving the raw spec
+
+Reduced-prompting mode active: automated-test verification only, no
+interactive manual-verification walkthrough.
+
+Automated test command: sbt scalafmtCheck test
+Result: 130 passed, 0 failed, 0 errors, across all four aggregated
+modules (33 pureKafka, 45 purerestlib, 23 inventoryService,
+29 orderService). scalafmtCheck clean.
+
+What this proves: purekafka.docs.Docs.routes[F] serves a real,
+generated AsyncAPI document (built via AsyncApiDoc.generate from a
+caller-supplied channel list) as JSON at GET /docs/asyncapi.json -
+the same source-of-truth-stays-in-sync shape purerest.docs.Docs.routes
+already gives REST endpoints, now extended to Kafka topics.
+
+This closes Phase 3 of the AsyncAPI documentation track. Phase 4
+(retrofitting kafka-harness as the reference consumer) and Phase 5
+(static HTML generation/serving/verification + README) remain.
