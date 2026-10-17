@@ -1,0 +1,17 @@
+Task: Phase 3 (Serving the raw spec) of purekafka-asyncapi_20261017.
+
+Wrote failing DocsSuite test first (Docs didn't exist - compile error,
+confirmed Red for the right reason), then implemented Docs.routes[F]
+as a plain http4s-dsl HttpRoutes[F] serving AsyncApiDoc.generate's
+circe Json at GET /docs/asyncapi.json. Chose JSON over YAML (spec.md's
+own wording allowed either, "asyncapi.yaml/.json") to avoid adding a
+new YAML-encoding dependency this phase didn't otherwise need - AsyncAPI
+documents are equally valid as JSON, and Phase 5's generator tooling
+can consume either.
+
+Files: build.sbt (new http4s-dsl/http4s-circe deps on pureKafka),
+modules/purekafka/src/main/scala/purekafka/docs/Docs.scala (new),
+modules/purekafka/src/test/scala/purekafka/docs/DocsSuite.scala (new).
+
+Verified: sbt scalafmtCheck test - 130 passed (33 pureKafka, up from
+31), 0 failed, across all four aggregated modules.
