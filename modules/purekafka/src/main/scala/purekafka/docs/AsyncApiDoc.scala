@@ -74,14 +74,18 @@ object AsyncApiDoc {
       version: String,
       channels: List[AsyncApiChannel[?]]
   ): Json = {
-    val topicsInRegistrationOrder = channels.map(_.topic).distinct
-    val channelsByTopic = channels.groupBy(_.topic)
+    val channelsByTopic =
+      channels.foldLeft(ListMap.empty[String, List[AsyncApiChannel[?]]]) {
+        (acc, channel) =>
+          acc.updated(
+            channel.topic,
+            acc.getOrElse(channel.topic, Nil) :+ channel
+          )
+      }
     val channelEntries: ListMap[String, ReferenceOr[ChannelItem]] =
-      ListMap.from(
-        topicsInRegistrationOrder.map(topic =>
-          topic -> Right(toChannelItem(channelsByTopic(topic)))
-        )
-      )
+      channelsByTopic.map { case (topic, channelsForTopic) =>
+        topic -> Right(toChannelItem(channelsForTopic))
+      }
     val doc = AsyncAPI(
       info = Info(title = title, version = version),
       channels = channelEntries
