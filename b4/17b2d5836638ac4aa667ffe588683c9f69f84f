@@ -1,0 +1,7 @@
+Task: Fix AsyncApiDoc.generate's same-topic channel handling (Red+Green, committed together).
+
+Changes:
+- AsyncApiDocSuite.scala: added a test registering two AsyncApiChannels on the same topic with different eventTypes, asserting both appear inside a oneOf on publish/subscribe.
+- AsyncApiDoc.scala: split toChannelItem into toMessage (per-channel SingleMessage) + toChannelItem (per-topic, now taking the full list of channels registered on that topic); a topic with one channel still yields a plain SingleMessage, 2+ yields OneOfMessage(oneOf = ...). generate() now groups channels by topic (preserving first-registration order via distinct topics list) before building ChannelItems, instead of ListMap.from silently collapsing same-topic entries to the last one.
+
+Why: order-service's asyncapi-docs_20261017 track needs to register 2 event types each on 2 topics (envelope pattern); the prior implementation would have silently dropped one eventType per topic.
