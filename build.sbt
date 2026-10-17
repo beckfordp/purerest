@@ -235,7 +235,14 @@ lazy val pureKafka = project
       // strictly better: type-safe document construction instead of
       // manually-assembled JSON, and no new JSON-shape bugs to maintain.
       "com.softwaremill.sttp.tapir" %% "tapir-apispec-docs" % tapirVersion,
-      "com.softwaremill.sttp.apispec" %% "asyncapi-circe" % "0.11.9"
+      "com.softwaremill.sttp.apispec" %% "asyncapi-circe" % "0.11.9",
+      // http4s-dsl/-circe: just enough to serve the AsyncApiDoc.generate
+      // output as a plain HttpRoutes[F] (Phase 3 of the AsyncAPI track) —
+      // not tapir-http4s-server/-swagger-ui-bundle, since this isn't a
+      // tapir endpoint being documented, just a static generated document
+      // being served at a fixed route.
+      "org.http4s" %% "http4s-dsl" % http4sVersion,
+      "org.http4s" %% "http4s-circe" % http4sVersion
     )
   )
 
