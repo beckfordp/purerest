@@ -1,11 +1,11 @@
 # Plan — Shared sbt plugin for AsyncAPI doc generation at build time
 
-## Phase 1 — AsyncApiChannelsProvider + AsyncApiSpecWriter (purekafka.docs)
+## Phase 1 — AsyncApiChannelsProvider + AsyncApiSpecWriter (purekafka.docs) [checkpoint: 07e5a59]
 - [x] Task: Write failing test: a fixture object implementing `AsyncApiChannelsProvider`, loaded reflectively by its class name, exposes `channels` correctly (Red) `71eaeb4`
 - [x] Task: Implement `AsyncApiChannelsProvider` trait (Green) `71eaeb4` — deviation: spec.md's reflection snippet needed a `$`-suffixed class name (Scala's module class vs. its static-forwarder mirror class); see git note on `71eaeb4`
 - [x] Task: Write failing test: `AsyncApiSpecWriter.main(Array(providerClass, title, version, outputPath))` writes valid AsyncAPI JSON to `outputPath`, matching `AsyncApiDoc.generate`'s own output for that provider's channels (Red) `8eb7164`
 - [x] Task: Implement `AsyncApiSpecWriter` (reflection + file write) (Green) `8eb7164`
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: AsyncApiChannelsProvider + AsyncApiSpecWriter' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: AsyncApiChannelsProvider + AsyncApiSpecWriter' (Protocol in workflow.md) `07e5a59`
 
 ## Phase 2 — sbt plugin module scaffold + settings
 - [ ] Task: Add `modules/sbt-purekafka-docs` to `build.sbt` (Scala 2.12, `sbtPlugin := true`); empty `AutoPlugin` compiles and `sbt publishLocal` succeeds
