@@ -9,6 +9,7 @@ import io.circe.parser.decode
 import io.circe.syntax._
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
+import org.http4s.server.staticcontent.{FileService, fileService}
 import org.typelevel.log4cats.noop.NoOpLogger
 import purerest.metrics.Metrics
 import purerest.tracing.Tracing
@@ -281,6 +282,26 @@ object Main extends IOApp.Simple {
                     )
                     val docsRoutes =
                       Docs.routes[IO]("kafka-harness", "1.0", List(demoChannel))
+
+                    // Serves scripts/generate-kafka-asyncapi-docs.sh's
+                    // output (static HTML, mounted via the docker-compose
+                    // bind mount at this same path) at /docs/asyncapi/* —
+                    // Phase 5 of the AsyncAPI follow-up, sibling to the
+                    // raw-spec route above. Exact URL is
+                    // /docs/asyncapi/index.html; nothing generates there
+                    // until the script has actually been run at least once.
+                    val staticAsyncApiDocsDir =
+                      sys.env.getOrElse(
+                        "ASYNCAPI_HTML_DIR",
+                        "/app/asyncapi-docs"
+                      )
+                    val staticDocsRoutes = fileService[IO](
+                      FileService.Config(
+                        systemPath = staticAsyncApiDocsDir,
+                        pathPrefix = "/docs/asyncapi"
+                      )
+                    )
+
                     val boundHttpPort =
                       Port.fromInt(httpPort).getOrElse(port"8080")
 
@@ -288,7 +309,7 @@ object Main extends IOApp.Simple {
                       .default[IO]
                       .withHost(host"0.0.0.0")
                       .withPort(boundHttpPort)
-                      .withHttpApp(docsRoutes.orNotFound)
+                      .withHttpApp((docsRoutes <+> staticDocsRoutes).orNotFound)
                       .build
                       .use { _ =>
                         List(

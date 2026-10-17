@@ -176,8 +176,18 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
       METRICS_PORT: "9093"
+      HTTP_PORT: "8080"
     ports:
       - "9093:9093"
+      # AsyncAPI docs HTTP server (ADR 0010's AsyncAPI follow-up) — see
+      # scripts/generate-kafka-asyncapi-docs.sh / verify-kafka-asyncapi-docs.sh.
+      - "8085:8080"
+    volumes:
+      # generate-kafka-asyncapi-docs.sh (run on the host) writes static
+      # HTML here; kafka-harness serves it back out from the same path at
+      # /docs/asyncapi — a bind mount rather than baking generated docs
+      # into the image, so a regeneration doesn't need a rebuild/restart.
+      - ./target/asyncapi-docs:/app/asyncapi-docs
 
 volumes:
   postgres-data:
