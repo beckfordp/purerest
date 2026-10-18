@@ -7,10 +7,10 @@
 - [x] Task: Implement `AsyncApiSpecWriter` (reflection + file write) (Green) `8eb7164`
 - [x] Task: Conductor - User Manual Verification 'Phase 1: AsyncApiChannelsProvider + AsyncApiSpecWriter' (Protocol in workflow.md) `07e5a59`
 
-## Phase 2 — sbt plugin module scaffold + settings
-- [ ] Task: Add `modules/sbt-purekafka-docs` to `build.sbt` (Scala 2.12, `sbtPlugin := true`); empty `AutoPlugin` compiles and `sbt publishLocal` succeeds
-- [ ] Task: Define settings (`asyncApiChannelsClass`, `asyncApiTitle`/`asyncApiVersion` defaulting to `name.value`/`version.value`, `asyncApiOutputDir` defaulting to `target/asyncapi-docs`)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Plugin scaffold + settings' (Protocol in workflow.md)
+## Phase 2 — sbt plugin module scaffold + settings [checkpoint: 34f2283]
+- [x] Task: Add `modules/sbt-purekafka-docs` to `build.sbt` (Scala 2.12, `sbtPlugin := true`); empty `AutoPlugin` compiles and `sbt publishLocal` succeeds `c307f90`
+- [x] Task: Define settings (`asyncApiChannelsClass`, `asyncApiTitle`/`asyncApiVersion` defaulting to `name.value`/`version.value`, `asyncApiOutputDir` defaulting to `target/asyncapi-docs`) `e01d8fb`
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Plugin scaffold + settings' (Protocol in workflow.md) `34f2283` — reduced-prompting mode: automated-test verification only, no interactive walkthrough; see git note on `34f2283`
 
 ## Phase 3 — asyncApiGenerateSpec task (JSON via runMain)
 - [ ] Task: Implement `asyncApiGenerateSpec` task — wires `(Compile / runMain).toTask(...)` to `AsyncApiSpecWriter` with the configured settings, writes `target/asyncapi-docs-spec/asyncapi.json`
