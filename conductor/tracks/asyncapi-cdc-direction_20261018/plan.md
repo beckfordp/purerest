@@ -1,9 +1,9 @@
 # Plan — Document CDC-published Kafka events with real publish/subscribe direction
 
-## Phase 1 — PublisherKind/ChannelDirection ADTs + AsyncApiChannel's direction field
+## Phase 1 — PublisherKind/ChannelDirection ADTs + AsyncApiChannel's direction field [checkpoint: 33a694d]
 - [x] Task: Write failing tests: `AsyncApiChannel[A]` defaults `direction` to `ChannelDirection.Both(PublisherKind.Direct)` when not specified; can also be constructed with an explicit `direction` (e.g. `Subscribe`, `Publish(Cdc)`) (Red) `618f619`
 - [x] Task: Implement `PublisherKind`/`ChannelDirection` ADTs and add the `direction` field to `AsyncApiChannel[A]` (Green) `618f619`
-- [~] Task: Conductor - User Manual Verification 'Phase 1: PublisherKind/ChannelDirection ADTs' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: PublisherKind/ChannelDirection ADTs' (Protocol in workflow.md) `33a694d` — reduced-prompting mode: automated-test verification only, no interactive walkthrough; see git note on `33a694d`
 
 ## Phase 2 — Direction-aware document generation
 - [ ] Task: Write failing tests: a `Subscribe`-direction channel produces no `publish` operation for its topic; a `Publish`-direction channel produces no `subscribe` operation; a topic combining a `Subscribe`-only channel and a separate `Publish` channel (different event types) splits correctly into the right oneOf buckets (Red)
