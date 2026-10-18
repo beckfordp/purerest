@@ -1,0 +1,46 @@
+Review fixes for sbt-asyncapi-plugin_20261017
+
+Applied from /conductor:review findings:
+1. DemoChannels.scala no longer hardcodes its own copy of the topic string -
+   references Main.topic (now non-private) instead, eliminating silent-drift risk.
+2. AsyncApiSpecWriter.scala's doc comment updated to match actual invocation
+   mechanism.
+3. tech-stack.md's AsyncAPI section gained a note on the deliberate
+   product-guidelines.md reflection exception.
+
+MAJOR finding surfaced BY applying fix #1: making `topic` non-private forced
+a genuine fresh recompile of kafka-harness within the SAME sbt invocation as
+the compile-chained asyncApiGenerate task - something no prior test in this
+track had actually exercised (classDirectory had always been pre-populated
+from earlier runs). This exposed TWO real, previously-undetected bugs:
+
+a) The `java` subprocess AsyncApiSpecWriter invocation (Phase 3/4's design)
+   intermittently/reproducibly threw ClassNotFoundException for the
+   target's own classes on a genuinely fresh compile. Root-caused (initially
+   misdiagnosed as an OrbStack/virtiofs cross-process filesystem-cache
+   issue, corrected once the real cause below was found) and fixed by
+   replacing the subprocess with an in-process `URLClassLoader` invocation
+   of AsyncApiSpecWriter via reflection (parent=null, to avoid the sbt
+   plugin's own Scala 2.12 `scala.*` classes shadowing the target's Scala 3
+   ones - hit and fixed a NoSuchMethodError on scala.Array$.unapplySeq
+   along the way).
+
+b) The TRUE root cause: `Compile / compile := { val a = (Compile/compile).value; asyncApiGenerate.value; a }`
+   as a PLAIN task does not sequence execution the way the Scala syntax
+   implies - sbt's task macro gathers every `.value` call in a block as a
+   sibling input to the task's dependency graph, not as an imperative
+   script. asyncApiGenerate was genuinely starting before the real
+   compiler run had written any class files (confirmed via a direct
+   File.exists() check logged mid-task, printed `false`, *before*
+   "compiling N Scala sources" even appeared in the log). Fixed by
+   wrapping the chain in Def.taskDyn (compile inside the outer block,
+   asyncApiGenerate inside a nested Def.task only constructed once the
+   outer block's own .value has resolved) - the correct sbt idiom for
+   "run A, then strictly-after run B whose dependencies shouldn't start
+   early." This is a durable lesson for any future chaining of a task
+   onto Compile/compile in this codebase: use Def.taskDyn, not a plain task.
+
+Verified: 3 consecutive clean `rm -rf target && sbt kafkaHarness/compile`
+runs all succeeded, each producing target/asyncapi-docs/index.html
+containing DemoEvent. Full `sbt compile test` (133 tests, 0 failures) +
+scalafmtCheck on all touched modules clean.
