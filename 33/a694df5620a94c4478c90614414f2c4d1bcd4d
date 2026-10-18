@@ -1,0 +1,7 @@
+Phase 1 Checkpoint: PublisherKind/ChannelDirection ADTs
+
+Reduced-prompting mode: automated-test verification only, no interactive walkthrough.
+Verification: sbt pureKafka/test (38 tests, 0 failures), pureKafka/scalafmtCheck clean.
+Both new/changed code files (ChannelDirection.scala, AsyncApiChannel.scala) have
+corresponding test coverage - no gaps.
+Commits this phase: 618f619.
