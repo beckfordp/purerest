@@ -32,8 +32,12 @@ class AsyncApiDocSuite extends FunSuite {
     val title = root.downField("info").downField("title").as[String].toOption
     assertEquals(title, Some("purekafka demo"))
 
-    val channelCursor = root.downField("channels").downField("kafka-harness-demo")
-    assert(channelCursor.focus.isDefined, "expected a channel entry keyed by the topic name")
+    val channelCursor =
+      root.downField("channels").downField("kafka-harness-demo")
+    assert(
+      channelCursor.focus.isDefined,
+      "expected a channel entry keyed by the topic name"
+    )
 
     val publishName = channelCursor
       .downField("publish")
@@ -117,7 +121,8 @@ class AsyncApiDocSuite extends FunSuite {
 
     val doc =
       AsyncApiDoc.generate("purekafka demo", "1.0", List(demo, other))
-    val channelCursor = doc.hcursor.downField("channels").downField("shared-topic")
+    val channelCursor =
+      doc.hcursor.downField("channels").downField("shared-topic")
 
     val publishMessageNames = channelCursor
       .downField("publish")
@@ -142,5 +147,104 @@ class AsyncApiDocSuite extends FunSuite {
       .flatten
       .flatMap(_.hcursor.downField("name").as[String].toOption)
     assertEquals(subscribeMessageNames.toSet, Set("DemoEvent", "OtherEvent"))
+  }
+
+  test(
+    "a Subscribe-direction channel produces no publish operation for its topic"
+  ) {
+    val channel = AsyncApiChannel[DemoPayload](
+      topic = "consumer-only-topic",
+      eventType = "DemoEvent",
+      direction = ChannelDirection.Subscribe
+    )
+
+    val doc = AsyncApiDoc.generate("purekafka demo", "1.0", List(channel))
+    val channelCursor =
+      doc.hcursor.downField("channels").downField("consumer-only-topic")
+
+    assert(
+      channelCursor.downField("publish").failed,
+      "expected no publish operation for a Subscribe-only channel"
+    )
+    val subscribeName = channelCursor
+      .downField("subscribe")
+      .downField("message")
+      .downField("name")
+      .as[String]
+      .toOption
+    assertEquals(subscribeName, Some("DemoEvent"))
+  }
+
+  test(
+    "a Publish-direction channel produces no subscribe operation for its topic"
+  ) {
+    val channel = AsyncApiChannel[DemoPayload](
+      topic = "publisher-only-topic",
+      eventType = "DemoEvent",
+      direction = ChannelDirection.Publish(PublisherKind.Direct)
+    )
+
+    val doc = AsyncApiDoc.generate("purekafka demo", "1.0", List(channel))
+    val channelCursor =
+      doc.hcursor.downField("channels").downField("publisher-only-topic")
+
+    assert(
+      channelCursor.downField("subscribe").failed,
+      "expected no subscribe operation for a Publish-only channel"
+    )
+    val publishName = channelCursor
+      .downField("publish")
+      .downField("message")
+      .downField("name")
+      .as[String]
+      .toOption
+    assertEquals(publishName, Some("DemoEvent"))
+  }
+
+  test(
+    "a topic combining a Subscribe-only channel and a separate Publish channel splits correctly into the right oneOf buckets"
+  ) {
+    val consumedOnly = AsyncApiChannel[DemoPayload](
+      topic = "mixed-direction-topic",
+      eventType = "ConsumedOnly",
+      direction = ChannelDirection.Subscribe
+    )
+    val publishedOnly = AsyncApiChannel[OtherPayload](
+      topic = "mixed-direction-topic",
+      eventType = "PublishedOnly",
+      direction = ChannelDirection.Publish(PublisherKind.Direct)
+    )
+
+    val doc = AsyncApiDoc.generate(
+      "purekafka demo",
+      "1.0",
+      List(consumedOnly, publishedOnly)
+    )
+    val channelCursor =
+      doc.hcursor.downField("channels").downField("mixed-direction-topic")
+
+    val publishName = channelCursor
+      .downField("publish")
+      .downField("message")
+      .downField("name")
+      .as[String]
+      .toOption
+    assertEquals(
+      publishName,
+      Some("PublishedOnly"),
+      "only the Publish-direction channel's event type should appear in the publish operation"
+    )
+
+    val subscribeName = channelCursor
+      .downField("subscribe")
+      .downField("message")
+      .downField("name")
+      .as[String]
+      .toOption
+    assertEquals(
+      subscribeName,
+      Some("ConsumedOnly"),
+      "only the Subscribe-direction channel's event type should appear in the subscribe operation"
+    )
   }
 }
