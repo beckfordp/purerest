@@ -1,0 +1,5 @@
+Phase 2 Checkpoint: Direction-aware document generation
+
+Reduced-prompting mode: automated-test verification only, no interactive walkthrough.
+Verification: sbt pureKafka/test (41 tests, 0 failures), pureKafka/scalafmtCheck clean.
+Commits this phase: 00426a0.
