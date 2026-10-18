@@ -23,6 +23,6 @@
 - [x] Task: Verify end-to-end on `kafka-harness`: `sbt kafkaHarness/compile` alone (no manual script run) produces `target/asyncapi-docs/index.html` containing `DemoEvent` `19e699f` — confirmed directly: fresh `sbt kafkaHarness/compile` (no prior asyncApiGenerateSpec/asyncApiGenerate run) produced the file, containing `DemoEvent`
 - [x] Task: Conductor - User Manual Verification 'Phase 4: asyncApiGenerate + compile chaining' (Protocol in workflow.md) `e4ca082` — reduced-prompting mode: automated-test verification only, no interactive walkthrough; see git note on `e4ca082`
 
-## Phase 5 — Full regression
+## Phase 5 — Full regression [checkpoint: e53709a]
 - [x] Task: Run the full `purerest` test suite + `scalafmtCheck`; confirm no regressions across all modules including the new plugin module — 133 tests passing (36+45+23+29 across modules), 0 failures; root `scalafmtCheck` clean; `sbtPureKafkaDocs/compile`+`scalafmtCheck`+`publishLocal` all clean
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: Full regression' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 5: Full regression' (Protocol in workflow.md) `e53709a` — reduced-prompting mode: automated-test verification only, no interactive walkthrough; see git note on `e53709a`
