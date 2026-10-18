@@ -10,10 +10,17 @@ import sttp.tapir.Schema
   *
   * Generic, with no `kafka-harness`-specific (or any other service-specific)
   * coupling — a calling service registers its own channels; this type and the
-  * document generation built on top of it (later phases of this track) stay
-  * portable.
+  * document generation built on top of it stay portable.
+  *
+  * `direction` defaults to `ChannelDirection.Both(PublisherKind.Direct)` —
+  * every existing registration keeps compiling and generating the same output
+  * unchanged. Set it explicitly once a channel's actual publish/subscribe role
+  * (and, on the publish side, whether delivery is a direct producer call or
+  * Debezium CDC from an outbox table — ADR 0008 in gluon) is known, so the
+  * generated document only claims what's true.
   */
 final case class AsyncApiChannel[A](
     topic: String,
-    eventType: String
+    eventType: String,
+    direction: ChannelDirection = ChannelDirection.Both(PublisherKind.Direct)
 )(implicit val schema: Schema[A])
