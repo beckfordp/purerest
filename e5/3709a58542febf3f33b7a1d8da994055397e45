@@ -1,0 +1,21 @@
+Phase 5 Checkpoint: Full regression (final phase of sbt-asyncapi-plugin_20261017)
+
+Reduced-prompting mode: automated-test verification only, no interactive walkthrough.
+
+Verification commands run:
+- sbt compile test (full build, 4 modules: purerestlib 36, pureKafka 45,
+  inventoryService 23, orderService 29 = 133 tests, 0 failures) - this also
+  exercised kafkaHarness's new compile-chained asyncApiGenerate task as a
+  side effect of root compile, confirming no regression there either.
+- sbt scalafmtCheck (root) - clean.
+- sbtPureKafkaDocs/compile, scalafmtCheck, publishLocal - all clean.
+
+Known, pre-existing, out-of-scope item: build.sbt's own scalafmtSbtCheck
+still fails on drift unrelated to this track (publishTo/root.aggregate
+wrapping) - present before this track started, left untouched throughout
+(see git notes on 71eaeb4 and 0b3d0f3 for where this was first surfaced).
+
+This closes all 5 phases of sbt-asyncapi-plugin_20261017. Final commits:
+71eaeb4, 8eb7164 (Phase 1); c307f90, e01d8fb (Phase 2); b0fd923, 0b3d0f3
+(Phase 3, later superseded); 19e699f (Phase 4, supersedes Phase 3's
+asyncApiGenerateSpec). Track ready to be marked complete.
