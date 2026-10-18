@@ -1,0 +1,22 @@
+Phase 3 Checkpoint: asyncApiGenerateSpec task
+
+Reduced-prompting mode: automated-test verification only, no interactive walkthrough.
+
+Verification commands run:
+- sbt compile (root)
+- sbt test (full suite, 29 tests visible in order-service region, 0 failures overall)
+- sbt kafkaHarness/asyncApiGenerateSpec - output inspected directly:
+  target/asyncapi-docs-spec/asyncapi.json contains the "kafka-harness-demo"
+  channel, publish+subscribe operations, and DemoEvent message/schema
+  (message: string, required).
+
+Test-coverage note: DemoChannels.scala/Main.scala (kafka-harness) and
+PureKafkaDocsPlugin.scala (sbt plugin) have no dedicated test files - kafka-
+harness has never had a test suite (pre-existing repo convention, a demo
+fixture verified by direct runs/Grafana, not munit), and this plugin's own
+plan.md specifies direct `sbt kafkaHarness/asyncApiGenerateSpec` runs as its
+verification method, not scripted sbt-plugin tests. Not a new gap introduced
+by this phase.
+
+Commits this phase: b0fd923 (DemoChannels refactor), 0b3d0f3
+(asyncApiGenerateSpec task + wiring).
