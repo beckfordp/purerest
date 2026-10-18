@@ -1,0 +1,8 @@
+{
+  "track_id": "asyncapi-cdc-direction_20261018",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-10-18T00:00:00Z",
+  "updated_at": "2026-10-18T00:00:00Z",
+  "description": "Document CDC-published Kafka events, distinguished from direct publishers, using the outbox payload as the contract"
+}
