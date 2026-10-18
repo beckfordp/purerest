@@ -20,7 +20,7 @@ import purekafka.consumer.{
   StreamSupervisor,
   StreamSupervisorConfig
 }
-import purekafka.docs.{AsyncApiChannel, Docs}
+import purekafka.docs.Docs
 import purekafka.resilience.{
   CircuitBreakerConfig,
   Resilience,
@@ -276,12 +276,12 @@ object Main extends IOApp.Simple {
                     // follow-up, Phase 4) and serves the generated spec
                     // alongside the existing metrics port — kafka-harness
                     // was metrics-port-only before this track.
-                    val demoChannel = AsyncApiChannel[DemoEvent](
-                      topic = topic,
-                      eventType = "DemoEvent"
-                    )
                     val docsRoutes =
-                      Docs.routes[IO]("kafka-harness", "1.0", List(demoChannel))
+                      Docs.routes[IO](
+                        "kafka-harness",
+                        "1.0",
+                        DemoChannels.channels
+                      )
 
                     // Serves scripts/generate-kafka-asyncapi-docs.sh's
                     // output (static HTML, mounted via the docker-compose
