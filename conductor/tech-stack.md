@@ -39,6 +39,27 @@
   that into both real `HttpRoutes[F]` and a generated OpenAPI spec + Swagger UI, so routes and
   docs can't drift apart.
 
+## Kafka Documentation (AsyncAPI)
+- **purekafka.docs** (`modules/purekafka`): services register their Kafka topics/eventTypes/payload
+  schemas as `AsyncApiChannel[A]` values (reusing tapir's own `Schema[A]` derivation), then
+  `AsyncApiDoc.generate` builds a real AsyncAPI 2.6.0 document via `sttp.apispec.asyncapi` — the same
+  model family tapir's own OpenAPI generation is built on, and the Kafka-side analogue of
+  `purerest.docs`'s OpenAPI/Swagger generation. `purekafka.docs.Docs.routes` serves the generated
+  spec as JSON; `kafka-harness` additionally serves the generated static HTML at a sibling route.
+- **sbt-purekafka-docs** (`modules/sbt-purekafka-docs`, Scala 2.12, `sbtPlugin := true`): wraps the
+  above in sbt tasks (`asyncApiGenerateSpec`, `asyncApiGenerate`) so a consuming service's AsyncAPI
+  docs regenerate automatically on every `sbt compile`, instead of running a shell script by hand.
+  `asyncApiGenerate` shells out to `@asyncapi/cli@4.1.1` + a patched `@asyncapi/html-template@1.0.0`
+  (Node.js/npm — see that task's own doc comment for the full version-pinning/patching reasoning);
+  Node-toolchain failures warn and continue rather than failing the build.
+- **Known constraint**: this plugin is dogfooded within this same multi-project build (on
+  `kafka-harness`) — sbt only discovers `AutoPlugin`s from the meta-build classpath
+  (`project/plugins.sbt`), not a sibling project's own output, so `sbtPureKafkaDocs`'s own `version`
+  is pinned to a fixed `"0.1.0-dev"` string (not this build's usual sbt-dynver-derived version) and
+  added to `project/plugins.sbt` like a normal external plugin coordinate. Bump that string by hand
+  + re-run `sbt sbtPureKafkaDocs/publishLocal` whenever the plugin itself changes. A real external
+  consumer (a separate repo) won't hit this same-build constraint.
+
 ## JSON
 - **circe**, via `http4s-circe`.
 

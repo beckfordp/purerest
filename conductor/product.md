@@ -56,6 +56,11 @@ toward a real storefront, but out of current scope.
 - Local observability stack (Docker Compose profile): Prometheus/Grafana/Elasticsearch/Kibana/Filebeat
   wired to real request/DB/resilience metrics and correlated structured logs — see README's
   "Build, run, and observe this system"
+- `purekafka`: Kafka resilience (retry/circuit-breaker) + observability (tracing, consumer lag,
+  dead-letter routing) building blocks for Kafka producers/consumers (ADR 0010), plus generated
+  AsyncAPI documentation for registered topics — served as JSON/static HTML from `kafka-harness`
+  (the reference consumer), auto-regenerated on every `sbt compile` via the `sbt-purekafka-docs`
+  plugin
 
 ## Iteration 2 Goals (2026-09-23)
 Hands-on use of the finished stack raised the question purerest hasn't actually answered yet:
