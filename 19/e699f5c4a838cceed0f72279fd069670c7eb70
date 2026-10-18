@@ -1,0 +1,40 @@
+Task: asyncApiGenerate task + Compile/compile chaining (Phase 4 of sbt-asyncapi-plugin_20261017)
+
+Summary: Added AsyncApiHtmlGenerator (ports scripts/generate-kafka-asyncapi-docs.sh's
+@asyncapi/cli@4.1.1 + patched @asyncapi/html-template@1.0.0 logic to plain
+scala.sys.process calls - install-once-cache-under-target, patch
+apiVersion v2->v3 once, clear+regenerate output dir without deleting it).
+Node-toolchain failures are caught and warned (log.warn), never thrown.
+Added asyncApiGenerate task wiring it in, and chained Compile/compile :=
+{ val a = (Compile/compile).value; asyncApiGenerate.value; a } so every
+`sbt kafkaHarness/compile` regenerates docs automatically.
+
+MAJOR deviation found during this phase, requiring reopening Phase 3's
+already-committed work: chaining asyncApiGenerate after Compile/compile
+created a genuine circular task dependency, because asyncApiGenerateSpec
+(Phase 3) used (Compile / runMain), which itself depends on (Compile /
+compile) - compile -> asyncApiGenerate -> asyncApiGenerateSpec -> runMain ->
+compile. Confirmed empirically: `sbt kafkaHarness/compile` hung indefinitely
+rather than failing fast (sbt's static cyclic-reference detection doesn't
+catch this because the dependency is wired through Def.taskDyn, resolved
+dynamically at task-execution time, not statically at settings-load time).
+
+Fix: rewrote asyncApiGenerateSpec to invoke AsyncApiSpecWriter via a direct
+`java` subprocess, building its classpath from (Compile / classDirectory)
+(a plain SettingKey, not compile-dependent) + (Compile / dependencyClasspath)
+(depends only on upstream projects' exportedProducts/library resolution,
+not this project's own compile) - neither depends on this project's own
+Compile/compile task, breaking the cycle. Simpler than the original
+Def.taskDyn/.toTask approach as a side benefit (no InputTask wrapping
+needed at all).
+
+Verified end-to-end: `sbt kafkaHarness/compile` alone (fresh run, no prior
+asyncApiGenerateSpec/asyncApiGenerate run) produced
+modules/kafka-harness/target/asyncapi-docs/index.html containing DemoEvent,
+confirming this phase's own acceptance criterion exactly. Full `sbt compile
+test` (0 failures) + scalafmtCheck on both plugin files clean.
+
+Files:
+- modules/sbt-purekafka-docs/.../AsyncApiHtmlGenerator.scala (new)
+- modules/sbt-purekafka-docs/.../PureKafkaDocsPlugin.scala (asyncApiGenerateSpec
+  rewritten, asyncApiGenerate added, Compile/compile chained)
