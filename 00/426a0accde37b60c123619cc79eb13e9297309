@@ -1,0 +1,23 @@
+Task: Direction-aware document generation (Phase 2 of asyncapi-cdc-direction_20261018)
+
+Summary: Reworked AsyncApiDoc.toChannelItem/toMessage to filter publish/
+subscribe oneOf membership by each channel's direction. A ChannelItem
+omits the publish (or subscribe) operation entirely (Option.map, not an
+empty oneOf) when no registered channel on that topic qualifies.
+
+Note: toMessage's withCdcNote parameter and the CDC-description wiring
+(Phase 3's planned scope) were implemented together with this phase's
+direction filtering, since both touch the exact same toMessage/
+toChannelItem call sites and splitting them would have meant writing
+the publish-channel-filtering logic twice. Phase 3's own tests will
+likely pass immediately against this commit - that's expected, not a
+shortcut, and will be verified/documented there.
+
+Files:
+- modules/purekafka/src/main/scala/purekafka/docs/AsyncApiDoc.scala (reworked)
+- modules/purekafka/src/test/scala/purekafka/docs/AsyncApiDocSuite.scala (3 new tests)
+
+TDD: Red confirmed (3 new tests failed against the old always-both
+behavior), then Green after the rework. Full pureKafka/test (41 tests)
+passes; scalafmtCheck on touched files clean (same pre-existing
+unrelated drift in 3 other test files left untouched again).
