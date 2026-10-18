@@ -298,6 +298,23 @@ lazy val kafkaHarness = project
     )
   )
 
+// sbt-purekafka-docs: a real sbt plugin (not a library) wrapping
+// purekafka.docs' AsyncApiSpecWriter so any consuming service can
+// generate/serve its AsyncAPI docs via sbt tasks instead of a shell script
+// (ADR 0010's AsyncAPI follow-up, this track). Scala 2.12 (sbt's own plugin
+// Scala version) — necessarily NOT commonSettings (Scala 3) and NOT in
+// root's .aggregate(...) below, same reasoning as loadTest further down: a
+// different Scala binary version can't be aggregated alongside the Scala 3
+// modules without breaking the normal compile/test loop.
+lazy val sbtPureKafkaDocs = project
+  .in(file("modules/sbt-purekafka-docs"))
+  .settings(
+    name := "sbt-purekafka-docs",
+    organization := "io.github.beckfordp",
+    scalaVersion := "2.12.20",
+    sbtPlugin := true
+  )
+
 // order-service: REST API that places orders, calling inventory-service via
 // purerest's client to reserve stock. Depends on inventoryService in Test
 // scope only, to run a real inventory-service in-process for integration
