@@ -1,0 +1,18 @@
+Phase 2 Checkpoint: sbt plugin module scaffold + settings
+
+Reduced-prompting mode (project .claude/prompt-off marker, off since 2026-09-27):
+automated-test verification only, no interactive walkthrough.
+
+Verification commands run:
+- sbt compile (root, confirms Scala 3 modules unaffected by the new 2.12 project)
+- sbt sbtPureKafkaDocs/compile
+- sbt sbtPureKafkaDocs/publishLocal
+- sbt sbtPureKafkaDocs/scalafmtCheck
+All passed clean.
+
+Commits this phase: c307f90 (empty AutoPlugin scaffold), e01d8fb (settings keys).
+
+Not yet exercised end-to-end against a real consumer (kafka-harness) -
+that's Phase 3's task ("Add the plugin to kafka-harness... run sbt
+kafkaHarness/asyncApiGenerateSpec"), deliberately deferred per plan.md's own
+task breakdown.
