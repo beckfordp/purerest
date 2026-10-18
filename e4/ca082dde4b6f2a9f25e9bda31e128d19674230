@@ -1,0 +1,28 @@
+Phase 4 Checkpoint: asyncApiGenerate task + Compile/compile chaining
+
+Reduced-prompting mode: automated-test verification only, no interactive walkthrough.
+
+Verification commands run:
+- sbt kafkaHarness/compile (fresh, no prior asyncApiGenerateSpec/asyncApiGenerate
+  run) - produced target/asyncapi-docs/index.html, grep-confirmed containing
+  "DemoEvent". Also confirmed via npm install logs that the first-run
+  install path (both @asyncapi/cli and html-template patching) executed
+  correctly, not just a cached-path success.
+- sbt compile test (full suite, 0 failures)
+- sbt sbtPureKafkaDocs/scalafmtCheck, kafkaHarness/scalafmtCheck (both clean)
+
+Real blocker hit and resolved during this phase (see git note on 19e699f
+for full detail): chaining asyncApiGenerate after Compile/compile created a
+genuine circular task dependency through Phase 3's runMain-based
+asyncApiGenerateSpec. Confirmed empirically (a hung `sbt kafkaHarness/compile`,
+stopped after observing no progress/no npm process spawned). Fixed by
+reworking asyncApiGenerateSpec to use a direct java subprocess with a
+classpath built from classDirectory + dependencyClasspath (neither
+compile-task-dependent) instead of (Compile / runMain).
+
+Test-coverage note: same as Phase 3 - no dedicated test files for the sbt
+plugin module (pre-existing convention: this plan's own acceptance criteria
+specify direct task-run verification, not scripted sbt-plugin tests).
+
+Commits this phase: 19e699f (asyncApiGenerate + chaining + the
+asyncApiGenerateSpec rework).
