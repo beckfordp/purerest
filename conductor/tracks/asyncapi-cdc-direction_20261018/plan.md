@@ -6,9 +6,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: PublisherKind/ChannelDirection ADTs' (Protocol in workflow.md) `33a694d` — reduced-prompting mode: automated-test verification only, no interactive walkthrough; see git note on `33a694d`
 
 ## Phase 2 — Direction-aware document generation
-- [ ] Task: Write failing tests: a `Subscribe`-direction channel produces no `publish` operation for its topic; a `Publish`-direction channel produces no `subscribe` operation; a topic combining a `Subscribe`-only channel and a separate `Publish` channel (different event types) splits correctly into the right oneOf buckets (Red)
-- [ ] Task: Rework `AsyncApiDoc.toChannelItem`/`generate` to filter publish/subscribe oneOf membership by each channel's `direction`, omitting an operation entirely (not an empty oneOf) when no registered channel on that topic qualifies for it (Green)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Direction-aware document generation' (Protocol in workflow.md)
+- [x] Task: Write failing tests: a `Subscribe`-direction channel produces no `publish` operation for its topic; a `Publish`-direction channel produces no `subscribe` operation; a topic combining a `Subscribe`-only channel and a separate `Publish` channel (different event types) splits correctly into the right oneOf buckets (Red) `00426a0`
+- [x] Task: Rework `AsyncApiDoc.toChannelItem`/`generate` to filter publish/subscribe oneOf membership by each channel's `direction`, omitting an operation entirely (not an empty oneOf) when no registered channel on that topic qualifies for it (Green) `00426a0` — deviation: Phase 3's `withCdcNote`/description wiring was implemented together with this phase's filtering (same call sites); see git note on `00426a0`
+- [~] Task: Conductor - User Manual Verification 'Phase 2: Direction-aware document generation' (Protocol in workflow.md)
 
 ## Phase 3 — CDC description label
 - [ ] Task: Write failing tests: a `Publish(Cdc)` channel's message includes a description noting CDC/outbox delivery; a `Publish(Direct)` channel's message has no such description (Red)
