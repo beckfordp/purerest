@@ -1,0 +1,36 @@
+Task: asyncApiGenerateSpec task + kafka-harness integration (Phase 3 of sbt-asyncapi-plugin_20261017)
+
+Summary: Added asyncApiGenerateSpec: TaskKey[File] to PureKafkaDocsPlugin,
+wiring (Compile / runMain) to purekafka.docs.AsyncApiSpecWriter with the
+project's configured settings, writing target/asyncapi-docs-spec/asyncapi.json.
+Enabled the plugin on kafkaHarness and set asyncApiChannelsClass :=
+"kafkaharness.DemoChannels". Verified via `sbt kafkaHarness/asyncApiGenerateSpec`
+- generated JSON correctly contains the "kafka-harness-demo" channel with
+"DemoEvent" message/schema.
+
+Deviation from user's chosen approach going in but matching it precisely:
+per user's explicit choice (pin a fixed dev version), sbtPureKafkaDocs's
+version is overridden to "0.1.0-dev" (not inheriting ThisBuild's sbt-dynver
+version), published via `sbt sbtPureKafkaDocs/publishLocal`, and added to
+project/plugins.sbt as a normal addSbtPlugin coordinate - this is how
+kafka-harness (same-build sibling) consumes it, same path an external
+consumer eventually will. Bump the "0.1.0-dev" string by hand + republish
+whenever the plugin itself changes.
+
+Deviation found during implementation: a plain task body combining
+`.value`-extracted local vals into a string passed to InputKey.toTask(...)
+fails to compile ("Could not find proxy for val ..."); fixed via
+Def.taskDyn wrapping an inner Def.task, the standard sbt idiom for this.
+
+Files:
+- build.sbt (enablePlugins + asyncApiChannelsClass on kafkaHarness; fixed
+  version on sbtPureKafkaDocs)
+- modules/sbt-purekafka-docs/.../PureKafkaDocsPlugin.scala (new task)
+- project/plugins.sbt (addSbtPlugin for this repo's own plugin)
+
+Verification: sbt compile (root), sbt test (full suite, 0 failures), sbt
+kafkaHarness/asyncApiGenerateSpec (output inspected directly, contains
+DemoEvent). sbtPureKafkaDocs/scalafmtCheck and kafkaHarness/scalafmtCheck
+clean. build.sbt's own scalafmtSbtCheck still fails on pre-existing,
+unrelated drift (publishTo wrapping, root.aggregate wrapping) - same
+baseline drift present before this phase, left untouched, out of scope.
