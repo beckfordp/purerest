@@ -1,0 +1,18 @@
+Task: PublisherKind/ChannelDirection ADTs + AsyncApiChannel.direction (Phase 1 of asyncapi-cdc-direction_20261018)
+
+Summary: Added PublisherKind (Direct | Cdc) and ChannelDirection
+(Publish(publisher) | Subscribe | Both(publisher)) sealed-trait ADTs.
+AsyncApiChannel[A] gains a direction field defaulting to
+Both(PublisherKind.Direct), preserving every existing registration's
+output unchanged.
+
+Files:
+- modules/purekafka/src/main/scala/purekafka/docs/ChannelDirection.scala (new)
+- modules/purekafka/src/main/scala/purekafka/docs/AsyncApiChannel.scala (direction field + doc comment update)
+- modules/purekafka/src/test/scala/purekafka/docs/AsyncApiChannelSuite.scala (2 new tests)
+
+TDD: Red confirmed via `sbt "pureKafka/testOnly purekafka.docs.AsyncApiChannelSuite"`
+(compile failure: "Not found: type ChannelDirection"), then Green after
+implementing the ADTs and field. Full pureKafka/test (38 tests) passes;
+scalafmtCheck on touched files clean (same pre-existing unrelated drift
+in 4 other test files seen in prior tracks, left untouched again).
