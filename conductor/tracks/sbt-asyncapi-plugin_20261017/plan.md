@@ -24,5 +24,5 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 4: asyncApiGenerate + compile chaining' (Protocol in workflow.md) `e4ca082` — reduced-prompting mode: automated-test verification only, no interactive walkthrough; see git note on `e4ca082`
 
 ## Phase 5 — Full regression
-- [ ] Task: Run the full `purerest` test suite + `scalafmtCheck`; confirm no regressions across all modules including the new plugin module
+- [x] Task: Run the full `purerest` test suite + `scalafmtCheck`; confirm no regressions across all modules including the new plugin module — 133 tests passing (36+45+23+29 across modules), 0 failures; root `scalafmtCheck` clean; `sbtPureKafkaDocs/compile`+`scalafmtCheck`+`publishLocal` all clean
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Full regression' (Protocol in workflow.md)
