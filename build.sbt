@@ -266,10 +266,14 @@ lazy val pureKafka = project
 lazy val kafkaHarness = project
   .in(file("modules/kafka-harness"))
   .dependsOn(purerestlib, pureKafka)
-  .enablePlugins(JavaAppPackaging, DockerPlugin)
+  .enablePlugins(JavaAppPackaging, DockerPlugin, PureKafkaDocsPlugin)
   .settings(commonSettings)
   .settings(
     name := "kafka-harness",
+    // kafka-harness's own AsyncApiChannelsProvider (DemoChannels.scala) -
+    // the integration fixture for sbt-purekafka-docs (ADR 0010's AsyncAPI
+    // follow-up, this track's sbt-plugin phase).
+    asyncApiChannelsClass := "kafkaharness.DemoChannels",
     Docker / packageName := "kafka-harness",
     dockerBaseImage := "eclipse-temurin:21-jre",
     dockerUpdateLatest := true,
@@ -312,7 +316,17 @@ lazy val sbtPureKafkaDocs = project
     name := "sbt-purekafka-docs",
     organization := "io.github.beckfordp",
     scalaVersion := "2.12.20",
-    sbtPlugin := true
+    sbtPlugin := true,
+    // Fixed, not sbt-dynver's per-commit ThisBuild version: this plugin is
+    // dogfooded within this same multi-project build (kafka-harness below),
+    // and AutoPlugins are only discoverable from the meta-build's own
+    // classpath (project/plugins.sbt), not a sibling project's output - so
+    // kafka-harness consumes it the same way an external consumer eventually
+    // will, via a normal addSbtPlugin coordinate (see project/plugins.sbt).
+    // A per-commit version there would mean re-pinning it on every change;
+    // bump this by hand (and re-run publishLocal) whenever the plugin itself
+    // changes during this track.
+    version := "0.1.0-dev"
   )
 
 // order-service: REST API that places orders, calling inventory-service via

@@ -4,7 +4,8 @@ import sbt._
 import sbt.Keys._
 
 /** Settings/tasks land here incrementally through this phase; this step adds
-  * just the settings keys, no tasks yet.
+  * `asyncApiGenerateSpec`, wiring `(Compile / runMain)` to
+  * `purekafka.docs.AsyncApiSpecWriter`.
   */
 object PureKafkaDocsPlugin extends AutoPlugin {
 
@@ -21,6 +22,9 @@ object PureKafkaDocsPlugin extends AutoPlugin {
     val asyncApiOutputDir: SettingKey[File] = settingKey[File](
       "Directory generated AsyncAPI docs are written to. Defaults to target/asyncapi-docs."
     )
+    val asyncApiGenerateSpec: TaskKey[File] = taskKey[File](
+      "Generates the AsyncAPI JSON spec via purekafka.docs.AsyncApiSpecWriter, writing to target/asyncapi-docs-spec/asyncapi.json."
+    )
   }
 
   import autoImport._
@@ -28,6 +32,18 @@ object PureKafkaDocsPlugin extends AutoPlugin {
   override def projectSettings: Seq[Setting[_]] = Seq(
     asyncApiTitle := name.value,
     asyncApiVersion := version.value,
-    asyncApiOutputDir := target.value / "asyncapi-docs"
+    asyncApiOutputDir := target.value / "asyncapi-docs",
+    asyncApiGenerateSpec := Def.taskDyn {
+      val channelsClass = asyncApiChannelsClass.value
+      val title = asyncApiTitle.value
+      val docVersion = asyncApiVersion.value
+      val outFile = target.value / "asyncapi-docs-spec" / "asyncapi.json"
+      val args =
+        s" purekafka.docs.AsyncApiSpecWriter $channelsClass $title $docVersion ${outFile.getAbsolutePath}"
+      Def.task {
+        (Compile / runMain).toTask(args).value
+        outFile
+      }
+    }.value
   )
 }
