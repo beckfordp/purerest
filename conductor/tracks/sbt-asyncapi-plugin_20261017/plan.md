@@ -26,3 +26,6 @@
 ## Phase 5 — Full regression [checkpoint: e53709a]
 - [x] Task: Run the full `purerest` test suite + `scalafmtCheck`; confirm no regressions across all modules including the new plugin module — 133 tests passing (36+45+23+29 across modules), 0 failures; root `scalafmtCheck` clean; `sbtPureKafkaDocs/compile`+`scalafmtCheck`+`publishLocal` all clean
 - [x] Task: Conductor - User Manual Verification 'Phase 5: Full regression' (Protocol in workflow.md) `e53709a` — reduced-prompting mode: automated-test verification only, no interactive walkthrough; see git note on `e53709a`
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions `02f4dcb` — in the course of fixing the DemoChannels topic-duplication finding, surfaced and fixed a real bug: `Compile / compile`'s chain to `asyncApiGenerate` wasn't actually sequenced (a plain task body doesn't enforce the apparent imperative order of multiple `.value` calls) — fixed via `Def.taskDyn`; also replaced the `java`-subprocess `AsyncApiSpecWriter` invocation with an in-process `URLClassLoader` one. See git note on `02f4dcb` for the full diagnosis.
