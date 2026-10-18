@@ -59,6 +59,13 @@
   added to `project/plugins.sbt` like a normal external plugin coordinate. Bump that string by hand
   + re-run `sbt sbtPureKafkaDocs/publishLocal` whenever the plugin itself changes. A real external
   consumer (a separate repo) won't hit this same-build constraint.
+- **Deliberate guideline exception**: `product-guidelines.md`'s "purerest API Style" says consumers
+  wire in "via explicit combinators/middleware, not annotations, reflection, or macros." `purekafka`'s
+  `AsyncApiChannelsProvider`/`AsyncApiSpecWriter` use Java reflection (`Class.forName` by configured
+  class name) specifically to bridge the sbt-plugin-to-consuming-service process boundary — there's
+  no compile-time handle across that boundary, so reflection is the only option. Scoped to this one
+  build-time doc-generation path, not a precedent for purerest's own runtime resilience/observability
+  APIs, which stay reflection-free.
 
 ## JSON
 - **circe**, via `http4s-circe`.

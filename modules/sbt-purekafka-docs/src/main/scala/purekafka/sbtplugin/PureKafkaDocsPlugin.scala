@@ -3,12 +3,11 @@ package purekafka.sbtplugin
 import sbt._
 import sbt.Keys._
 
-import scala.sys.process._
-
-/** `asyncApiGenerateSpec` invokes `purekafka.docs.AsyncApiSpecWriter` via a
-  * direct `java` subprocess (not `(Compile / runMain)` — see its own comment
-  * below for why); `asyncApiGenerate` renders static HTML from that spec,
-  * chained to run automatically after `Compile / compile`.
+/** `asyncApiGenerateSpec` invokes `purekafka.docs.AsyncApiSpecWriter`
+  * in-process via a dedicated `URLClassLoader` (not `(Compile / runMain)` or a
+  * `java` subprocess — see its own comment below for why); `asyncApiGenerate`
+  * renders static HTML from that spec, chained to run automatically after
+  * `Compile / compile`.
   */
 object PureKafkaDocsPlugin extends AutoPlugin {
 
@@ -50,26 +49,39 @@ object PureKafkaDocsPlugin extends AutoPlugin {
       // circular (confirmed directly: it hangs rather than failing fast,
       // since Def.taskDyn-based dependencies aren't checked by sbt's static
       // cyclic-reference detection). classDirectory/dependencyClasspath
-      // don't depend on this project's own compile task, so a direct `java`
-      // subprocess with that classpath breaks the cycle.
+      // don't depend on this project's own compile task, breaking the cycle.
+      //
+      // Also not a separate `java` subprocess: spawning a new OS process per
+      // invocation added classpath-string/java.home plumbing for no benefit
+      // once the real bug below was found and fixed (a missing-sequencing
+      // issue, not a filesystem one - an external process would have hit the
+      // exact same stale-classes symptom). Loading the target class
+      // in-process via a dedicated URLClassLoader is simpler and avoids the
+      // subprocess-spawn overhead on every compile.
       val classpath =
         (Compile / classDirectory).value +: Attributed.data(
           (Compile / dependencyClasspath).value
         )
-      val javaBin = file(sys.props("java.home")) / "bin" / "java"
-      val cmd = Seq(
-        javaBin.getAbsolutePath,
-        "-cp",
-        classpath.map(_.getAbsolutePath).mkString(java.io.File.pathSeparator),
-        "purekafka.docs.AsyncApiSpecWriter",
-        channelsClass,
-        title,
-        docVersion,
-        outFile.getAbsolutePath
-      )
-      val exitCode = Process(cmd).!(streams.value.log)
-      if (exitCode != 0)
-        sys.error(s"AsyncApiSpecWriter failed with exit code $exitCode")
+      // `parent = null`, not this plugin's own classloader: confirmed
+      // directly that parent-first delegation lets the sbt plugin's own
+      // Scala 2.12 `scala.*` classes shadow the consuming project's Scala 3
+      // ones (NoSuchMethodError on scala.Array$.unapplySeq - the two
+      // binary-incompatible versions of the same class name). The target
+      // project's own dependencyClasspath already carries its complete
+      // Scala 3 runtime, so full isolation (rooted at the bootstrap
+      // classloader only) is both necessary and sufficient.
+      val loader =
+        new java.net.URLClassLoader(classpath.map(_.toURI.toURL).toArray, null)
+      try {
+        val writerClass = loader.loadClass("purekafka.docs.AsyncApiSpecWriter$")
+        val writerModule = writerClass.getField("MODULE$").get(null)
+        val mainMethod =
+          writerClass.getMethod("main", classOf[Array[String]])
+        mainMethod.invoke(
+          writerModule,
+          Array(channelsClass, title, docVersion, outFile.getAbsolutePath)
+        )
+      } finally loader.close()
       outFile
     },
     asyncApiGenerate := {
@@ -80,10 +92,24 @@ object PureKafkaDocsPlugin extends AutoPlugin {
         .generate(specFile, outputDir, cliCacheDir, streams.value.log)
       outputDir
     },
-    Compile / compile := {
+    // Def.taskDyn, not a plain task: confirmed directly that a plain task
+    // body (`{ val a = (Compile/compile).value; asyncApiGenerate.value; a }`)
+    // does NOT sequence asyncApiGenerate strictly after compile - sbt's task
+    // macro gathers every `.value` call in a block as a sibling input to the
+    // task, not as an imperative script, so asyncApiGenerate was starting
+    // before the real compiler run had written any class files (confirmed via
+    // a direct File.exists() check logged mid-task: false, logged *before*
+    // "compiling N Scala sources" even printed). Wrapping the chained call in
+    // a nested Def.task, only constructed once the outer taskDyn block's own
+    // `.value` (compile) has resolved, is what actually enforces "compile,
+    // then generate" ordering - the same idiom asyncApiGenerateSpec's own
+    // (now superseded) runMain-based first draft used for a related reason.
+    Compile / compile := Def.taskDyn {
       val analysis = (Compile / compile).value
-      asyncApiGenerate.value
-      analysis
-    }
+      Def.task {
+        asyncApiGenerate.value
+        analysis
+      }
+    }.value
   )
 }

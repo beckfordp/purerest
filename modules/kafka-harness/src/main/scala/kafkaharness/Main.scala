@@ -65,7 +65,7 @@ object Main extends IOApp.Simple {
   private val httpPort =
     sys.env.get("HTTP_PORT").flatMap(_.toIntOption).getOrElse(8080)
   private val serviceName = "kafka-harness"
-  private val topic = "kafka-harness-demo"
+  val topic = "kafka-harness-demo"
   private val groupId = "kafka-harness-group"
   private val poisonMarker = "__POISON__"
   private val blipMarker = "__BLIP__"

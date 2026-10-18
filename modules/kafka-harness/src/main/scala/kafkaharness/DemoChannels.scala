@@ -12,7 +12,7 @@ import purekafka.docs.{AsyncApiChannel, AsyncApiChannelsProvider}
 object DemoChannels extends AsyncApiChannelsProvider {
   val channels: List[AsyncApiChannel[?]] = List(
     AsyncApiChannel[DemoEvent](
-      topic = "kafka-harness-demo",
+      topic = Main.topic,
       eventType = "DemoEvent"
     )
   )
