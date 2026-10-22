@@ -83,7 +83,9 @@ lazy val purerestlib = project
     // .github/workflows/release.yml). Credentials come from env vars the workflow
     // sets from its built-in GITHUB_TOKEN — unset locally, so `publishLocal` (which
     // ignores publishTo/credentials entirely) is unaffected.
-    publishTo := Some("GitHub Packages" at "https://maven.pkg.github.com/beckfordp/purerest"),
+    publishTo := Some(
+      "GitHub Packages" at "https://maven.pkg.github.com/beckfordp/purerest"
+    ),
     credentials += Credentials(
       "GitHub Package Registry",
       "maven.pkg.github.com",
@@ -177,7 +179,9 @@ lazy val pureKafka = project
     // the workflow sets from its built-in GITHUB_TOKEN — unset locally, so
     // `publishLocal` (which ignores publishTo/credentials entirely) is
     // unaffected.
-    publishTo := Some("GitHub Packages" at "https://maven.pkg.github.com/beckfordp/purerest"),
+    publishTo := Some(
+      "GitHub Packages" at "https://maven.pkg.github.com/beckfordp/purerest"
+    ),
     credentials += Credentials(
       "GitHub Package Registry",
       "maven.pkg.github.com",
@@ -471,7 +475,13 @@ lazy val loadTest = project
 // them; not published itself.
 lazy val root = project
   .in(file("."))
-  .aggregate(purerestlib, pureKafka, orderService, inventoryService, kafkaHarness)
+  .aggregate(
+    purerestlib,
+    pureKafka,
+    orderService,
+    inventoryService,
+    kafkaHarness
+  )
   .settings(
     name := "purerest",
     publish / skip := true

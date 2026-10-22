@@ -21,7 +21,9 @@ class DocsSuite extends CatsEffectSuite {
   private val routes =
     Docs.routes[IO]("purekafka demo", "1.0", List(channel))
 
-  test("serves the generated AsyncAPI document as JSON, containing the configured title and channel") {
+  test(
+    "serves the generated AsyncAPI document as JSON, containing the configured title and channel"
+  ) {
     for {
       response <- routes.orNotFound.run(
         Request[IO](Method.GET, uri"/docs/asyncapi.json")

@@ -82,15 +82,19 @@ class KafkaTracingSuite extends CatsEffectSuite {
       } yield {
         val attrs = spans.head.getAttributes
         assertEquals(
-          attrs.get(io.opentelemetry.api.common.AttributeKey.stringKey(
-            "messaging.system"
-          )),
+          attrs.get(
+            io.opentelemetry.api.common.AttributeKey.stringKey(
+              "messaging.system"
+            )
+          ),
           "kafka"
         )
         assertEquals(
-          attrs.get(io.opentelemetry.api.common.AttributeKey.stringKey(
-            "messaging.destination.name"
-          )),
+          attrs.get(
+            io.opentelemetry.api.common.AttributeKey.stringKey(
+              "messaging.destination.name"
+            )
+          ),
           "my-topic"
         )
       }

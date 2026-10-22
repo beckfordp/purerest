@@ -47,7 +47,10 @@ class InventoryServiceConfigSuite extends CatsEffectSuite {
         |""".stripMargin
 
     assert(
-      ConfigSource.string(missingServiceName).load[InventoryServiceConfig].isLeft
+      ConfigSource
+        .string(missingServiceName)
+        .load[InventoryServiceConfig]
+        .isLeft
     )
   }
 

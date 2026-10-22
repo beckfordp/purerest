@@ -25,9 +25,16 @@ class ConsumerLagSuite extends CatsEffectSuite {
     testMeter.use { testkit =>
       for {
         meter <- testkit.meterProvider.get("consumer-lag-test")
-        config = ConsumerLagConfig(pollInterval = 10.millis, groupId = "my-group")
+        config = ConsumerLagConfig(
+          pollInterval = 10.millis,
+          groupId = "my-group"
+        )
         fetchLag = IO.pure(Map(("my-topic", 0) -> 42.0))
-        _ <- ConsumerLag.record[IO](config)(meter)(fetchLag).take(1).compile.drain
+        _ <- ConsumerLag
+          .record[IO](config)(meter)(fetchLag)
+          .take(1)
+          .compile
+          .drain
         metrics <- testkit.collectMetrics
       } yield MetricExpectations.checkAll(
         metrics,
