@@ -247,4 +247,86 @@ class AsyncApiDocSuite extends FunSuite {
       "only the Subscribe-direction channel's event type should appear in the subscribe operation"
     )
   }
+
+  test(
+    "a Publish(Cdc) channel's message includes a description noting CDC/outbox delivery"
+  ) {
+    val channel = AsyncApiChannel[DemoPayload](
+      topic = "cdc-topic",
+      eventType = "DemoEvent",
+      direction = ChannelDirection.Publish(PublisherKind.Cdc)
+    )
+
+    val doc = AsyncApiDoc.generate("purekafka demo", "1.0", List(channel))
+    val description = doc.hcursor
+      .downField("channels")
+      .downField("cdc-topic")
+      .downField("publish")
+      .downField("message")
+      .downField("description")
+      .as[String]
+      .toOption
+
+    assert(
+      description.exists(_.contains("CDC")),
+      s"expected a CDC-noting description, got $description"
+    )
+  }
+
+  test(
+    "a Publish(Direct) channel's message has no CDC description"
+  ) {
+    val channel = AsyncApiChannel[DemoPayload](
+      topic = "direct-topic",
+      eventType = "DemoEvent",
+      direction = ChannelDirection.Publish(PublisherKind.Direct)
+    )
+
+    val doc = AsyncApiDoc.generate("purekafka demo", "1.0", List(channel))
+    val descriptionCursor = doc.hcursor
+      .downField("channels")
+      .downField("direct-topic")
+      .downField("publish")
+      .downField("message")
+      .downField("description")
+
+    assert(
+      descriptionCursor.failed,
+      "expected no description field for a directly-published channel"
+    )
+  }
+
+  test(
+    "a Both(Cdc) channel's publish message has the CDC description but its subscribe message does not"
+  ) {
+    val channel = AsyncApiChannel[DemoPayload](
+      topic = "both-cdc-topic",
+      eventType = "DemoEvent",
+      direction = ChannelDirection.Both(PublisherKind.Cdc)
+    )
+
+    val doc = AsyncApiDoc.generate("purekafka demo", "1.0", List(channel))
+    val channelCursor =
+      doc.hcursor.downField("channels").downField("both-cdc-topic")
+
+    val publishDescription = channelCursor
+      .downField("publish")
+      .downField("message")
+      .downField("description")
+      .as[String]
+      .toOption
+    assert(
+      publishDescription.exists(_.contains("CDC")),
+      s"expected the publish side to carry the CDC note, got $publishDescription"
+    )
+
+    val subscribeDescriptionCursor = channelCursor
+      .downField("subscribe")
+      .downField("message")
+      .downField("description")
+    assert(
+      subscribeDescriptionCursor.failed,
+      "expected the subscribe side not to claim a publish provenance it doesn't have"
+    )
+  }
 }
