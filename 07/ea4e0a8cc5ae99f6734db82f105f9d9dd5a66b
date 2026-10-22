@@ -1,0 +1,17 @@
+Phase 4 Checkpoint: Backward-compat regression + kafka-harness demo channel (final phase of asyncapi-cdc-direction_20261018)
+
+Reduced-prompting mode: automated-test verification only, no interactive walkthrough.
+
+Verification commands run:
+- sbt pureKafka/test (44 tests, 0 failures) - DocsSuite, AsyncApiChannelsProviderSuite,
+  AsyncApiSpecWriterSuite (untouched by this track) confirmed passing, proving
+  direction's default preserves all existing output.
+- sbt kafkaHarness/compile (auto-chained doc generation) - verified both
+  channels' generated spec/HTML content directly.
+- sbt compile test scalafmtCheckAll scalafmtSbtCheck (full repo, all modules)
+  - 0 failures, both formatting gates clean.
+
+This closes all 4 phases of asyncapi-cdc-direction_20261018. Commits:
+618f619 (Phase 1), 00426a0 (Phase 2, also implements Phase 3's description
+logic), 69bb374 (Phase 3 tests), 017972a (Phase 4 kafka-harness channel).
+Track ready to be marked complete.
