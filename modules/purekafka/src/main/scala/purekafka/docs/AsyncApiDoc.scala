@@ -73,6 +73,15 @@ object AsyncApiDoc {
       TapirSchemaToJsonSchema(channel.schema, markOptionsAsNullable = true)
     SingleMessage(
       name = Some(channel.eventType),
+      // AsyncAPI distinguishes `name` (machine-friendly identifier) from
+      // `title` (human-friendly display name) - the rendered html-template
+      // reads `title` for the label shown above each message's payload (a
+      // oneOf with 2+ alternatives otherwise shows every one as a bare "#0"/
+      // "#1" with no visible way to tell which event is which without
+      // expanding its payload and reading field names). Set to the same
+      // eventType value as `name`, since this module has no separate
+      // human-friendly label to offer - same value, different AsyncAPI field.
+      title = Some(channel.eventType),
       payload = Some(Right(payloadSchema)),
       description = if (withCdcNote) Some(CdcDescription) else None
     )
