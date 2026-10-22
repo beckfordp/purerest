@@ -79,33 +79,47 @@ object AsyncApiDoc {
   }
 
   private def toOperationMessage(
-      channels: List[AsyncApiChannel[?]],
-      withCdcNote: AsyncApiChannel[?] => Boolean
+      messages: List[SingleMessage]
   ): Option[Message] =
-    channels.map(c => toMessage(c, withCdcNote(c))) match {
+    messages match {
       case Nil           => None
       case single :: Nil => Some(single)
-      case messages      => Some(OneOfMessage(oneOf = messages))
+      case many          => Some(OneOfMessage(oneOf = many))
     }
 
   /** Converts all [[AsyncApiChannel]]s registered on one topic into an AsyncAPI
     * `ChannelItem`, splitting them into the `publish`/`subscribe` operations
     * each is eligible for per its own `direction`.
+    *
+    * `toMessage` (and the `TapirSchemaToJsonSchema` derivation inside it) runs
+    * at most once per channel here, not once per operation — a `Both`-direction
+    * channel (the common case) is eligible for *both* `publish` and
+    * `subscribe`, so its publish-side message (built once, with the CDC note if
+    * applicable) is reused directly as its subscribe-side message, stripping
+    * the note via a cheap `.copy` rather than re-deriving the schema a second
+    * time when one needs to differ from the other.
     */
   private def toChannelItem(
       channelsForTopic: List[AsyncApiChannel[?]]
   ): ChannelItem = {
-    val publishChannels =
-      channelsForTopic.filter(c => includesPublish(c.direction))
-    val subscribeChannels =
-      channelsForTopic.filter(c => includesSubscribe(c.direction))
+    val messagesByChannel = channelsForTopic.map { channel =>
+      val withCdcNote =
+        publisherOf(channel.direction).contains(PublisherKind.Cdc)
+      val publishMessage = toMessage(channel, withCdcNote)
+      val subscribeMessage =
+        if (withCdcNote) publishMessage.copy(description = None)
+        else publishMessage
+      (channel, publishMessage, subscribeMessage)
+    }
 
-    val publishMessage = toOperationMessage(
-      publishChannels,
-      c => publisherOf(c.direction).contains(PublisherKind.Cdc)
-    )
-    val subscribeMessage =
-      toOperationMessage(subscribeChannels, _ => false)
+    val publishMessage = toOperationMessage(messagesByChannel.collect {
+      case (channel, message, _) if includesPublish(channel.direction) =>
+        message
+    })
+    val subscribeMessage = toOperationMessage(messagesByChannel.collect {
+      case (channel, _, message) if includesSubscribe(channel.direction) =>
+        message
+    })
 
     ChannelItem(
       publish = publishMessage.map(Operation.inlineMessage),
