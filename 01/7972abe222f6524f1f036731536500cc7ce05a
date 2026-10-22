@@ -1,0 +1,29 @@
+Task: kafka-harness CDC demo channel (Phase 4 of asyncapi-cdc-direction_20261018)
+
+Summary: Added DemoOutboxEvent, an illustrative-only payload type standing
+in for an outbox row's assembled envelope payload, and registered it as a
+second channel in DemoChannels on a new topic
+(kafka-harness-outbox-demo/OrderStatusChanged) with
+direction = ChannelDirection.Publish(PublisherKind.Cdc). The existing
+kafka-harness-demo/DemoEvent channel now sets
+direction = ChannelDirection.Both(PublisherKind.Direct) explicitly
+(same as the default, for clarity) - matches its real produce+consume
+behavior, output unchanged.
+
+Verified via sbt kafkaHarness/compile (auto-chained asyncApiGenerateSpec/
+asyncApiGenerate via sbt-purekafka-docs):
+- kafka-harness-demo: publish + subscribe both present, no CDC
+  description - unchanged from before this track.
+- kafka-harness-outbox-demo: publish present, subscribe ABSENT (correct -
+  Publish-only direction), description field contains the CDC/Debezium
+  note.
+- Rendered HTML (target/asyncapi-docs/index.html) contains DemoEvent,
+  OrderStatusChanged, "CDC", and "Debezium" - confirmed via direct grep,
+  not just spec inspection.
+
+Files:
+- modules/kafka-harness/src/main/scala/kafkaharness/DemoOutboxEvent.scala (new)
+- modules/kafka-harness/src/main/scala/kafkaharness/DemoChannels.scala (second channel registered)
+
+Verification: sbt compile test scalafmtCheckAll scalafmtSbtCheck (full
+repo-wide, not just purekafka/kafka-harness) - all clean, 0 failures.
