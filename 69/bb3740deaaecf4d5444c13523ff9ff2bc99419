@@ -1,0 +1,24 @@
+Task: CDC description label tests (Phase 3 of asyncapi-cdc-direction_20261018)
+
+Summary: Added 3 tests locking in the CDC-description behavior: a
+Publish(Cdc) channel's message carries a description mentioning "CDC";
+a Publish(Direct) channel's message has no description field at all;
+a Both(Cdc) channel's publish-side message carries the note while its
+subscribe-side message does not (no false publish provenance claimed).
+
+Deviation (expected, documented on Phase 2's git note on 00426a0):
+these tests passed immediately (Green), not Red - the toMessage
+withCdcNote wiring and toChannelItem's publisher-aware call sites were
+already implemented in Phase 2, since splitting that logic across two
+commits would have meant touching the same code twice. This commit is
+Phase 3's "Implement description population" task in substance (already
+done) with its own "Write failing tests" task's tests now locked in
+against that existing implementation - no separate implementation
+commit needed for this phase.
+
+Files:
+- modules/purekafka/src/test/scala/purekafka/docs/AsyncApiDocSuite.scala (3 new tests)
+
+Verification: sbt pureKafka/test (44 tests, 0 failures),
+pureKafka/scalafmtCheckAll clean (confirms the new workflow gate from
+the scalafmt-drift fix catches Test-scope sources correctly).
