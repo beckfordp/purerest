@@ -1,6 +1,11 @@
 package kafkaharness
 
-import purekafka.docs.{AsyncApiChannel, AsyncApiChannelsProvider}
+import purekafka.docs.{
+  AsyncApiChannel,
+  AsyncApiChannelsProvider,
+  ChannelDirection,
+  PublisherKind
+}
 
 /** This harness's registered topic/eventType/payload for AsyncAPI
   * documentation, as a singleton `AsyncApiChannelsProvider` — the shape the sbt
@@ -11,9 +16,24 @@ import purekafka.docs.{AsyncApiChannel, AsyncApiChannelsProvider}
   */
 object DemoChannels extends AsyncApiChannelsProvider {
   val channels: List[AsyncApiChannel[?]] = List(
+    // Real channel: kafka-harness both produces and consumes this topic
+    // itself (see Main.scala), so Both(Direct) — the default, set here
+    // explicitly for clarity — accurately reflects its actual behavior.
     AsyncApiChannel[DemoEvent](
       topic = Main.topic,
-      eventType = "DemoEvent"
+      eventType = "DemoEvent",
+      direction = ChannelDirection.Both(PublisherKind.Direct)
+    ),
+    // Illustrative only: kafka-harness has no real outbox table or
+    // Debezium connector. Demonstrates what a CDC-published channel's
+    // generated documentation looks like (publish-only, with a note that
+    // delivery is via Debezium CDC rather than a direct producer call —
+    // see DemoOutboxEvent's own doc comment) — never actually produced or
+    // consumed by this app.
+    AsyncApiChannel[DemoOutboxEvent](
+      topic = "kafka-harness-outbox-demo",
+      eventType = "OrderStatusChanged",
+      direction = ChannelDirection.Publish(PublisherKind.Cdc)
     )
   )
 }
