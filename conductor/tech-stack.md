@@ -46,6 +46,16 @@
   model family tapir's own OpenAPI generation is built on, and the Kafka-side analogue of
   `purerest.docs`'s OpenAPI/Swagger generation. `purekafka.docs.Docs.routes` serves the generated
   spec as JSON; `kafka-harness` additionally serves the generated static HTML at a sibling route.
+- **Direction-aware generation**: `AsyncApiChannel[A]` carries a `direction: ChannelDirection`
+  (`Publish(publisher) | Subscribe | Both(publisher)`, defaulting to `Both(PublisherKind.Direct)` for
+  backward compatibility) so the generated document only claims the publish/subscribe operations a
+  channel actually has — a `Subscribe`-only channel never gets a spurious `publish` entry.
+  `PublisherKind` (`Direct | Cdc`) further distinguishes, on the publish side, a direct producer call
+  from delivery via Debezium CDC from an outbox table (ADR 0008 in gluon) — a CDC-published channel's
+  generated message carries a description noting that provenance. The outbox row's `payload` column
+  already holds the same inner domain-event shape a direct `AsyncApiChannel[A]` registration uses
+  (confirmed against ADR 0008), so no second schema story is needed for CDC-published events, only
+  the `direction`/`publisher` labeling.
 - **sbt-purekafka-docs** (`modules/sbt-purekafka-docs`, Scala 2.12, `sbtPlugin := true`): wraps the
   above in sbt tasks (`asyncApiGenerateSpec`, `asyncApiGenerate`) so a consuming service's AsyncAPI
   docs regenerate automatically on every `sbt compile`, instead of running a shell script by hand.
