@@ -1,0 +1,5 @@
+Phase 3 Checkpoint: CDC description label
+
+Reduced-prompting mode: automated-test verification only, no interactive walkthrough.
+Verification: sbt pureKafka/test (44 tests, 0 failures), pureKafka/scalafmtCheckAll clean.
+Commits this phase: 69bb374 (tests; implementation itself landed in Phase 2's 00426a0).
