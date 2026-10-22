@@ -11,9 +11,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Direction-aware document generation' (Protocol in workflow.md) `6d93ba2` — reduced-prompting mode: automated-test verification only, no interactive walkthrough; see git note on `6d93ba2`
 
 ## Phase 3 — CDC description label
-- [ ] Task: Write failing tests: a `Publish(Cdc)` channel's message includes a description noting CDC/outbox delivery; a `Publish(Direct)` channel's message has no such description (Red)
-- [ ] Task: Implement description population in `AsyncApiDoc.toMessage` based on `PublisherKind` (Green)
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: CDC description label' (Protocol in workflow.md)
+- [x] Task: Write failing tests: a `Publish(Cdc)` channel's message includes a description noting CDC/outbox delivery; a `Publish(Direct)` channel's message has no such description (Red) `69bb374` — deviation: passed immediately (Green, not Red) since the implementation was already done in Phase 2's combined commit; see git note on `69bb374`
+- [x] Task: Implement description population in `AsyncApiDoc.toMessage` based on `PublisherKind` (Green) `00426a0` — done as part of Phase 2's rework (same call sites); see git note on `00426a0`
+- [~] Task: Conductor - User Manual Verification 'Phase 3: CDC description label' (Protocol in workflow.md)
 
 ## Phase 4 — Backward-compat regression + kafka-harness demo channel
 - [ ] Task: Run the full existing `purekafka` test suite (`AsyncApiChannelSuite`, `AsyncApiDocSuite`, `DocsSuite`, `AsyncApiChannelsProviderSuite`, `AsyncApiSpecWriterSuite`) unchanged — confirm all pass, proving the new `direction` field's default preserves today's output exactly
