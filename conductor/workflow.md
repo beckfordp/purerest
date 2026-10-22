@@ -145,15 +145,24 @@ sbt update
 
 ### Daily Development
 ```bash
-sbt compile        # compile
-sbt test           # run tests
-sbt scalafmt       # format code
+sbt compile         # compile
+sbt test            # run tests
+sbt scalafmtAll     # format code (all modules, Compile *and* Test scopes)
+sbt scalafmtSbt     # format build.sbt / project/*.sbt
 ```
 
 ### Before Committing
 ```bash
-sbt scalafmtCheck test
+sbt scalafmtCheckAll scalafmtSbtCheck test
 ```
+
+**Use the `*All`/`*Sbt` variants, not bare `scalafmt`/`scalafmtCheck.`** The bare
+tasks only cover **Compile**-scope sources of the current project — they silently
+skip every `src/test/` file and `build.sbt`. That gap let formatting drift
+accumulate unnoticed in five test files plus `build.sbt` across several tracks
+(each new track's `scalafmt` run would "helpfully" reformat those unrelated files,
+forcing a revert to keep commits scoped); cleared in one pass and prevented from
+recurring by the commands above.
 
 ## Testing Requirements
 
