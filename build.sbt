@@ -270,14 +270,10 @@ lazy val pureKafka = project
 lazy val kafkaHarness = project
   .in(file("modules/kafka-harness"))
   .dependsOn(purerestlib, pureKafka)
-  .enablePlugins(JavaAppPackaging, DockerPlugin, PureKafkaDocsPlugin)
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
   .settings(commonSettings)
   .settings(
     name := "kafka-harness",
-    // kafka-harness's own AsyncApiChannelsProvider (DemoChannels.scala) -
-    // the integration fixture for sbt-purekafka-docs (ADR 0010's AsyncAPI
-    // follow-up, this track's sbt-plugin phase).
-    asyncApiChannelsClass := "kafkaharness.DemoChannels",
     Docker / packageName := "kafka-harness",
     dockerBaseImage := "eclipse-temurin:21-jre",
     dockerUpdateLatest := true,

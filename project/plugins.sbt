@@ -12,9 +12,3 @@ addSbtPlugin("io.gatling" % "gatling-sbt" % "4.13.3")
 // DockerPlugin) for the local observability stack — see docker-compose.yml's
 // "observability" profile.
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.1")
-// This repo's own AsyncAPI-docs sbt plugin (modules/sbt-purekafka-docs),
-// dogfooded on kafka-harness within this same build. A fixed version, not
-// sbt-dynver's per-commit one (see that module's own build.sbt comment) —
-// bump by hand + `sbt sbtPureKafkaDocs/publishLocal` whenever the plugin
-// itself changes.
-addSbtPlugin("io.github.beckfordp" % "sbt-purekafka-docs" % "0.1.0-dev")
