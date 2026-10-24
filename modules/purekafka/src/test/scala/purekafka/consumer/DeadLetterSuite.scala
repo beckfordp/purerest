@@ -12,7 +12,11 @@ import org.typelevel.otel4s.oteljava.testkit.metrics.{
   MetricsTestkit,
   PointExpectation
 }
-import purekafka.resilience.RetryConfig
+import purekafka.resilience.{
+  CircuitBreakerConfig,
+  ResilienceConfig,
+  RetryConfig
+}
 
 import scala.concurrent.duration._
 
@@ -29,6 +33,15 @@ class DeadLetterSuite extends CatsEffectSuite {
   private val fastConfig =
     RetryConfig(maxRetries = 2, baseDelay = 1.millisecond)
 
+  // Generous enough (high failure threshold, short reset) not to interfere
+  // with tests that aren't themselves exercising the DLQ-publish resilience
+  // path - see the two tests below for that.
+  private val generousPublishResilience = ResilienceConfig(
+    retry = RetryConfig(maxRetries = 2, baseDelay = 1.millisecond),
+    circuitBreaker =
+      CircuitBreakerConfig(failureThreshold = 100, resetTimeout = 1.second)
+  )
+
   private def recordingPublish(
       log: Ref[IO, List[(String, String, String)]]
   ): (String, String, String) => IO[Unit] =
@@ -39,6 +52,7 @@ class DeadLetterSuite extends CatsEffectSuite {
       published <- Ref.of[IO, List[(String, String, String)]](Nil)
       deadLetter <- DeadLetter.fromPublish[IO, String, String](
         fastConfig,
+        generousPublishResilience,
         recordingPublish(published)
       )(NoOpLogger[IO])(Meter.noop[IO])
       _ <- deadLetter.guard("orders", "k1", "v1")(IO.unit)
@@ -54,6 +68,7 @@ class DeadLetterSuite extends CatsEffectSuite {
       published <- Ref.of[IO, List[(String, String, String)]](Nil)
       deadLetter <- DeadLetter.fromPublish[IO, String, String](
         fastConfig,
+        generousPublishResilience,
         recordingPublish(published)
       )(NoOpLogger[IO])(Meter.noop[IO])
       process = attempts.updateAndGet(_ + 1).flatMap { n =>
@@ -76,6 +91,7 @@ class DeadLetterSuite extends CatsEffectSuite {
       published <- Ref.of[IO, List[(String, String, String)]](Nil)
       deadLetter <- DeadLetter.fromPublish[IO, String, String](
         fastConfig,
+        generousPublishResilience,
         recordingPublish(published)
       )(NoOpLogger[IO])(Meter.noop[IO])
       result <- deadLetter
@@ -101,6 +117,7 @@ class DeadLetterSuite extends CatsEffectSuite {
       testLogger = StructuredTestingLogger.impl[IO]()
       deadLetter <- DeadLetter.fromPublish[IO, String, String](
         fastConfig,
+        generousPublishResilience,
         recordingPublish(published)
       )(testLogger)(Meter.noop[IO])
       _ <- deadLetter
@@ -131,6 +148,7 @@ class DeadLetterSuite extends CatsEffectSuite {
         published <- Ref.of[IO, List[(String, String, String)]](Nil)
         deadLetter <- DeadLetter.fromPublish[IO, String, String](
           fastConfig,
+          generousPublishResilience,
           recordingPublish(published)
         )(NoOpLogger[IO])(meter)
         _ <- deadLetter.guard("orders", "k1", "v1")(IO.unit) // no DLQ
@@ -152,5 +170,69 @@ class DeadLetterSuite extends CatsEffectSuite {
         }
       }
     }
+  }
+
+  test(
+    "retries the DLQ publish itself on a transient failure, before it succeeds"
+  ) {
+    for {
+      attempts <- Ref.of[IO, Int](0)
+      resilientPublish = (_: String, _: String, _: String) =>
+        attempts.updateAndGet(_ + 1).flatMap { n =>
+          if (n <= 2) IO.raiseError(new RuntimeException(s"dlq boom $n"))
+          else IO.unit
+        }
+      deadLetter <- DeadLetter.fromPublish[IO, String, String](
+        fastConfig,
+        ResilienceConfig(
+          retry = RetryConfig(maxRetries = 2, baseDelay = 1.millisecond),
+          circuitBreaker = CircuitBreakerConfig(
+            failureThreshold = 100,
+            resetTimeout = 1.second
+          )
+        ),
+        resilientPublish
+      )(NoOpLogger[IO])(Meter.noop[IO])
+      result <- deadLetter
+        .guard("orders", "k1", "v1")(
+          IO.raiseError(new RuntimeException("poison"))
+        )
+        .attempt
+      finalAttempts <- attempts.get
+    } yield {
+      assert(
+        result.isRight,
+        s"expected guard to swallow the processing error once the DLQ publish eventually succeeds, got $result"
+      )
+      assertEquals(finalAttempts, 3) // 1 initial + 2 retries
+    }
+  }
+
+  test(
+    "raises, rather than swallowing, when the DLQ publish itself is permanently failing after its own retries and circuit breaker are exhausted"
+  ) {
+    val alwaysFailingPublish = (_: String, _: String, _: String) =>
+      IO.raiseError[Unit](new RuntimeException("dlq broker unreachable"))
+    for {
+      deadLetter <- DeadLetter.fromPublish[IO, String, String](
+        fastConfig,
+        ResilienceConfig(
+          retry = RetryConfig(maxRetries = 1, baseDelay = 1.millisecond),
+          circuitBreaker = CircuitBreakerConfig(
+            failureThreshold = 100,
+            resetTimeout = 1.second
+          )
+        ),
+        alwaysFailingPublish
+      )(NoOpLogger[IO])(Meter.noop[IO])
+      result <- deadLetter
+        .guard("orders", "k1", "v1")(
+          IO.raiseError(new RuntimeException("poison"))
+        )
+        .attempt
+    } yield assert(
+      result.isLeft,
+      s"expected guard to raise once the DLQ publish itself exhausts its retry budget, got $result"
+    )
   }
 }

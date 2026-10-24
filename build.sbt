@@ -330,7 +330,19 @@ lazy val sbtPureKafkaDocs = project
     // A per-commit version there would mean re-pinning it on every change;
     // bump this by hand (and re-run publishLocal) whenever the plugin itself
     // changes during this track.
-    version := "0.1.0-dev"
+    version := "0.1.0-dev",
+    // Same GitHub Packages registry/credentials as pureKafka above - this is
+    // its first real publish (release.yml now runs sbtPureKafkaDocs/publish
+    // alongside it).
+    publishTo := Some(
+      "GitHub Packages" at "https://maven.pkg.github.com/beckfordp/purerest"
+    ),
+    credentials += Credentials(
+      "GitHub Package Registry",
+      "maven.pkg.github.com",
+      sys.env.getOrElse("GITHUB_ACTOR", ""),
+      sys.env.getOrElse("GITHUB_TOKEN", "")
+    )
   )
 
 // order-service: REST API that places orders, calling inventory-service via

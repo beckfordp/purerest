@@ -163,19 +163,20 @@ class KafkaResilienceLoadTest extends CatsEffectSuite with TestContainerForAll {
 
           producerSettings = ProducerSettings[IO, String, String]
             .withBootstrapServers(bootstrapServers)
-          resilientProduce = Resilience.middleware[IO](
-            ResilienceConfig(
-              retry = RetryConfig(maxRetries = 3, baseDelay = 50.millis),
-              circuitBreaker = CircuitBreakerConfig(
-                failureThreshold = 10,
-                resetTimeout = 2.seconds
-              )
+          publishResilienceConfig = ResilienceConfig(
+            retry = RetryConfig(maxRetries = 3, baseDelay = 50.millis),
+            circuitBreaker = CircuitBreakerConfig(
+              failureThreshold = 10,
+              resetTimeout = 2.seconds
             )
-          )(logger)(meter)
+          )
+          resilientProduce =
+            Resilience.middleware[IO](publishResilienceConfig)(logger)(meter)
 
           dlqResourcePair <- DeadLetter
             .resource[IO, String, String](
               config = RetryConfig(maxRetries = 1, baseDelay = 10.millis),
+              publishResilience = publishResilienceConfig,
               producerSettings = producerSettings
             )(logger)(meter)
             .allocated

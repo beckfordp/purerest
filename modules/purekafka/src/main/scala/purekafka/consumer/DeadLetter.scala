@@ -5,7 +5,7 @@ import cats.syntax.all._
 import fs2.kafka.{KafkaProducer, ProducerRecord, ProducerSettings}
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.otel4s.metrics.Meter
-import purekafka.resilience.{Retry, RetryConfig}
+import purekafka.resilience.{Resilience, ResilienceConfig, Retry, RetryConfig}
 
 /** Processes a message with bounded retry (reusing
   * [[purekafka.resilience.Retry]]); if every retry is exhausted, publishes the
@@ -13,20 +13,28 @@ import purekafka.resilience.{Retry, RetryConfig}
   * and returns successfully — so a consumer `Stream` built on top of this can
   * carry on with the next message rather than being killed
   * ([[purekafka.consumer.StreamSupervisor]] would otherwise restart the whole
-  * stream for one poison message) or stalling that partition.
+  * stream for one poison message) or stalling that partition. The DLQ publish
+  * itself is also guarded, by [[purekafka.resilience.Resilience.middleware]]
+  * (retry + circuit breaker) — a genuine single-call producer site, previously
+  * unprotected. If that publish ultimately fails (its own retries and breaker
+  * exhausted), `guard` now raises rather than swallowing — there's nothing more
+  * to do locally at that point, and [[StreamSupervisor]]'s restart-with-backoff
+  * is the correct fallback, same as any other stream failure.
   *
-  * Deliberately reuses `Retry`'s bounded-retry-then-give-up shape rather than
-  * hand-rolling a second one: the only genuinely new behavior here is *what
-  * happens on exhaustion* (publish to the DLQ and swallow, instead of raising
-  * the last error) — `RetryConfig`'s `maxRetries`/`baseDelay` is the same
-  * bounded shape this needs, same reasoning `Resilience` already gives for
-  * composing `Retry` rather than reinventing retry policy a second time.
+  * Deliberately reuses `Retry`'s bounded-retry-then-give-up shape for message
+  * processing rather than hand-rolling a second one: the only genuinely new
+  * behavior here is *what happens on exhaustion* (publish to the DLQ and
+  * swallow, instead of raising the last error) — `RetryConfig`'s
+  * `maxRetries`/`baseDelay` is the same bounded shape this needs, same
+  * reasoning `Resilience` already gives for composing `Retry` rather than
+  * reinventing retry policy a second time.
   */
 trait DeadLetter[F[_], K, V] {
 
   /** Runs `process`, retrying per the configured [[RetryConfig]]; routes
     * `(key, value)` to `<topic>-dlq` and returns successfully if every retry is
-    * exhausted, instead of raising.
+    * exhausted, instead of raising - unless the DLQ publish itself then fails
+    * (its own [[ResilienceConfig]] exhausted), in which case this raises.
     */
   def guard(topic: String, key: K, value: V)(process: F[Unit]): F[Unit]
 }
@@ -42,11 +50,14 @@ object DeadLetter {
     */
   def fromPublish[F[_]: Async, K, V](
       config: RetryConfig,
+      publishResilience: ResilienceConfig,
       publish: (String, K, V) => F[Unit]
   )(
       logger: StructuredLogger[F]
   )(meter: Meter[F]): F[DeadLetter[F, K, V]] = {
     val retryGuard = Retry.middleware[F](config)(logger)(meter)
+    val publishGuard =
+      Resilience.middleware[F](publishResilience)(logger)(meter)
 
     meter.counter[Long]("purekafka.dlq.published").create.map { counter =>
       new DeadLetter[F, K, V] {
@@ -55,7 +66,7 @@ object DeadLetter {
         ): F[Unit] =
           retryGuard(process).handleErrorWith { error =>
             val dlqTopic = s"$topic-dlq"
-            publish(dlqTopic, key, value) *>
+            publishGuard(publish(dlqTopic, key, value)) *>
               counter.inc() *>
               logger.error(
                 Map(
@@ -79,6 +90,7 @@ object DeadLetter {
     */
   def resource[F[_]: Async, K, V](
       config: RetryConfig,
+      publishResilience: ResilienceConfig,
       producerSettings: ProducerSettings[F, K, V]
   )(
       logger: StructuredLogger[F]
@@ -86,6 +98,7 @@ object DeadLetter {
     KafkaProducer.resource(producerSettings).evalMap { producer =>
       fromPublish[F, K, V](
         config,
+        publishResilience,
         (dlqTopic, key, value) =>
           producer
             .produceOne_(ProducerRecord(dlqTopic, key, value))
