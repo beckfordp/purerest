@@ -246,7 +246,15 @@ lazy val pureKafka = project
       // tapir endpoint being documented, just a static generated document
       // being served at a fixed route.
       "org.http4s" %% "http4s-dsl" % http4sVersion,
-      "org.http4s" %% "http4s-circe" % http4sVersion
+      "org.http4s" %% "http4s-circe" % http4sVersion,
+      // http4s-ember-client: SchemaRegistryWriter's Apicurio REST calls
+      // (Rework 5 step 2, ADR 0003) - consistent with this module's
+      // existing cats-effect/http4s dependencies (StreamSupervisor/
+      // DeadLetter/Resilience), not java.net.http. Already present
+      // transitively on every consuming service's own classpath via
+      // purerestlib, so nothing new gets loaded into the sbt plugin's
+      // isolated URLClassLoader.
+      "org.http4s" %% "http4s-ember-client" % http4sVersion
     )
   )
 
