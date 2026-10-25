@@ -1,0 +1,14 @@
+Phase 2: sbt task wiring + end-to-end verification — reduced-prompting mode (prompt-off): automated-test verification only, no interactive walkthrough.
+
+- scalafmtCheckAll; test: clean, exit 0, 0 failed across every suite.
+- scripts/verify-schema-registry-check.sh: all checks passed against the
+  real local Apicurio instance (infra/k8s/local-infra) — first run
+  registers + sets the BACKWARD compatibility rule; second identical run
+  is a no-op; a type-changing (String -> Int) incompatible payload edit
+  is rejected and fails the sbt task.
+- Design pivot during implementation: sbt AutoPlugins only load from a
+  build's own meta-build classpath (project/plugins.sbt), not a sibling
+  project's output in the same build, so kafka-harness could not simply
+  enablePlugins(PureKafkaDocsPlugin) in-build. The verify script instead
+  publishLocals purekafka + sbt-purekafka-docs and drives a throwaway
+  sbt project it builds and tears down itself.
