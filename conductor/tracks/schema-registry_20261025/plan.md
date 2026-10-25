@@ -21,21 +21,47 @@
       only (50 passed), no interactive walkthrough; see git note on
       `8d6cd6e`
 
-## Phase 2: sbt task wiring + end-to-end verification
-- [ ] Task: `PureKafkaDocsPlugin` gains `schemaRegistryUrl`/
+## Phase 2: sbt task wiring + end-to-end verification [checkpoint: TBD]
+- [x] Task: `PureKafkaDocsPlugin` gains `schemaRegistryUrl`/
       `schemaRegistryGroupId` settings (latter defaults to `name.value`)
       and the `schemaRegistryCheck` task, invoking `SchemaRegistryWriter`
       via the same dedicated-`URLClassLoader`-plus-reflection mechanism
       `asyncApiGenerateSpec` already uses — not chained after
-      `Compile/compile`
-- [ ] Task: New `scripts/verify-schema-registry-check.sh` (mirroring
-      `scripts/verify-kafka-asyncapi-docs.sh`'s own structure), run
-      against the real local Apicurio instance already deployed in
-      `infra/k8s/local-infra`: first run registers + sets the rule; a
-      second identical run is a no-op; a deliberately incompatible
-      schema change (a throwaway test fixture) is rejected and fails the
-      sbt task
-- [ ] Task: Run full test suite + the verify script end-to-end; confirm
-      no regressions
+      `Compile/compile` `031f4de`
+- [x] Task: New `scripts/verify-schema-registry-check.sh` `031f4de` —
+      design pivot found while implementing: sbt AutoPlugins are only
+      discoverable from a build's own meta-build classpath
+      (`project/plugins.sbt`), not a sibling project's output in the
+      *same* build (confirmed against `sbtPureKafkaDocs`'s own existing
+      version-pinning comment in `build.sbt`), so `kafka-harness` can't
+      just `enablePlugins` it directly. The script instead
+      `publishLocal`s `purekafka` + `sbt-purekafka-docs` and drives a
+      throwaway sbt project (built by the script itself, torn down on
+      exit) that consumes them the same way a real external consumer
+      eventually will — not a production change to kafka-harness.
+      Bumped `sbtPureKafkaDocs`'s pinned dev version 0.1.0-dev ->
+      0.2.0-dev per its own comment's instruction to do so when the
+      plugin changes within a track. Live-verified against the real
+      local Apicurio instance: first run registers + sets the BACKWARD
+      rule (200/204); second identical run is a no-op (200, no second
+      rule-set call needed); a type-changing (String -> Int) payload
+      edit is rejected and fails the task — empirically, Apicurio 3.3.2
+      returns a `500 SchemaException: could not determine version` for
+      this particular kind of incompatible change rather than the `400
+      RuleViolationException` seen during Rework 5 step 1's infra
+      testing for other kinds of changes; `SchemaRegistryWriter`
+      already treats any non-2xx uniformly as a failure, so both shapes
+      are handled correctly either way. Also found and fixed:
+      `schemaRegistryCheck` referenced `(Compile / classDirectory)` /
+      `(Compile / dependencyClasspath)` without ever depending on
+      `(Compile / compile)` itself — since, unlike `asyncApiGenerateSpec`,
+      it's deliberately *not* reached via the `Compile/compile` taskDyn
+      chain, running it standalone threw a bare `ClassNotFoundException`
+      for the never-compiled channels-provider class until `(Compile /
+      compile).value` was added as its first line.
+- [x] Task: Run full test suite + the verify script end-to-end; confirm
+      no regressions `031f4de` — `scalafmtCheckAll; test`: clean, exit 0,
+      0 failed across every suite; `verify-schema-registry-check.sh`:
+      all checks passed against the real local Apicurio instance
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: sbt task
       wiring + end-to-end verification' (Protocol in workflow.md)
