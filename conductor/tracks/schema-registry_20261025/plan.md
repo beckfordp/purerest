@@ -1,6 +1,6 @@
 # Plan — Build-time schema registry check/registration (Rework 5 step 2, ADR 0003)
 
-## Phase 1: SchemaRegistryWriter core logic [checkpoint: PENDING]
+## Phase 1: SchemaRegistryWriter core logic [checkpoint: 8d6cd6e]
 - [x] Task: Add `http4s-ember-client` to `purekafka`'s `build.sbt` `fa1c687`
 - [x] Task: Write failing tests for `SchemaRegistryWriter`'s
       request-building logic against an in-memory stub `Client[F]`
@@ -15,8 +15,11 @@
       `TapirSchemaToJsonSchema` the same way `AsyncApiDoc.toMessage` does
       (Green) `fa1c687` — all 4 tests passed on first implementation
       attempt; 50/50 module-wide, scalafmtCheck clean
-- [ ] Task: Conductor - User Manual Verification 'Phase 1:
+- [x] Task: Conductor - User Manual Verification 'Phase 1:
       SchemaRegistryWriter core logic' (Protocol in workflow.md)
+      `8d6cd6e` — reduced-prompting mode: automated-test verification
+      only (50 passed), no interactive walkthrough; see git note on
+      `8d6cd6e`
 
 ## Phase 2: sbt task wiring + end-to-end verification
 - [ ] Task: `PureKafkaDocsPlugin` gains `schemaRegistryUrl`/
