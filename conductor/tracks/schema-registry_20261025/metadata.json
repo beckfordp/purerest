@@ -1,0 +1,8 @@
+{
+  "track_id": "schema-registry_20261025",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-10-25T09:05:57Z",
+  "updated_at": "2026-10-25T09:05:57Z",
+  "description": "Build-time schema registry check/registration (Rework 5 step 2, ADR 0003). New purekafka.docs.SchemaRegistryWriter derives each registered AsyncApiChannel's JSON Schema (reusing TapirSchemaToJsonSchema, the same call AsyncApiDoc.scala already makes) and registers/checks it against Apicurio Registry via its REST API, empirically confirmed live against the real local instance deployed in Rework 5 step 1 (POST .../artifacts?ifExists=FIND_OR_CREATE_VERSION, idempotent; a BACKWARD compatibility rule set on first registration, 409-on-re-set treated as success; a 400 on an incompatible change). Built with http4s-ember-client + cats-effect IO (bridged via unsafeRunSync at the reflective main entry point), not java.net.http, for consistency with purekafka's existing cats-effect/http4s dependencies and testability via Client.fromHttpApp. A new schemaRegistryCheck sbt task in the existing PureKafkaDocsPlugin invokes it via the same dedicated-URLClassLoader-plus-reflection mechanism asyncApiGenerateSpec already uses - deliberately NOT auto-chained after Compile/compile, so local sbt compile/test never depends on the registry being up. No retry/circuit-breaker wrapping on the registry call in this first version."
+}
