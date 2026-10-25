@@ -21,7 +21,7 @@
       only (50 passed), no interactive walkthrough; see git note on
       `8d6cd6e`
 
-## Phase 2: sbt task wiring + end-to-end verification [checkpoint: TBD]
+## Phase 2: sbt task wiring + end-to-end verification [checkpoint: c89d568]
 - [x] Task: `PureKafkaDocsPlugin` gains `schemaRegistryUrl`/
       `schemaRegistryGroupId` settings (latter defaults to `name.value`)
       and the `schemaRegistryCheck` task, invoking `SchemaRegistryWriter`
@@ -63,5 +63,8 @@
       no regressions `031f4de` — `scalafmtCheckAll; test`: clean, exit 0,
       0 failed across every suite; `verify-schema-registry-check.sh`:
       all checks passed against the real local Apicurio instance
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: sbt task
+- [x] Task: Conductor - User Manual Verification 'Phase 2: sbt task
       wiring + end-to-end verification' (Protocol in workflow.md)
+      `c89d568` — reduced-prompting mode: automated-test + verify-script
+      verification only, no interactive walkthrough; see git note on
+      `c89d568`
