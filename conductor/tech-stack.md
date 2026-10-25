@@ -62,13 +62,25 @@
   `asyncApiGenerate` shells out to `@asyncapi/cli@4.1.1` + a patched `@asyncapi/html-template@1.0.0`
   (Node.js/npm — see that task's own doc comment for the full version-pinning/patching reasoning);
   Node-toolchain failures warn and continue rather than failing the build.
-- **Known constraint**: this plugin is dogfooded within this same multi-project build (on
-  `kafka-harness`) — sbt only discovers `AutoPlugin`s from the meta-build classpath
-  (`project/plugins.sbt`), not a sibling project's own output, so `sbtPureKafkaDocs`'s own `version`
-  is pinned to a fixed `"0.1.0-dev"` string (not this build's usual sbt-dynver-derived version) and
-  added to `project/plugins.sbt` like a normal external plugin coordinate. Bump that string by hand
-  + re-run `sbt sbtPureKafkaDocs/publishLocal` whenever the plugin itself changes. A real external
-  consumer (a separate repo) won't hit this same-build constraint.
+- **schemaRegistryCheck** (Rework 5 step 2, ADR 0003): a separate, explicitly-invoked task (not
+  chained after `Compile/compile` — it makes a real network call, unlike `asyncApiGenerate`'s pure
+  local file writes) that reuses the same `AsyncApiChannel`/`Schema[A]` registrations to check/register
+  each channel's JSON Schema against an Apicurio Registry instance (`schemaRegistryUrl` /
+  `schemaRegistryGroupId`, the latter defaulting to `name.value`) via `purekafka.docs.SchemaRegistryWriter`
+  (`http4s-ember-client` + cats-effect `IO`), failing the build on a `400`/other non-2xx rejection.
+  Sets a `BACKWARD` compatibility rule on an artifact's first-ever registration. Run explicitly, e.g.
+  in CI.
+- **Known constraint**: sbt only discovers `AutoPlugin`s from a build's own meta-build classpath
+  (`project/plugins.sbt`), not a sibling project's own output within the *same* build — confirmed
+  directly while building `schemaRegistryCheck`'s own end-to-end verification: `kafka-harness`, which
+  lives in this same build, cannot just `enablePlugins(PureKafkaDocsPlugin)` (it stays on its existing
+  runtime-served-routes approach for AsyncAPI instead — see `scripts/verify-kafka-asyncapi-docs.sh`).
+  `sbtPureKafkaDocs`'s own `version` is pinned to a fixed dev string (not this build's usual
+  sbt-dynver-derived version) for exactly this reason; bump that string by hand + re-run `sbt
+  sbtPureKafkaDocs/publishLocal` whenever the plugin itself changes. Exercising the plugin's task
+  wiring for real (`scripts/verify-schema-registry-check.sh`) means `publishLocal`-ing it and driving
+  a throwaway sbt project built by the script itself — the same way a real external consumer
+  (a separate repo, via a normal `addSbtPlugin` coordinate) eventually will.
 - **Deliberate guideline exception**: `product-guidelines.md`'s "purerest API Style" says consumers
   wire in "via explicit combinators/middleware, not annotations, reflection, or macros." `purekafka`'s
   `AsyncApiChannelsProvider`/`AsyncApiSpecWriter` use Java reflection (`Class.forName` by configured
