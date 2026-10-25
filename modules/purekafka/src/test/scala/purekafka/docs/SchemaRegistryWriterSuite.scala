@@ -13,10 +13,10 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
 
   final case class RecordedRequest(method: String, path: String, body: Json)
 
-  /** A stub `Client[F]` recording every request it receives (for
-    * assertions) and returning a canned response per `(method, path)`
-    * pair - no real registry needed, mirroring `AsyncApiSpecWriterSuite`'s
-    * own fixture-based, no-real-IO testing style for the equivalent writer.
+  /** A stub `Client[F]` recording every request it receives (for assertions)
+    * and returning a canned response per `(method, path)` pair - no real
+    * registry needed, mirroring `AsyncApiSpecWriterSuite`'s own fixture-based,
+    * no-real-IO testing style for the equivalent writer.
     */
   private def stubClient(
       requestsRef: Ref[IO, List[RecordedRequest]],
@@ -156,7 +156,10 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
                   "POST",
                   "/apis/registry/v3/groups/test-group/artifacts/fixture-topic-FixtureEvent/rules"
                 ) =>
-              (Status.Conflict, Json.obj("name" -> "RuleAlreadyExistsException".asJson))
+              (
+                Status.Conflict,
+                Json.obj("name" -> "RuleAlreadyExistsException".asJson)
+              )
             case other => fail(s"unexpected request: $other")
           }
       )

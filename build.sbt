@@ -334,7 +334,7 @@ lazy val sbtPureKafkaDocs = project
     // A per-commit version there would mean re-pinning it on every change;
     // bump this by hand (and re-run publishLocal) whenever the plugin itself
     // changes during this track.
-    version := "0.1.0-dev",
+    version := "0.2.0-dev",
     // Same GitHub Packages registry/credentials as pureKafka above - this is
     // its first real publish (release.yml now runs sbtPureKafkaDocs/publish
     // alongside it).

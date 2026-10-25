@@ -7,7 +7,13 @@ import sbt.Keys._
   * in-process via a dedicated `URLClassLoader` (not `(Compile / runMain)` or a
   * `java` subprocess — see its own comment below for why); `asyncApiGenerate`
   * renders static HTML from that spec, chained to run automatically after
-  * `Compile / compile`.
+  * `Compile / compile`. `schemaRegistryCheck` invokes
+  * `purekafka.docs.SchemaRegistryWriter` the same reflective way, but is
+  * deliberately *not* chained after `Compile / compile` (Rework 5 step 2,
+  * ADR 0003) — it makes a real network call to a schema registry, unlike
+  * `asyncApiGenerate`'s pure local file writes, so local `sbt compile`/`sbt
+  * test` must keep working even when no registry is running. Run it
+  * explicitly (`sbt schemaRegistryCheck`), e.g. in CI.
   */
 object PureKafkaDocsPlugin extends AutoPlugin {
 
@@ -30,6 +36,15 @@ object PureKafkaDocsPlugin extends AutoPlugin {
     val asyncApiGenerate: TaskKey[File] = taskKey[File](
       "Renders static AsyncAPI HTML (via @asyncapi/cli + a patched html-template) from the generated spec, into asyncApiOutputDir. Node-toolchain failures warn and continue rather than failing the task."
     )
+    val schemaRegistryUrl: SettingKey[String] = settingKey[String](
+      "Base URL of the Apicurio Registry instance to check/register schemas against. Required to run schemaRegistryCheck."
+    )
+    val schemaRegistryGroupId: SettingKey[String] = settingKey[String](
+      "Apicurio Registry group id schemas are registered under. Defaults to name.value (one group per service)."
+    )
+    val schemaRegistryCheck: TaskKey[Unit] = taskKey[Unit](
+      "Registers/checks each AsyncApiChannel's JSON Schema against Apicurio Registry via purekafka.docs.SchemaRegistryWriter, failing the build on an incompatible change. Not chained after Compile/compile - run explicitly (e.g. in CI)."
+    )
   }
 
   import autoImport._
@@ -38,6 +53,40 @@ object PureKafkaDocsPlugin extends AutoPlugin {
     asyncApiTitle := name.value,
     asyncApiVersion := version.value,
     asyncApiOutputDir := target.value / "asyncapi-docs",
+    schemaRegistryGroupId := name.value,
+    schemaRegistryCheck := {
+      // Unlike asyncApiGenerateSpec (only ever reached via Compile/compile's
+      // own taskDyn chain below, so classes are already fresh by the time it
+      // runs), this task is deliberately standalone - nothing else forces
+      // compilation first. Confirmed directly: without this, `sbt
+      // schemaRegistryCheck` on its own threw a bare ClassNotFoundException
+      // for the (never-compiled) channels-provider class.
+      val _ = (Compile / compile).value
+      val channelsClass = asyncApiChannelsClass.value
+      val registryUrl = schemaRegistryUrl.value
+      val groupId = schemaRegistryGroupId.value
+      // Same reflective-invocation mechanism asyncApiGenerateSpec uses
+      // below (dedicated URLClassLoader, parent = null) - see its own
+      // comments for exactly why (not (Compile/runMain), not a `java`
+      // subprocess, Scala-version classloader isolation).
+      val classpath =
+        (Compile / classDirectory).value +: Attributed.data(
+          (Compile / dependencyClasspath).value
+        )
+      val loader =
+        new java.net.URLClassLoader(classpath.map(_.toURI.toURL).toArray, null)
+      try {
+        val writerClass =
+          loader.loadClass("purekafka.docs.SchemaRegistryWriter$")
+        val writerModule = writerClass.getField("MODULE$").get(null)
+        val mainMethod =
+          writerClass.getMethod("main", classOf[Array[String]])
+        mainMethod.invoke(
+          writerModule,
+          Array(channelsClass, registryUrl, groupId)
+        )
+      } finally loader.close()
+    },
     asyncApiGenerateSpec := {
       val channelsClass = asyncApiChannelsClass.value
       val title = asyncApiTitle.value
