@@ -1,0 +1,9 @@
+Phase 1 Verification Report — SchemaRegistryWriter core logic
+
+Automated test command: sbt pureKafka/scalafmtCheck pureKafka/test
+Result: 50/50 tests passing (module-wide), scalafmtCheck clean.
+
+Manual verification: skipped (reduced-prompting mode, .claude/prompt-off) -
+pure unit tests against a stub Client[F], no real registry needed at this
+phase; Phase 2's end-to-end verify script will confirm against the real
+local Apicurio instance.
