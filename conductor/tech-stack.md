@@ -62,6 +62,10 @@
   `asyncApiGenerate` shells out to `@asyncapi/cli@4.1.1` + a patched `@asyncapi/html-template@1.0.0`
   (Node.js/npm — see that task's own doc comment for the full version-pinning/patching reasoning);
   Node-toolchain failures warn and continue rather than failing the build.
+  When the consuming project also enables sbt-native-packager
+  (`JavaAppPackaging`/`UniversalPlugin`), the plugin also appends
+  `asyncApiGenerate`'s output to `Universal / mappings`, baking the rendered HTML into the Docker
+  image automatically (TD-6) — AppRoutes then serves it at `/docs/asyncapi/index.html`.
 - **schemaRegistryCheck** (Rework 5 step 2, ADR 0003): a separate, explicitly-invoked task (not
   chained after `Compile/compile` — it makes a real network call, unlike `asyncApiGenerate`'s pure
   local file writes) that reuses the same `AsyncApiChannel`/`Schema[A]` registrations to check/register

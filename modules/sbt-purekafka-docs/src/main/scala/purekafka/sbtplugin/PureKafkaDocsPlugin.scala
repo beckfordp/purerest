@@ -3,6 +3,9 @@ package purekafka.sbtplugin
 import sbt._
 import sbt.Keys._
 
+import com.typesafe.sbt.SbtNativePackager.Universal
+import com.typesafe.sbt.packager.universal.UniversalPlugin
+
 /** `asyncApiGenerateSpec` invokes `purekafka.docs.AsyncApiSpecWriter`
   * in-process via a dedicated `URLClassLoader` (not `(Compile / runMain)` or a
   * `java` subprocess — see its own comment below for why); `asyncApiGenerate`
@@ -16,6 +19,15 @@ import sbt.Keys._
   * explicitly (`sbt schemaRegistryCheck`), e.g. in CI.
   */
 object PureKafkaDocsPlugin extends AutoPlugin {
+
+  // Requires UniversalPlugin so native-packager's own `Universal / mappings`
+  // setting is initialised before this plugin's `++=` append below (sbt
+  // applies a plugin's settings after those of the plugins it requires).
+  // `noTrigger` is essential: without it, sbt's default `allRequirements`
+  // trigger would auto-activate this plugin on every JavaAppPackaging
+  // project, including ones that never configure `asyncApiChannelsClass`.
+  override def requires: Plugins = UniversalPlugin
+  override def trigger: PluginTrigger = noTrigger
 
   object autoImport {
     val asyncApiChannelsClass: SettingKey[String] = settingKey[String](
@@ -140,6 +152,22 @@ object PureKafkaDocsPlugin extends AutoPlugin {
       AsyncApiHtmlGenerator
         .generate(specFile, outputDir, cliCacheDir, streams.value.log)
       outputDir
+    },
+    // Auto-wires the rendered HTML into sbt-native-packager images (TD-6):
+    // without this, every consuming build had to repeat the same
+    // `Universal / mappings ++=` block by hand. Inert for a project that
+    // doesn't enable native-packager, and `asyncApiGenerate` only runs when a
+    // packaging task actually reads `Universal / mappings`. The plugin stays
+    // opt-in (`trigger = noTrigger` above) — enabling native-packager alone
+    // must not activate it.
+    Universal / mappings ++= {
+      val base = asyncApiGenerate.value
+      Path
+        .allSubpaths(base)
+        .map { case (file, relPath) =>
+          file -> s"target/asyncapi-docs/$relPath"
+        }
+        .toSeq
     },
     // Def.taskDyn, not a plain task: confirmed directly that a plain task
     // body (`{ val a = (Compile/compile).value; asyncApiGenerate.value; a }`)

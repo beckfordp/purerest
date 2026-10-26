@@ -325,16 +325,20 @@ lazy val sbtPureKafkaDocs = project
     organization := "io.github.beckfordp",
     scalaVersion := "2.12.20",
     sbtPlugin := true,
-    // Fixed, not sbt-dynver's per-commit ThisBuild version: this plugin is
-    // dogfooded within this same multi-project build (kafka-harness below),
-    // and AutoPlugins are only discoverable from the meta-build's own
-    // classpath (project/plugins.sbt), not a sibling project's output - so
-    // kafka-harness consumes it the same way an external consumer eventually
-    // will, via a normal addSbtPlugin coordinate (see project/plugins.sbt).
-    // A per-commit version there would mean re-pinning it on every change;
-    // bump this by hand (and re-run publishLocal) whenever the plugin itself
-    // changes during this track.
-    version := "0.2.0-dev",
+    // Native-packager is an optional collaborator: the plugin appends the
+    // generated HTML to Universal/mappings when a consuming project also
+    // enables JavaAppPackaging/UniversalPlugin (TD-6). A plugin-to-plugin
+    // dependency, so the Universal configuration/mappings keys resolve.
+    libraryDependencies += Defaults.sbtPluginExtra(
+      "com.github.sbt" % "sbt-native-packager" % "1.11.1",
+      (pluginCrossBuild / sbtBinaryVersion).value,
+      (pluginCrossBuild / scalaBinaryVersion).value
+    ),
+    // Fixed, not sbt-dynver's per-commit ThisBuild version: AutoPlugins are
+    // only discoverable from a consuming build's own meta-build classpath, so
+    // external consumers pin a normal addSbtPlugin coordinate. Bump this by
+    // hand (and re-run publishLocal) whenever the plugin itself changes.
+    version := "0.3.0-dev",
     // Same GitHub Packages registry/credentials as pureKafka above - this is
     // its first real publish (release.yml now runs sbtPureKafkaDocs/publish
     // alongside it).
