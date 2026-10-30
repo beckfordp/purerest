@@ -1,0 +1,6 @@
+Tasks: Write failing tests + Implement LatencyBuckets (Phase 1, Perf 3a)
+- New purerest.metrics.LatencyBuckets.seconds: 24 boundaries 5ms-10s, dense 250ms-2.5s
+- ServerMetrics/ClientMetrics: withExplicitBucketBoundaries(LatencyBuckets.seconds)
+- Tests: LatencyBucketsSuite (values, ascending); boundary assertions in Server/ClientMetricsSuite via testkit PointExpectation.boundaries
+- Why: SDK default buckets are ms-sized, seconds-recorded histograms collapsed into 0-5s bucket (PERF-3.0)
+Tests and implementation committed together so main/CI never holds a red build.
