@@ -12,7 +12,10 @@
       `scripts/verify-perf3a-phase1.sh` runs the full sbt check: fmt, test, coverage. e09b00e
 
 ## Phase 2: Release v0.4.0
-- [ ] Task: Push main, tag `v0.4.0` and push the tag. Watch release.yml to green.
+- [x] Task: Push main, tag `v0.4.0` and push the tag. Watch release.yml to green.
+      Deviation: run 41068774260 published purerestlib/purekafka 0.4.0, then failed
+      re-publishing the unchanged sbt-purekafka-docs 0.3.0-dev (fixed version, already
+      exists), so deploy-docs was skipped. Pre-existing release.yml bug; follow-up.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md).
       `scripts/verify-perf3a-phase2.sh` checks that purerestlib 0.4.0 resolves from GitHub
       Packages (a throwaway sbt `update` in the scratchpad).
