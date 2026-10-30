@@ -47,3 +47,6 @@
 - The 0.1.0→0.4.0 jump is safe: no purerestlib/src/main changes since v0.1.0
 - A cold-build AsyncAPI race in services means rerun once
 - The testkit dependency may need adding to purerestlib Test scope
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions c90d4a7 (generator g8 bump: pure-service-generator, see git log)
