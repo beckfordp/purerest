@@ -34,13 +34,14 @@ object ServerMetrics {
       .mkString("/")
 
   /** Wraps `HttpRoutes[F]` with a `http.server.request.duration` histogram
-    * measurement (seconds) per handled request, tagged with the request method,
-    * route, and — when the route matched — the response status code, or an
-    * `error.type` attribute if the route raised instead of returning a response
-    * (so the "Errors" dimension of RED metrics doesn't silently miss handler
-    * failures — OTel semantic-convention attribute names throughout). The
-    * histogram instrument is created once, on first use, and reused for every
-    * subsequent request rather than recreated per request.
+    * measurement (seconds, [[LatencyBuckets.seconds]] boundaries) per handled
+    * request, tagged with the request method, route, and — when the route
+    * matched — the response status code, or an `error.type` attribute if the
+    * route raised instead of returning a response (so the "Errors" dimension of
+    * RED metrics doesn't silently miss handler failures — OTel
+    * semantic-convention attribute names throughout). The histogram instrument
+    * is created once, on first use, and reused for every subsequent request
+    * rather than recreated per request.
     */
   def middleware[F[_]: Async](
       meter: Meter[F]
@@ -55,6 +56,7 @@ object ServerMetrics {
           meter
             .histogram[Double]("http.server.request.duration")
             .withUnit("s")
+            .withExplicitBucketBoundaries(LatencyBuckets.seconds)
             .create
             .flatTap(histogram => histogramRef.set(Some(histogram)))
       }

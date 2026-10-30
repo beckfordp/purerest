@@ -160,4 +160,24 @@ class ServerMetricsSuite extends CatsEffectSuite {
       }
     }
   }
+
+  test("the request duration histogram uses LatencyBuckets.seconds") {
+    Metrics.test[IO]("purerest-server-metrics-test").use { testMeter =>
+      val wrapped = ServerMetrics.middleware(testMeter.meter)(routes)
+      for {
+        _ <- wrapped.orNotFound.run(Request[IO](uri = uri"/ping"))
+        metrics <- testMeter.collectMetrics
+      } yield MetricExpectations.checkAll(
+        metrics,
+        MetricExpectation
+          .histogram("http.server.request.duration")
+          .containsPoints(
+            PointExpectation.histogram.boundaries(LatencyBuckets.seconds)
+          )
+      ) match {
+        case Right(_)         => ()
+        case Left(mismatches) => fail(MetricExpectations.format(mismatches))
+      }
+    }
+  }
 }

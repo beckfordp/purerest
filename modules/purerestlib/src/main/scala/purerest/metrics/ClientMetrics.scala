@@ -12,13 +12,13 @@ import scala.concurrent.duration.SECONDS
 object ClientMetrics {
 
   /** Wraps a `Client[F]` with a `http.client.request.duration` histogram
-    * measurement (seconds) per outgoing call, tagged with the request method,
-    * server address, and response status code, or an `error.type` attribute if
-    * the call raised instead of returning a response (so the "Errors" dimension
-    * of RED metrics doesn't silently miss connection failures/timeouts — OTel
-    * semantic-convention attribute names throughout). The histogram instrument
-    * is created once, on first use, and reused for every subsequent call rather
-    * than recreated per call.
+    * measurement (seconds, [[LatencyBuckets.seconds]] boundaries) per outgoing
+    * call, tagged with the request method, server address, and response status
+    * code, or an `error.type` attribute if the call raised instead of returning
+    * a response (so the "Errors" dimension of RED metrics doesn't silently miss
+    * connection failures/timeouts — OTel semantic-convention attribute names
+    * throughout). The histogram instrument is created once, on first use, and
+    * reused for every subsequent call rather than recreated per call.
     */
   def middleware[F[_]: Async](meter: Meter[F])(client: Client[F]): Client[F] = {
     val histogramRef: Ref[F, Option[Histogram[F, Double]]] =
@@ -31,6 +31,7 @@ object ClientMetrics {
           meter
             .histogram[Double]("http.client.request.duration")
             .withUnit("s")
+            .withExplicitBucketBoundaries(LatencyBuckets.seconds)
             .create
             .flatTap(histogram => histogramRef.set(Some(histogram)))
       }
