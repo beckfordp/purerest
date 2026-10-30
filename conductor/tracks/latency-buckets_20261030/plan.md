@@ -1,6 +1,6 @@
 # Plan: Perf 3a — Latency histogram buckets
 
-## Phase 1: Shared boundaries in purerestlib
+## Phase 1: Shared boundaries in purerestlib [checkpoint: e09b00e]
 - [x] Task: Write failing tests: `LatencyBucketsSuite` checks the exact values, ascending
       order and 5ms–10s range. `ServerMetricsSuite` and `ClientMetricsSuite` use the
       oteljava testkit to assert that recorded histograms carry these boundaries. 916f908
@@ -8,8 +8,8 @@
       `withExplicitBucketBoundaries` into ServerMetrics/ClientMetrics. Update the Scaladoc. 916f908
 - [x] Task: Apply the boundaries to the demo `order-service` module's `OrderStore` DB
       histogram. c71b934
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md).
-      `scripts/verify-perf3a-phase1.sh` runs the full sbt check: fmt, test, coverage.
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md).
+      `scripts/verify-perf3a-phase1.sh` runs the full sbt check: fmt, test, coverage. e09b00e
 
 ## Phase 2: Release v0.4.0
 - [ ] Task: Push main, tag `v0.4.0` and push the tag. Watch release.yml to green.
