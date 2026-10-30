@@ -28,7 +28,7 @@
       order 43543c6, payment 17e26cb, user c910a39 (fulfilment/user: new ping-based test,
       no prior DB metric test)
 - [x] Task: notification-service: version bump only. bba2f41
-- [~] Task: Check `gh run list` in all 8 repos until green.
+- [x] Task: Check `gh run list` in all 8 repos until green. (all 8 green)
 - [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md).
       `scripts/verify-perf3a-phase3.sh` reports CI status across the 8 repos.
 
