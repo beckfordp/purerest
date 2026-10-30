@@ -1,0 +1,5 @@
+Phase 1 verification (Perf 3a): ./scripts/verify-perf3a-phase1.sh PASS
+- sbt scalafmtCheck Test/scalafmtCheck test: 50+49+23+29 passed
+- purerest.metrics coverage: all classes 100%
+- purerestlib overall 77.56% predates track (logging/tracing helpers)
+Manual verification replaced by script (prompting off).
