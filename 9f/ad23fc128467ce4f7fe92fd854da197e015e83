@@ -1,0 +1,3 @@
+Phase 2 verification (Perf 3a): ./scripts/verify-perf3a-phase2.sh PASS
+- purerestlib_3-0.4.0.jar downloadable from GitHub Packages, contains purerest/metrics/LatencyBuckets
+- Release run 41068774260: purerestlib + purekafka 0.4.0 published; sbt-purekafka-docs republish of fixed 0.3.0-dev failed (already exists), deploy-docs skipped. Follow-up.
