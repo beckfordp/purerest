@@ -32,12 +32,12 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md).
       `scripts/verify-perf3a-phase3.sh` reports CI status across the 8 repos. 9d7426e
 
-## Phase 4: Deploy + live verification
+## Phase 4: Deploy + live verification [checkpoint: 0a8dd39]
 - [x] Task: `bin/k8s-local-up` (rebuild and redeploy all 8). (all 8 rolled out)
-- [ ] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md).
       `scripts/verify-perf3a-phase4.sh` port-forwards each service's metrics port (9090)
       and greps `http_server_request_duration_seconds_bucket{...le="0.25"`, plus the DB
-      bucket where present. Then `bin/run-perf SmokeSimulation` exits 0.
+      bucket where present. Smoke run first (its traffic populates the histograms), exits 0. 0a8dd39
 
 ## Wrap-up (outside the track)
 - gluon PLAN.md PERF-3.0 ticked, CHANGELOG entry
