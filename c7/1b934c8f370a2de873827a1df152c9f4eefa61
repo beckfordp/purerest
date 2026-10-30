@@ -1,0 +1,4 @@
+Task: Apply boundaries to demo order-service OrderStore (Phase 1, Perf 3a)
+- OrderStore db.client.operation.duration: withExplicitBucketBoundaries(LatencyBuckets.seconds)
+- OrderStorePostgresSuite asserts every point carries LatencyBuckets.seconds boundaries
+- Why: same ms-sized default-bucket problem as the HTTP histograms
