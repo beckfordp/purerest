@@ -6,8 +6,8 @@
       oteljava testkit to assert that recorded histograms carry these boundaries. 916f908
 - [x] Task: Implement `purerest.metrics.LatencyBuckets.seconds` and wire
       `withExplicitBucketBoundaries` into ServerMetrics/ClientMetrics. Update the Scaladoc. 916f908
-- [ ] Task: Apply the boundaries to the demo `order-service` module's `OrderStore` DB
-      histogram.
+- [x] Task: Apply the boundaries to the demo `order-service` module's `OrderStore` DB
+      histogram. c71b934
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md).
       `scripts/verify-perf3a-phase1.sh` runs the full sbt check: fmt, test, coverage.
 
