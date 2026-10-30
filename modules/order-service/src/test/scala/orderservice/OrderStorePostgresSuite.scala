@@ -7,7 +7,7 @@ import com.dimafeng.testcontainers.munit.TestContainerForAll
 import munit.CatsEffectSuite
 import org.testcontainers.utility.DockerImageName
 import org.typelevel.otel4s.metrics.Meter
-import purerest.metrics.Metrics
+import purerest.metrics.{LatencyBuckets, Metrics}
 
 import scala.jdk.CollectionConverters._
 
@@ -143,6 +143,12 @@ class OrderStorePostgresSuite extends CatsEffectSuite with TestContainerForAll {
                 operations.contains("insert") && operations.contains("select"),
                 s"expected db.operation attributes for both insert and select, got: $operations"
               )
+              data.get.getHistogramData.getPoints.asScala.foreach { point =>
+                assertEquals(
+                  point.getBoundaries.asScala.map(_.doubleValue).toVector,
+                  LatencyBuckets.seconds.boundaries
+                )
+              }
             }
           }
       }
