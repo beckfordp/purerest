@@ -1,0 +1,3 @@
+Phase 4 verification (Perf 3a): ./scripts/verify-perf3a-phase4.sh PASS
+- bin/run-perf SmokeSimulation exit 0, validity RESULT valid
+- /metrics le="0.25" on http_server_request_duration_seconds in all 8, db_client_operation_duration_seconds in the 7 with a DB histogram
