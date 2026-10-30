@@ -5,6 +5,9 @@ This file tracks all major tracks for the project.
 - [x] **Track: `purekafka`: Kafka resilience + observability module (ADR 0010)**
   *Link: [./tracks/purekafka_20261015/](./tracks/purekafka_20261015/)*
 
+- [ ] **Track: Performance 3a: Latency histogram buckets (PERF-3.0)**
+  *Link: [./tracks/latency-buckets_20261030/](./tracks/latency-buckets_20261030/)*
+
 ---
 
 ## Backlog
