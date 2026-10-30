@@ -3,7 +3,7 @@
 ## Phase 1: Shared boundaries in purerestlib
 - [x] Task: Write failing tests: `LatencyBucketsSuite` checks the exact values, ascending
       order and 5ms–10s range. `ServerMetricsSuite` and `ClientMetricsSuite` use the
-      oteljava testkit to assert that recorded histograms carry these boundaries.
+      oteljava testkit to assert that recorded histograms carry these boundaries. 916f908
 - [x] Task: Implement `purerest.metrics.LatencyBuckets.seconds` and wire
       `withExplicitBucketBoundaries` into ServerMetrics/ClientMetrics. Update the Scaladoc. 916f908
 - [ ] Task: Apply the boundaries to the demo `order-service` module's `OrderStore` DB
