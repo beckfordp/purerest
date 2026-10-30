@@ -20,7 +20,7 @@
       `scripts/verify-perf3a-phase2.sh` checks that purerestlib 0.4.0 resolves from GitHub
       Packages (downloads the jar, checks for LatencyBuckets). 9fad23f
 
-## Phase 3: Adopt in the 8 services (one commit and push per repo)
+## Phase 3: Adopt in the 8 services (one commit and push per repo) [checkpoint: 9d7426e]
 - [x] Task: For each of cart, catalog, fulfilment, inventory, order, payment and user: bump
       `purerestlibVersion` to 0.4.0, apply `LatencyBuckets.seconds` to the DB histogram, and
       run `sbt scalafmtCheck test`. Each service's existing DB timer test asserts the
@@ -29,11 +29,11 @@
       no prior DB metric test)
 - [x] Task: notification-service: version bump only. bba2f41
 - [x] Task: Check `gh run list` in all 8 repos until green. (all 8 green)
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md).
-      `scripts/verify-perf3a-phase3.sh` reports CI status across the 8 repos.
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md).
+      `scripts/verify-perf3a-phase3.sh` reports CI status across the 8 repos. 9d7426e
 
 ## Phase 4: Deploy + live verification
-- [ ] Task: `bin/k8s-local-up` (rebuild and redeploy all 8).
+- [~] Task: `bin/k8s-local-up` (rebuild and redeploy all 8).
 - [ ] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md).
       `scripts/verify-perf3a-phase4.sh` port-forwards each service's metrics port (9090)
       and greps `http_server_request_duration_seconds_bucket{...le="0.25"`, plus the DB
