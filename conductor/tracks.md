@@ -17,4 +17,6 @@ folder), so `/conductor:implement` cannot pick these up by accident. Reorder fre
 priorities change. When ready to work on one, run `/conductor:newTrack <title>` to go
 through the spec/plan questions and promote it into a real track below.
 
+- Release: skip sbtPureKafkaDocs publish when its fixed version already exists, so deploy-docs runs (v0.4.0 run 41068774260 failed there; Scaladoc pages stale at 0.3.1)
+
 ---

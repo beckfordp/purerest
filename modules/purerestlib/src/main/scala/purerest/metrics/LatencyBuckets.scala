@@ -15,6 +15,7 @@ import org.typelevel.otel4s.metrics.BucketBoundaries
   */
 object LatencyBuckets {
 
+  /** 24 boundaries in seconds, for `withExplicitBucketBoundaries`. */
   val seconds: BucketBoundaries = BucketBoundaries(
     0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6,
     0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 7.5, 10.0
