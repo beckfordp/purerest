@@ -1,0 +1,409 @@
+<title>purerest Call Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3F5F1;
+    --surface:#FFFFFF;
+    --surface-2:#EAEEE8;
+    --ink:#161A17;
+    --ink-dim:#5B655B;
+    --border:#D6DBD1;
+    --accent:#0E7C79;
+    --accent-soft:#DCEEEA;
+    --font-sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+    --font-mono:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0D1210;
+      --surface:#171C19;
+      --surface-2:#1E2521;
+      --ink:#E7ECE6;
+      --ink-dim:#93A093;
+      --border:#2A322B;
+      --accent:#3FE0D1;
+      --accent-soft:#173936;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1210;
+    --surface:#171C19;
+    --surface-2:#1E2521;
+    --ink:#E7ECE6;
+    --ink-dim:#93A093;
+    --border:#2A322B;
+    --accent:#3FE0D1;
+    --accent-soft:#173936;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-sans);
+    padding:0 20px;
+  }
+  .page{
+    max-width:980px;
+    margin:0 auto;
+    padding-block:48px 64px;
+    display:flex;
+    flex-direction:column;
+    gap:38px;
+  }
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  h1{
+    font-size:clamp(26px,4vw,34px);
+    line-height:1.15;
+    font-weight:650;
+    margin:10px 0 8px;
+    text-wrap:balance;
+    letter-spacing:-0.01em;
+  }
+  .subtitle{
+    font-size:16px;
+    color:var(--ink-dim);
+    max-width:56ch;
+    line-height:1.5;
+  }
+  .meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:18px;
+  }
+  .pill{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    padding:5px 10px;
+    border-radius:999px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--ink-dim);
+  }
+
+  .intro p{
+    font-size:15px;
+    line-height:1.65;
+    max-width:72ch;
+    color:var(--ink);
+  }
+  .intro code{
+    font-family:var(--font-mono);
+    background:var(--surface-2);
+    padding:1px 5px;
+    border-radius:4px;
+    font-size:0.92em;
+  }
+
+  h2{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    padding-bottom:10px;
+    border-bottom:1px solid var(--border);
+    margin:0 0 18px;
+  }
+
+  .diagram-wrap{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+  }
+  figure{margin:0;}
+  .diagram-scroll{overflow-x:auto;}
+  svg{display:block;width:100%;height:auto;min-width:640px;}
+  figcaption{
+    font-size:13px;
+    color:var(--ink-dim);
+    margin-top:14px;
+    line-height:1.55;
+    max-width:76ch;
+  }
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:22px;
+    margin-top:16px;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+  }
+  .legend-item{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-size:12.5px;
+    color:var(--ink-dim);
+  }
+  .legend-swatch{width:30px;height:0;border-top:2.5px solid var(--ink);}
+  .legend-swatch.dep{border-top:2.5px solid var(--accent);}
+
+  .module-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+  }
+  .module-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:18px 20px;
+  }
+  .module-card h3{
+    font-family:var(--font-mono);
+    font-size:14px;
+    font-weight:700;
+    margin:0 0 3px;
+  }
+  .module-card .path{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-dim);
+    margin-bottom:12px;
+    display:block;
+  }
+  .module-card ul{
+    margin:0 0 12px;
+    padding-left:16px;
+    font-size:12.5px;
+    line-height:1.65;
+    color:var(--ink);
+  }
+  .tags{display:flex;flex-wrap:wrap;gap:6px;}
+  .tag{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--ink-dim);
+    padding:3px 7px;
+    border-radius:5px;
+  }
+  .surface-note{
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--ink-dim);
+    max-width:74ch;
+  }
+
+  footer{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--ink-dim);
+    padding-top:20px;
+    border-top:1px solid var(--border);
+  }
+
+  @media (max-width:640px){
+    .module-grid{grid-template-columns:1fr;}
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="eyebrow">System design — pure-service</div>
+    <h1>purerest, and its two consumers</h1>
+    <p class="subtitle">A Cats-Effect platform library, and the request path that exercises it.</p>
+    <div class="meta-row">
+      <span class="pill">Scala 3.9.0</span>
+      <span class="pill">Cats Effect 3.7.0</span>
+      <span class="pill">http4s 0.23.37</span>
+      <span class="pill">sbt multi-module</span>
+    </div>
+  </header>
+
+  <section class="intro">
+    <p>
+      <code>purerest</code> is a small Cats-Effect-native library: an http4s client, OpenTelemetry tracing
+      (<code>otel4s</code>), and trace-correlated structured logging (<code>log4cats</code>), each exposed as a
+      plain value or combinator rather than an annotation. <code>order-service</code> and
+      <code>inventory-service</code> are its two consumers — ordinary http4s servers that pull purerest in as an
+      sbt module dependency, the same way they'd pull in any other library. The diagram below follows one
+      request, <code>POST /orders</code>, from curl through both services and into purerest, and shows exactly
+      which parts of the library each service's own <code>Main.scala</code> actually constructs.
+    </p>
+  </section>
+
+  <section class="diagram-section">
+    <div class="diagram-wrap">
+      <figure>
+        <div class="diagram-scroll">
+        <svg viewBox="0 0 1000 570" role="img" aria-label="order-service's InventoryClient calls inventory-service's POST /inventory/reserve through a plain purerest HttpClient. inventory-service's Main constructs a Tracer and a trace-correlated logger from purerest and wraps InventoryRoutes in purerest's ServerTracing middleware; order-service constructs neither.">
+          <defs>
+            <marker id="arrowInk" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" style="fill:var(--ink)"/>
+            </marker>
+            <marker id="arrowDim" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" style="fill:var(--ink-dim)"/>
+            </marker>
+            <marker id="arrowAccent" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" style="fill:var(--accent)"/>
+            </marker>
+          </defs>
+
+          <!-- client -->
+          <rect x="20" y="115" width="100" height="50" rx="6" style="fill:var(--surface-2);stroke:var(--border)"/>
+          <text x="70" y="137" text-anchor="middle" style="fill:var(--ink);font:700 12px var(--font-mono)">curl</text>
+          <text x="70" y="151" text-anchor="middle" style="fill:var(--ink-dim);font:400 9.5px var(--font-sans)">developer</text>
+
+          <!-- order-service outer -->
+          <rect x="150" y="60" width="320" height="280" rx="12" style="fill:var(--surface);stroke:var(--border);stroke-width:1.5"/>
+          <text x="170" y="88" style="fill:var(--ink);font:700 14px var(--font-mono)">order-service</text>
+          <text x="170" y="104" style="fill:var(--ink-dim);font:400 9.5px var(--font-mono)">:8080</text>
+
+          <rect x="170" y="118" width="280" height="42" rx="6" style="fill:var(--surface-2);stroke:var(--border)"/>
+          <text x="310" y="135" text-anchor="middle" style="fill:var(--ink);font:700 11px var(--font-mono)">OrderRoutes</text>
+          <text x="310" y="150" text-anchor="middle" style="fill:var(--ink-dim);font:400 9.5px var(--font-mono)">POST /orders</text>
+
+          <rect x="170" y="190" width="130" height="56" rx="6" style="fill:var(--surface-2);stroke:var(--border)"/>
+          <text x="235" y="211" text-anchor="middle" style="fill:var(--ink);font:700 10px var(--font-mono)">InventoryClient</text>
+          <text x="235" y="225" text-anchor="middle" style="fill:var(--ink-dim);font:400 8.5px var(--font-mono)">http4s Client[F] call</text>
+          <text x="235" y="237" text-anchor="middle" style="fill:var(--ink-dim);font:400 8.5px var(--font-mono)">→ inventory-service</text>
+
+          <rect x="320" y="190" width="130" height="56" rx="6" style="fill:var(--surface-2);stroke:var(--border)"/>
+          <text x="385" y="211" text-anchor="middle" style="fill:var(--ink);font:700 10px var(--font-mono)">OrderStore</text>
+          <text x="385" y="225" text-anchor="middle" style="fill:var(--ink-dim);font:400 8.5px var(--font-mono)">in-memory</text>
+          <text x="385" y="237" text-anchor="middle" style="fill:var(--ink-dim);font:400 8.5px var(--font-mono)">order → id</text>
+
+          <line x1="270" y1="160" x2="240" y2="190" style="stroke:var(--ink);stroke-width:1.5" marker-end="url(#arrowInk)"/>
+          <line x1="360" y1="160" x2="380" y2="190" style="stroke:var(--ink);stroke-width:1.5" marker-end="url(#arrowInk)"/>
+
+          <!-- inventory-service outer -->
+          <rect x="620" y="60" width="320" height="280" rx="12" style="fill:var(--surface);stroke:var(--border);stroke-width:1.5"/>
+          <text x="640" y="88" style="fill:var(--ink);font:700 14px var(--font-mono)">inventory-service</text>
+          <text x="640" y="104" style="fill:var(--ink-dim);font:400 9.5px var(--font-mono)">:8081</text>
+
+          <rect x="640" y="118" width="280" height="42" rx="6" style="fill:var(--surface-2);stroke:var(--border)"/>
+          <text x="780" y="135" text-anchor="middle" style="fill:var(--ink);font:700 11px var(--font-mono)">InventoryRoutes</text>
+          <text x="780" y="150" text-anchor="middle" style="fill:var(--ink-dim);font:400 9px var(--font-mono)">POST /inventory/reserve</text>
+
+          <rect x="640" y="190" width="280" height="56" rx="6" style="fill:var(--surface-2);stroke:var(--border)"/>
+          <text x="780" y="212" text-anchor="middle" style="fill:var(--ink);font:700 11px var(--font-mono)">InventoryStore</text>
+          <text x="780" y="227" text-anchor="middle" style="fill:var(--ink-dim);font:400 9px var(--font-mono)">in-memory</text>
+          <text x="780" y="240" text-anchor="middle" style="fill:var(--ink-dim);font:400 8.5px var(--font-mono)">reserve → reservation id</text>
+
+          <line x1="780" y1="160" x2="780" y2="190" style="stroke:var(--ink);stroke-width:1.5" marker-end="url(#arrowInk)"/>
+
+          <!-- client -> OrderRoutes -->
+          <line x1="120" y1="140" x2="167" y2="139" style="stroke:var(--ink);stroke-width:2" marker-end="url(#arrowInk)"/>
+          <text x="143" y="126" text-anchor="middle" style="fill:var(--ink);font:700 10px var(--font-mono)">POST /orders</text>
+
+          <!-- request: InventoryClient -> InventoryRoutes -->
+          <polyline points="300,218 545,218 545,139 637,139" style="fill:none;stroke:var(--ink);stroke-width:2" marker-end="url(#arrowInk)"/>
+          <text x="545" y="126" text-anchor="middle" style="fill:var(--ink);font:700 10px var(--font-mono)">POST /inventory/reserve</text>
+          <text x="545" y="196" text-anchor="middle" style="fill:var(--ink-dim);font:400 8.5px var(--font-mono)">plain http4s Client — no tracing wrap</text>
+
+          <!-- response: InventoryStore area -> InventoryClient -->
+          <polyline points="780,246 780,300 235,300 235,249" style="fill:none;stroke:var(--ink-dim);stroke-width:1.5" marker-end="url(#arrowDim)"/>
+          <text x="507" y="292" text-anchor="middle" style="fill:var(--ink-dim);font:400 9.5px var(--font-mono)">201 Created · reservationId</text>
+
+          <!-- purerest band -->
+          <rect x="150" y="400" width="790" height="150" rx="12" style="fill:var(--surface-2);stroke:var(--border);stroke-width:1.5"/>
+          <text x="170" y="425" style="fill:var(--ink);font:700 14px var(--font-mono)">purerest<tspan style="fill:var(--ink-dim);font-weight:400" dx="6" font-size="12">modules/purerest — library</tspan></text>
+          <text x="170" y="441" style="fill:var(--ink-dim);font:400 9.5px var(--font-mono)">tagless-final, F[_]: Async — no annotations, no reflection</text>
+
+          <rect x="170" y="458" width="220" height="78" rx="6" style="fill:var(--surface);stroke:var(--border)"/>
+          <text x="280" y="480" text-anchor="middle" style="fill:var(--ink);font:700 11px var(--font-mono)">purerest.client</text>
+          <text x="280" y="496" text-anchor="middle" style="fill:var(--ink);font:400 10px var(--font-mono)">HttpClient.resource[F]</text>
+          <text x="280" y="511" text-anchor="middle" style="fill:var(--ink-dim);font:400 8.5px var(--font-mono)">used by → order-service</text>
+
+          <rect x="410" y="458" width="290" height="78" rx="6" style="fill:var(--surface);stroke:var(--border)"/>
+          <text x="555" y="480" text-anchor="middle" style="fill:var(--ink);font:700 11px var(--font-mono)">purerest.tracing</text>
+          <text x="555" y="496" text-anchor="middle" style="fill:var(--ink);font:400 8.5px var(--font-mono)">Tracing · ServerTracing · ClientTracing</text>
+          <text x="555" y="510" text-anchor="middle" style="fill:var(--ink-dim);font:400 8px var(--font-mono)">used by → inventory-service</text>
+
+          <rect x="720" y="458" width="200" height="78" rx="6" style="fill:var(--surface);stroke:var(--border)"/>
+          <text x="820" y="480" text-anchor="middle" style="fill:var(--ink);font:700 11px var(--font-mono)">purerest.logging</text>
+          <text x="820" y="496" text-anchor="middle" style="fill:var(--ink);font:400 8.5px var(--font-mono)">Logging.create(tracer, name)</text>
+          <text x="820" y="511" text-anchor="middle" style="fill:var(--ink-dim);font:400 8px var(--font-mono)">used by → inventory-service</text>
+
+          <!-- dependency edges: solid accent -->
+          <line x1="235" y1="246" x2="280" y2="456" style="stroke:var(--accent);stroke-width:2" marker-end="url(#arrowAccent)"/>
+          <text x="150" y="360" style="fill:var(--ink-dim);font:400 9px var(--font-mono)">constructs Client[F]</text>
+
+          <line x1="740" y1="340" x2="580" y2="456" style="stroke:var(--accent);stroke-width:2" marker-end="url(#arrowAccent)"/>
+          <text x="470" y="374" text-anchor="middle" style="fill:var(--ink-dim);font:400 9px var(--font-mono)">Main builds Tracer[F]; wraps InventoryRoutes</text>
+
+          <line x1="820" y1="340" x2="820" y2="456" style="stroke:var(--accent);stroke-width:2" marker-end="url(#arrowAccent)"/>
+          <text x="820" y="374" text-anchor="middle" style="fill:var(--ink-dim);font:400 9px var(--font-mono)">Main builds trace-correlated logger</text>
+        </svg>
+        </div>
+        <figcaption><code>InventoryClient</code> calls inventory-service through a plain <code>purerest.client.HttpClient</code> — no tracing middleware wraps it. <code>inventory-service</code>'s <code>Main</code> builds a console <code>Tracer[F]</code> and a trace-correlated logger from purerest and wraps <code>InventoryRoutes</code> in <code>ServerTracing</code>; <code>order-service</code> constructs neither.</figcaption>
+      </figure>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-swatch"></span>HTTP request / response</div>
+        <div class="legend-item"><span class="legend-swatch dep"></span>constructs / depends on (purerest)</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stack">
+    <h2>Modules &amp; dependencies</h2>
+    <div class="module-grid">
+      <div class="module-card">
+        <h3>purerest</h3>
+        <span class="path">modules/purerest</span>
+        <ul>
+          <li>client.HttpClient</li>
+          <li>tracing.{Tracing, ServerTracing, ClientTracing}</li>
+          <li>logging.Logging</li>
+        </ul>
+        <div class="tags">
+          <span class="tag">cats-effect 3.7.0</span>
+          <span class="tag">http4s-ember-client</span>
+          <span class="tag">circe</span>
+          <span class="tag">otel4s-oteljava 1.1.0</span>
+          <span class="tag">log4cats 2.8.0</span>
+        </div>
+      </div>
+      <div class="module-card">
+        <h3>order-service</h3>
+        <span class="path">modules/order-service</span>
+        <ul>
+          <li>OrderRoutes — POST /orders</li>
+          <li>OrderStore — in-memory</li>
+          <li>InventoryClient</li>
+          <li>Main — Ember server</li>
+        </ul>
+        <div class="tags">
+          <span class="tag">http4s-ember-server</span>
+          <span class="tag">circe</span>
+          <span class="tag">→ purerest</span>
+        </div>
+      </div>
+      <div class="module-card">
+        <h3>inventory-service</h3>
+        <span class="path">modules/inventory-service</span>
+        <ul>
+          <li>InventoryRoutes — POST /inventory/reserve</li>
+          <li>InventoryStore — in-memory</li>
+          <li>Main — Ember server</li>
+        </ul>
+        <div class="tags">
+          <span class="tag">http4s-ember-server</span>
+          <span class="tag">circe</span>
+          <span class="tag">→ purerest</span>
+        </div>
+      </div>
+    </div>
+    <p class="surface-note">purerest's current surface, in full: a client wrapper, tracing, and logging — no retry, circuit breaker, or metrics module exists in <code>modules/purerest/src/main</code> yet; both stores are in-memory, no persistence layer.</p>
+  </section>
+
+  <footer>Source: build.sbt, modules/*/src/main/scala</footer>
+
+</div>
