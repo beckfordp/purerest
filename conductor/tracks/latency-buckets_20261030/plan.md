@@ -21,12 +21,14 @@
       Packages (downloads the jar, checks for LatencyBuckets). 9fad23f
 
 ## Phase 3: Adopt in the 8 services (one commit and push per repo)
-- [ ] Task: For each of cart, catalog, fulfilment, inventory, order, payment and user: bump
+- [x] Task: For each of cart, catalog, fulfilment, inventory, order, payment and user: bump
       `purerestlibVersion` to 0.4.0, apply `LatencyBuckets.seconds` to the DB histogram, and
       run `sbt scalafmtCheck test`. Each service's existing DB timer test asserts the
-      boundaries.
-- [ ] Task: notification-service: version bump only.
-- [ ] Task: Check `gh run list` in all 8 repos until green.
+      boundaries. cart 98d9086, catalog 5a10cac, fulfilment e4ea0a5, inventory d2e6214,
+      order 43543c6, payment 17e26cb, user c910a39 (fulfilment/user: new ping-based test,
+      no prior DB metric test)
+- [x] Task: notification-service: version bump only. bba2f41
+- [~] Task: Check `gh run list` in all 8 repos until green.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md).
       `scripts/verify-perf3a-phase3.sh` reports CI status across the 8 repos.
 
