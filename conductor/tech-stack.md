@@ -122,6 +122,9 @@
 - **Metrics**: otel4s's `Meter[F]` — RED metrics (request rate/errors/duration) plus
   resilience signals (retry attempts, circuit-breaker state/transitions/rejections), exported
   via `opentelemetry-exporter-prometheus`; in-memory testkit for tests.
+  Duration histograms (HTTP server/client here, DB in services) use explicit second-scale
+  boundaries, `purerest.metrics.LatencyBuckets.seconds` (5ms–10s), not the SDK's ms-sized
+  defaults (2026-10-30, gluon PERF-3.0).
 
 ## Resilience
 - **Retry**: **cats-retry** (4.0.0, Scala 3-only) supplies the backoff-policy composition
