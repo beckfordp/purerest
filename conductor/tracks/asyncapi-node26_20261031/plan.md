@@ -8,8 +8,8 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Generator on current versions' (Protocol in workflow.md)
 
 ## Phase 2: Release
-- [~] Task: tag `v0.4.1`, release workflow green, `sbt-purekafka-docs:0.4.0-dev` resolvable
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Release' (Protocol in workflow.md)
+- [x] Task: tag `v0.4.1`, release workflow green, `sbt-purekafka-docs:0.4.0-dev` resolvable (tag v0.4.1)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Release' (Protocol in workflow.md)
 
 ## Phase: Review Fixes
 - [x] Task: Apply review suggestions fe1d11f
