@@ -1,7 +1,7 @@
 {
   "track_id": "asyncapi-node26_20261031",
   "type": "chore",
-  "status": "new",
+  "status": "completed",
   "created_at": "2026-10-31T14:50:50Z",
   "updated_at": "2026-10-31T14:50:50Z",
   "description": "AsyncAPI HTML on Node 26: current @asyncapi/cli and html-template, no patch"
