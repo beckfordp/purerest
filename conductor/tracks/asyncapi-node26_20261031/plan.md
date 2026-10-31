@@ -7,7 +7,7 @@
 - [x] Task: plugin version 0.4.0-dev, tech-stack.md b3d9f6b
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Generator on current versions' (Protocol in workflow.md)
 
-## Phase 2: Release
+## Phase 2: Release [checkpoint: 739d753]
 - [x] Task: tag `v0.4.1`, release workflow green, `sbt-purekafka-docs:0.4.0-dev` resolvable (tag v0.4.1)
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Release' (Protocol in workflow.md)
 
