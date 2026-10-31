@@ -1,0 +1,1 @@
+Task: pure NodeVersion (parse node -v output, atLeast). munit added as plugin Test dep. 4 tests written first (red: not found), then green.
