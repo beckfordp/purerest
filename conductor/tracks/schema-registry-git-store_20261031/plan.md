@@ -1,7 +1,7 @@
 # Plan — Schema registry: versionable schemas, producer-only registration
 
 ## Phase 1: Writer and plugin
-- [ ] Task: `RegistrySchema` — draft-07 conversion + closed content model, munit tests first
+- [x] Task: `RegistrySchema` — draft-07 conversion + closed content model, munit tests first fca8856
 - [ ] Task: `SchemaRegistryWriter` — producer label, BACKWARD_TRANSITIVE, Subscribe dry-run (404 warn/skip, 4xx fail), tests first
 - [ ] Task: plugin `schemaRegistryProducer` setting, version 0.5.0-dev, tech-stack.md
 - [ ] Task: `scripts/verify-schema-registry-evolution.sh` against local Apicurio
