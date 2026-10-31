@@ -1,0 +1,1 @@
+Task: plugin fixed version 0.3.0-dev -> 0.4.0-dev (consumers pin it; new version also sidesteps the 'version already exists' publish failure for this release). tech-stack.md: versions, Node >= 24.11 requirement, cache layout, dated note.
