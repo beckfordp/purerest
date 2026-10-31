@@ -46,7 +46,7 @@ object PureKafkaDocsPlugin extends AutoPlugin {
       "Generates the AsyncAPI JSON spec via purekafka.docs.AsyncApiSpecWriter, writing to target/asyncapi-docs-spec/asyncapi.json."
     )
     val asyncApiGenerate: TaskKey[File] = taskKey[File](
-      "Renders static AsyncAPI HTML (via @asyncapi/cli + a patched html-template) from the generated spec, into asyncApiOutputDir. Node-toolchain failures warn and continue rather than failing the task."
+      "Renders static AsyncAPI HTML (via @asyncapi/cli + @asyncapi/html-template, Node >= 24.11) from the generated spec, into asyncApiOutputDir. A missing or too-old Node, or any Node-toolchain failure, warns and continues rather than failing the task."
     )
     val schemaRegistryUrl: SettingKey[String] = settingKey[String](
       "Base URL of the Apicurio Registry instance to check/register schemas against. Required to run schemaRegistryCheck."
