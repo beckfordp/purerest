@@ -297,8 +297,8 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
     }
   }
 
-  test("an incompatible subscribe mirror fails") {
-    runSubscribe(Status.Conflict).map { case (result, _) =>
+  test("an incompatible subscribe mirror (Apicurio 400 RuleViolation) fails") {
+    runSubscribe(Status.BadRequest).map { case (result, _) =>
       assert(result.isLeft, s"expected a failure, got $result")
     }
   }
