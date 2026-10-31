@@ -12,11 +12,11 @@ import com.typesafe.sbt.packager.universal.UniversalPlugin
   * renders static HTML from that spec, chained to run automatically after
   * `Compile / compile`. `schemaRegistryCheck` invokes
   * `purekafka.docs.SchemaRegistryWriter` the same reflective way, but is
-  * deliberately *not* chained after `Compile / compile` (Rework 5 step 2,
-  * ADR 0003) — it makes a real network call to a schema registry, unlike
+  * deliberately *not* chained after `Compile / compile` (Rework 5 step 2, ADR
+  * 0003) — it makes a real network call to a schema registry, unlike
   * `asyncApiGenerate`'s pure local file writes, so local `sbt compile`/`sbt
-  * test` must keep working even when no registry is running. Run it
-  * explicitly (`sbt schemaRegistryCheck`), e.g. in CI.
+  * test` must keep working even when no registry is running. Run it explicitly
+  * (`sbt schemaRegistryCheck`), e.g. in CI.
   */
 object PureKafkaDocsPlugin extends AutoPlugin {
 

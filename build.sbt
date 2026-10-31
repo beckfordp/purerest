@@ -334,6 +334,8 @@ lazy val sbtPureKafkaDocs = project
       (pluginCrossBuild / sbtBinaryVersion).value,
       (pluginCrossBuild / scalaBinaryVersion).value
     ),
+    // Unit tests for the plugin's pure helpers (e.g. NodeVersion).
+    libraryDependencies += "org.scalameta" %% "munit" % munitVersion % Test,
     // Fixed, not sbt-dynver's per-commit ThisBuild version: AutoPlugins are
     // only discoverable from a consuming build's own meta-build classpath, so
     // external consumers pin a normal addSbtPlugin coordinate. Bump this by
