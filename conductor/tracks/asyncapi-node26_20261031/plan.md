@@ -10,3 +10,6 @@
 ## Phase 2: Release
 - [~] Task: tag `v0.4.1`, release workflow green, `sbt-purekafka-docs:0.4.0-dev` resolvable
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Release' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions fe1d11f
