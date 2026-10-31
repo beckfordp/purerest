@@ -4,7 +4,6 @@ import sbt._
 import sbt.util.Logger
 
 import scala.sys.process._
-import scala.util.Try
 import scala.util.control.NonFatal
 
 /** Ports `scripts/generate-kafka-asyncapi-docs.sh`'s `@asyncapi/cli` +
@@ -43,17 +42,30 @@ object AsyncApiHtmlGenerator {
       log: Logger
   ): Unit =
     installedNode match {
-      case Some(node) if node.atLeast(MinimumNode) =>
+      case Right(node) if node.atLeast(MinimumNode) =>
         render(specFile, outputDir, cliCacheDir, log)
       case found =>
         log.warn(
-          s"asyncApiGenerate: AsyncAPI HTML needs Node >= $MinimumNode (found ${found.fold("none")(_.toString)}); " +
+          s"asyncApiGenerate: AsyncAPI HTML needs Node >= $MinimumNode (${found.fold(identity, n => s"found $n")}); " +
             "skipping it, the spec JSON is still generated"
         )
     }
 
-  private def installedNode: Option[NodeVersion] =
-    Try(Seq("node", "-v").!!).toOption.flatMap(NodeVersion.parse)
+  /** The `node` on PATH, or why there isn't a usable one. */
+  private def installedNode: Either[String, NodeVersion] = {
+    val output =
+      try Right(Seq("node", "-v").!!)
+      catch {
+        case _: java.io.IOException => Left("no node on PATH")
+        // `!!` throws RuntimeException on a non-zero exit.
+        case e: RuntimeException => Left(s"node -v failed: ${e.getMessage}")
+      }
+    output.flatMap(out =>
+      NodeVersion
+        .parse(out)
+        .toRight(s"unrecognised node -v output: ${out.trim}")
+    )
+  }
 
   private def render(
       specFile: File,
