@@ -7,6 +7,6 @@
 - [x] Task: `scripts/verify-schema-registry-evolution.sh` against local Apicurio 130b212
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Writer and plugin' (Protocol in workflow.md)
 
-## Phase 2: Release
+## Phase 2: Release [checkpoint: a5ddfd5]
 - [x] Task: tag `v0.5.0`, release workflow green (run 41244847166)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Release' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Release' (Protocol in workflow.md)
