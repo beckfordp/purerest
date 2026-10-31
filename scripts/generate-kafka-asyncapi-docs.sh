@@ -24,6 +24,13 @@ KAFKA_HARNESS_URL="${KAFKA_HARNESS_URL:-http://localhost:8085}"
 OUTPUT_DIR="${OUTPUT_DIR:-target/asyncapi-docs}"
 SPEC_FILE="target/asyncapi-docs-spec/asyncapi.json"
 
+# @asyncapi/generator 3.x (bundled by the cli below) needs Node >= 24.11.
+node_version="$(node -v 2>/dev/null || echo none)"
+if ! node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>24||(a===24&&b>=11)?0:1)' 2>/dev/null; then
+  echo "FAIL: AsyncAPI HTML needs Node >= 24.11 (found ${node_version}); try 'nvm use 26'" >&2
+  exit 1
+fi
+
 mkdir -p "$(dirname "$SPEC_FILE")"
 
 echo "1. Fetching the running spec from ${KAFKA_HARNESS_URL}/docs/asyncapi.json..."
@@ -42,18 +49,13 @@ echo "2. Generating static HTML via @asyncapi/cli (generate fromTemplate) + @asy
 # a registry-named template is re-installed on every run.
 ASYNCAPI_CLI_VERSION="6.2.2"
 HTML_TEMPLATE_VERSION="3.5.6"
-node_version="$(node -v 2>/dev/null || echo none)"
-if ! node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>24||(a===24&&b>=11)?0:1)' 2>/dev/null; then
-  echo "FAIL: AsyncAPI HTML needs Node >= 24.11 (found ${node_version}); try 'nvm use 26'" >&2
-  exit 1
-fi
 TOOL_DIR="target/asyncapi-cli-tool/cli-${ASYNCAPI_CLI_VERSION}_html-${HTML_TEMPLATE_VERSION}"
 ASYNCAPI_BIN="${TOOL_DIR}/node_modules/.bin/asyncapi"
 HTML_TEMPLATE="${TOOL_DIR}/node_modules/@asyncapi/html-template"
 if [ ! -x "$ASYNCAPI_BIN" ] || [ ! -d "$HTML_TEMPLATE" ]; then
   echo "   (first run — installing @asyncapi/cli@${ASYNCAPI_CLI_VERSION} + @asyncapi/html-template@${HTML_TEMPLATE_VERSION} into ${TOOL_DIR}, cached for next time)"
   mkdir -p "$TOOL_DIR"
-  npm install --no-save --prefix "$TOOL_DIR" "@asyncapi/cli@${ASYNCAPI_CLI_VERSION}" "@asyncapi/html-template@${HTML_TEMPLATE_VERSION}" >/dev/null
+  npm install --no-save --loglevel=error --prefix "$TOOL_DIR" "@asyncapi/cli@${ASYNCAPI_CLI_VERSION}" "@asyncapi/html-template@${HTML_TEMPLATE_VERSION}" >/dev/null
 fi
 
 # Clear contents without removing the directory itself (`rm -rf
@@ -64,6 +66,6 @@ fi
 mkdir -p "$OUTPUT_DIR"
 find "$OUTPUT_DIR" -mindepth 1 -delete
 
-"$ASYNCAPI_BIN" generate fromTemplate "$SPEC_FILE" "$HTML_TEMPLATE" --output "$OUTPUT_DIR" --force-write --no-interactive
+SUPPRESS_NO_CONFIG_WARNING=true "$ASYNCAPI_BIN" generate fromTemplate "$SPEC_FILE" "$HTML_TEMPLATE" --output "$OUTPUT_DIR" --force-write --no-interactive
 
 echo "3. Done — static HTML at ${OUTPUT_DIR}/index.html"

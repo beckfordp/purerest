@@ -82,6 +82,9 @@ object AsyncApiHtmlGenerator {
           "npm",
           "install",
           "--no-save",
+          // sbt logs a subprocess's stderr as [error]: keep npm's deprecation
+          // warnings out of the build log.
+          "--loglevel=error",
           "--prefix",
           toolDir.getAbsolutePath,
           s"@asyncapi/cli@$AsyncApiCliVersion",
@@ -114,7 +117,10 @@ object AsyncApiHtmlGenerator {
   }
 
   private def runChecked(cmd: Seq[String], log: Logger): Unit = {
-    val exitCode = Process(cmd).!(log)
+    // The cli's node-config otherwise warns, on stderr (logged as [error]),
+    // that the consuming project has no config/ directory.
+    val exitCode =
+      Process(cmd, None, "SUPPRESS_NO_CONFIG_WARNING" -> "true").!(log)
     if (exitCode != 0)
       sys.error(
         s"command failed with exit code $exitCode: ${cmd.mkString(" ")}"
