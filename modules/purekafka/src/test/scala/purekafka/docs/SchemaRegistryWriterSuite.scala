@@ -11,7 +11,12 @@ import org.http4s.{HttpRoutes, Request, Response, Status}
 
 class SchemaRegistryWriterSuite extends CatsEffectSuite {
 
-  final case class RecordedRequest(method: String, path: String, body: Json)
+  final case class RecordedRequest(
+      method: String,
+      path: String,
+      query: String,
+      body: Json
+  )
 
   /** A stub `Client[F]` recording every request it receives (for assertions)
     * and returning a canned response per `(method, path)` pair - no real
@@ -26,7 +31,9 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
       req.as[Json].flatMap { body =>
         val method = req.method.name
         val path = req.uri.path.renderString
-        requestsRef.update(_ :+ RecordedRequest(method, path, body)) *> {
+        requestsRef.update(
+          _ :+ RecordedRequest(method, path, req.uri.query.renderString, body)
+        ) *> {
           val (status, respBody) = responseFor(method, path)
           IO.pure(Response[IO](status).withEntity(respBody))
         }
@@ -38,7 +45,7 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
   private val oneChannel = List(AsyncApiChannelsProviderFixture.channels.head)
 
   test(
-    "registers one channel's JSON Schema under <topic>-<eventType> and sets a BACKWARD rule on first registration"
+    "registers a producer channel's closed draft-07 schema under <topic>-<eventType>, labelled with its producer, and sets BACKWARD_TRANSITIVE on first registration"
   ) {
     for {
       requestsRef <- Ref.of[IO, List[RecordedRequest]](Nil)
@@ -66,6 +73,7 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
         client,
         "http://ignored",
         "test-group",
+        "test-producer",
         oneChannel
       )
       requests <- requestsRef.get
@@ -94,6 +102,26 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
           .toOption
           .exists(_.contains("FixturePayload"))
       )
+      val registered = createReq.body.hcursor
+        .downField("firstVersion")
+        .downField("content")
+        .downField("content")
+        .as[String]
+        .flatMap(io.circe.parser.parse)
+        .toOption
+        .get
+      assertEquals(
+        registered.hcursor.get[String]("$schema"),
+        Right(RegistrySchema.Draft07)
+      )
+      assertEquals(
+        registered.hcursor.get[Boolean]("additionalProperties"),
+        Right(false)
+      )
+      assertEquals(
+        createReq.body.hcursor.downField("labels").get[String]("producer"),
+        Right("test-producer")
+      )
 
       val ruleReq = requests(1)
       assertEquals(ruleReq.method, "POST")
@@ -105,7 +133,7 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
         ruleReq.body,
         Json.obj(
           "ruleType" -> "COMPATIBILITY".asJson,
-          "config" -> "BACKWARD".asJson
+          "config" -> "BACKWARD_TRANSITIVE".asJson
         )
       )
     }
@@ -132,6 +160,7 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
         client,
         "http://ignored",
         "test-group",
+        "test-producer",
         oneChannel
       )
       requests <- requestsRef.get
@@ -164,7 +193,13 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
           }
       )
       result <- SchemaRegistryWriter
-        .register[IO](client, "http://ignored", "test-group", oneChannel)
+        .register[IO](
+          client,
+          "http://ignored",
+          "test-group",
+          "test-producer",
+          oneChannel
+        )
         .attempt
     } yield assert(result.isRight, s"expected success, got $result")
   }
@@ -190,8 +225,81 @@ class SchemaRegistryWriterSuite extends CatsEffectSuite {
           }
       )
       result <- SchemaRegistryWriter
-        .register[IO](client, "http://ignored", "test-group", oneChannel)
+        .register[IO](
+          client,
+          "http://ignored",
+          "test-group",
+          "test-producer",
+          oneChannel
+        )
         .attempt
     } yield assert(result.isLeft, s"expected a failure, got $result")
+  }
+
+  private val subscribeChannel = List(
+    AsyncApiChannel[FixturePayload](
+      topic = "fixture-topic",
+      eventType = "FixtureEvent",
+      direction = ChannelDirection.Subscribe
+    )
+  )
+
+  private val dryRunPath =
+    "/apis/registry/v3/groups/test-group/artifacts/fixture-topic-FixtureEvent/versions"
+
+  private def runSubscribe(status: Status) =
+    for {
+      requestsRef <- Ref.of[IO, List[RecordedRequest]](Nil)
+      client = stubClient(
+        requestsRef,
+        (method, path) =>
+          (method, path) match {
+            case ("POST", `dryRunPath`) => (status, Json.obj())
+            case other                  => fail(s"unexpected request: $other")
+          }
+      )
+      result <- SchemaRegistryWriter
+        .register[IO](
+          client,
+          "http://ignored",
+          "test-group",
+          "test-consumer",
+          subscribeChannel
+        )
+        .attempt
+      requests <- requestsRef.get
+    } yield (result, requests)
+
+  test(
+    "a subscribe channel only dry-runs its open draft-07 mirror against the producer's artifact"
+  ) {
+    runSubscribe(Status.Ok).map { case (result, requests) =>
+      assert(result.isRight, s"expected success, got $result")
+      assertEquals(requests.size, 1)
+      assertEquals(requests.head.query, "dryRun=true")
+      val mirror = requests.head.body.hcursor
+        .downField("content")
+        .get[String]("content")
+        .flatMap(io.circe.parser.parse)
+        .toOption
+        .get
+      assertEquals(
+        mirror.hcursor.get[String]("$schema"),
+        Right(RegistrySchema.Draft07)
+      )
+      assert(!mirror.hcursor.downField("additionalProperties").succeeded)
+    }
+  }
+
+  test("a subscribe channel whose producer artifact is absent is skipped") {
+    runSubscribe(Status.NotFound).map { case (result, _) =>
+      assert(result.isRight, s"expected success, got $result")
+    }
+  }
+
+  test("an incompatible subscribe mirror fails") {
+    runSubscribe(Status.Conflict).map { case (result, _) =>
+      assert(result.isLeft, s"expected a failure, got $result")
+    }
   }
 }
