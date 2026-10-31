@@ -54,6 +54,9 @@ object PureKafkaDocsPlugin extends AutoPlugin {
     val schemaRegistryGroupId: SettingKey[String] = settingKey[String](
       "Apicurio Registry group id schemas are registered under. Defaults to name.value (one group per service)."
     )
+    val schemaRegistryProducer: SettingKey[String] = settingKey[String](
+      "Service name recorded as the 'producer' label on artifacts this build registers (gluon TD-18). Defaults to name.value."
+    )
     val schemaRegistryCheck: TaskKey[Unit] = taskKey[Unit](
       "Registers/checks each AsyncApiChannel's JSON Schema against Apicurio Registry via purekafka.docs.SchemaRegistryWriter, failing the build on an incompatible change. Not chained after Compile/compile - run explicitly (e.g. in CI)."
     )
@@ -66,6 +69,7 @@ object PureKafkaDocsPlugin extends AutoPlugin {
     asyncApiVersion := version.value,
     asyncApiOutputDir := target.value / "asyncapi-docs",
     schemaRegistryGroupId := name.value,
+    schemaRegistryProducer := name.value,
     schemaRegistryCheck := {
       // Unlike asyncApiGenerateSpec (only ever reached via Compile/compile's
       // own taskDyn chain below, so classes are already fresh by the time it
@@ -77,6 +81,7 @@ object PureKafkaDocsPlugin extends AutoPlugin {
       val channelsClass = asyncApiChannelsClass.value
       val registryUrl = schemaRegistryUrl.value
       val groupId = schemaRegistryGroupId.value
+      val producer = schemaRegistryProducer.value
       // Same reflective-invocation mechanism asyncApiGenerateSpec uses
       // below (dedicated URLClassLoader, parent = null) - see its own
       // comments for exactly why (not (Compile/runMain), not a `java`
@@ -95,7 +100,7 @@ object PureKafkaDocsPlugin extends AutoPlugin {
           writerClass.getMethod("main", classOf[Array[String]])
         mainMethod.invoke(
           writerModule,
-          Array(channelsClass, registryUrl, groupId)
+          Array(channelsClass, registryUrl, groupId, producer)
         )
       } finally loader.close()
     },

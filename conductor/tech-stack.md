@@ -76,8 +76,12 @@
   each channel's JSON Schema against an Apicurio Registry instance (`schemaRegistryUrl` /
   `schemaRegistryGroupId`, the latter defaulting to `name.value`) via `purekafka.docs.SchemaRegistryWriter`
   (`http4s-ember-client` + cats-effect `IO`), failing the build on a `400`/other non-2xx rejection.
-  Sets a `BACKWARD` compatibility rule on an artifact's first-ever registration. Run explicitly, e.g.
-  in CI.
+  Producer-only since plugin `0.5.0-dev` / purekafka `0.5.0` (gluon TD-18): `Publish`/`Both`
+  channels register a closed (`additionalProperties: false`) draft-07 schema labelled
+  `producer=<schemaRegistryProducer>` (default `name.value`) and set `BACKWARD_TRANSITIVE` on first
+  registration; `Subscribe` channels only dry-run their open mirror against the producer's artifact
+  (absent → warn and skip). Draft-07 because Apicurio 3.3.2 can't version 2020-12 (gluon TD-11);
+  closed so an optional field addition is a compatible new version. Run explicitly, e.g. in CI.
 - **Known constraint**: sbt only discovers `AutoPlugin`s from a build's own meta-build classpath
   (`project/plugins.sbt`), not a sibling project's own output within the *same* build — confirmed
   directly while building `schemaRegistryCheck`'s own end-to-end verification: `kafka-harness`, which
