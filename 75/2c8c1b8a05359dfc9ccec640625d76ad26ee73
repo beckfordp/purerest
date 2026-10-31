@@ -1,0 +1,1 @@
+Phase 1 verification: sbt scalafmtCheckAll test green; scripts/verify-schema-registry-evolution.sh all 8 checks passed against local Apicurio 3.3.2 (2026-10-31).
