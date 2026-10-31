@@ -5,6 +5,9 @@ This file tracks all major tracks for the project.
 - [x] **Track: `purekafka`: Kafka resilience + observability module (ADR 0010)**
   *Link: [./tracks/purekafka_20261015/](./tracks/purekafka_20261015/)*
 
+- [ ] **Track: Schema registry: versionable schemas, producer-only registration (gluon TD-18.1/18.2)**
+  *Link: [./tracks/schema-registry-git-store_20261031/](./tracks/schema-registry-git-store_20261031/)*
+
 ---
 
 ## Backlog
