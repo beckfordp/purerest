@@ -10,3 +10,6 @@
 ## Phase 2: Release [checkpoint: a5ddfd5]
 - [x] Task: tag `v0.5.0`, release workflow green (run 41244847166)
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Release' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 2fbdbe3
