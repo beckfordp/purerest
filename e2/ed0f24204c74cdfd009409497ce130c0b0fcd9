@@ -1,0 +1,1 @@
+Task: script on current versions, same cache layout + Node >= 24.11 guard (FAIL with 'nvm use 26' hint). Old Node-18 / patch diagnosis comments replaced. verify-kafka-asyncapi-docs.sh: All checks passed on Node 26.13.0 (after kafkaHarness/Docker/publishLocal).
