@@ -340,7 +340,7 @@ lazy val sbtPureKafkaDocs = project
     // only discoverable from a consuming build's own meta-build classpath, so
     // external consumers pin a normal addSbtPlugin coordinate. Bump this by
     // hand (and re-run publishLocal) whenever the plugin itself changes.
-    version := "0.3.0-dev",
+    version := "0.4.0-dev",
     // Same GitHub Packages registry/credentials as pureKafka above - this is
     // its first real publish (release.yml now runs sbtPureKafkaDocs/publish
     // alongside it).

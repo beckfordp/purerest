@@ -59,9 +59,13 @@
 - **sbt-purekafka-docs** (`modules/sbt-purekafka-docs`, Scala 2.12, `sbtPlugin := true`): wraps the
   above in sbt tasks (`asyncApiGenerateSpec`, `asyncApiGenerate`) so a consuming service's AsyncAPI
   docs regenerate automatically on every `sbt compile`, instead of running a shell script by hand.
-  `asyncApiGenerate` shells out to `@asyncapi/cli@4.1.1` + a patched `@asyncapi/html-template@1.0.0`
-  (Node.js/npm — see that task's own doc comment for the full version-pinning/patching reasoning);
-  Node-toolchain failures warn and continue rather than failing the build.
+  `asyncApiGenerate` shells out to `@asyncapi/cli@6.2.2` + `@asyncapi/html-template@3.5.6`, installed
+  once into a version-named cache under `target/asyncapi-cli-tool/` and rendered from the template's
+  local path. **Needs Node >= 24.11** (`@asyncapi/generator` 3.x); gluon standardises on Node 26 LTS.
+  Below that, or with no Node, it warns and skips the HTML (the spec JSON is still generated); any
+  other Node-toolchain failure also warns and continues rather than failing the build.
+  *(2026-10-31: replaces cli 4.1.1 + a v2→v3-patched html-template 1.0.0, pinned only because the
+  machine ran Node 18.)*
   When the consuming project also enables sbt-native-packager
   (`JavaAppPackaging`/`UniversalPlugin`), the plugin also appends
   `asyncApiGenerate`'s output to `Universal / mappings`, baking the rendered HTML into the Docker
