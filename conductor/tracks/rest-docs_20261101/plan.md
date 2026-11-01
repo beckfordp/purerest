@@ -1,19 +1,29 @@
 # Plan: TD-20.1 — REST docs convention + coverage check
 
 ## Phase 1: Coverage check in purerestlib
-- [ ] Task: Write failing tests `DocsCoverageSuite`: fully documented fixture (summary,
+- [x] Task: Write failing tests `DocsCoverageSuite`: fully documented fixture (summary,
       description, tag, described path/query/header params, `@description`/`@encodedExample`
       DTO with nested DTO, described 404 error variant) → `Nil`; one bare fixture per gap kind
       → exactly that gap: op summary, op description, param description, non-2xx response
       description, schema property (top-level + nested), body schema example. Plus: ordering
-      stable; `Docs.routes` swagger endpoints not reported.
-- [ ] Task: Implement `DocGap` ADT (location + `render`) and
+      stable; `Docs.routes` swagger endpoints not reported. 1bf8b08
+      (swagger-endpoint test dropped: check takes only the service's endpoints; added an
+      array-body test)
+- [x] Task: Implement `DocGap` ADT (location + `render`) and
       `Docs.undocumented(title, version, endpoints)`:
       `OpenAPIDocsInterpreter().serverEndpointsToOpenAPI`, walk paths→operations→params/responses
       and `components.schemas` (properties, body-referenced schemas' example). Treat tapir's
       default response descriptions (empty / reason phrase) as missing — verify actual default
-      in tapir 1.11.25 first. Scaladoc all public symbols.
-- [ ] Task: `sbt scalafmtCheck test` + `coverage test coverageReport` (>80% new code).
+      in tapir 1.11.25 first. Scaladoc all public symbols. 1bf8b08
+      Deviations: signature is `Docs.undocumented(endpoints: List[AnyEndpoint])` — title/
+      version don't affect gaps; services pass `serverEndpoints.map(_.endpoint)`. tapir
+      emits `""` for undescribed responses (auto 400 decode-failure is described). Example
+      counts if on the class, the body, or every field (recursively) — matches the
+      field-level `@encodedExample` style the event case classes already use. tapir moves a
+      field's `@description` onto a `$ref`'d component, so a `$ref` property counts as
+      described if either side is.
+- [x] Task: `sbt scalafmtCheck test` + `coverage test coverageReport` (>80% new code).
+      purerestlib 80.4% stmt / 85.2% branch; DocsCoverage 87%, DocGap/Docs 100%. 1bf8b08
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md).
       `scripts/verify-td20-1-phase1.sh`: fmt, test, coverage.
 
