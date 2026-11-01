@@ -1,7 +1,7 @@
 {
   "track_id": "asyncapi-ordering_20261101",
   "type": "feature",
-  "status": "new",
+  "status": "completed",
   "created_at": "2026-11-01T13:00:00Z",
   "updated_at": "2026-11-01T11:50:00Z",
   "description": "AsyncAPI docs: sends before receives, registration order within, channels in the same order"
