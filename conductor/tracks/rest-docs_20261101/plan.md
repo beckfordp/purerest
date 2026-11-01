@@ -24,7 +24,7 @@
       described if either side is.
 - [x] Task: `sbt scalafmtCheck test` + `coverage test coverageReport` (>80% new code).
       purerestlib 80.4% stmt / 85.2% branch; DocsCoverage 87%, DocGap/Docs 100%. 1bf8b08
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md).
       `scripts/verify-td20-1-phase1.sh`: fmt, test, coverage.
 
 ## Phase 2: README convention
