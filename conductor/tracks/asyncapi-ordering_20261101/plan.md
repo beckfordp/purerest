@@ -1,7 +1,7 @@
 # Plan — AsyncAPI docs: sends first
 
 ## Phase 1: Ordering
-- [ ] Task: `AsyncApiDoc` — sends before receives, channels in operation order, tests first
+- [x] Task: `AsyncApiDoc` — sends before receives, channels in operation order, tests first b8e26d8
 - [ ] Task: plugin `0.6.1-dev`, tech-stack.md
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Ordering' (Protocol in workflow.md)
 
