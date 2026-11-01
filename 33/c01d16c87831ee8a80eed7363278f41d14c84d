@@ -1,0 +1,1 @@
+Phase 1 verification: sbt scalafmtCheckAll test green (64/49/23/29); scripts/verify-asyncapi-v3.sh passed; kafka-harness operations kafka-harness-demo-send, kafka-harness-outbox-demo, kafka-harness-demo-receive (2026-11-01).
