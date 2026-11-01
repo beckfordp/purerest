@@ -27,13 +27,13 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md).
       `scripts/verify-td20-1-phase1.sh`: fmt, test, coverage. d82a744
 
-## Phase 2: README convention
+## Phase 2: README convention [checkpoint: 550c626]
 - [x] Task: README "Documenting endpoints" section: convention bullets (from spec), worked
       endpoint + DTO snippet, one-test coverage example
       (`assertEquals(Docs.undocumented(...).map(_.render), Nil)`), owning-service rule, client
       mirrors exempt. Snippet mirrors the test fixture so it stays honest. cc95c85
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md).
-      `scripts/verify-td20-1-phase2.sh`: README section present, snippet lines match the suite fixture.
+      `scripts/verify-td20-1-phase2.sh`: README section present, snippet lines match the suite fixture. 550c626
 
 ## Phase 3: Release v0.7.0
 - [ ] Task: Push main, tag `v0.7.0`, push tag; watch release.yml to green.
