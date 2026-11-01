@@ -40,11 +40,13 @@ jobs:
       - name: Test gate
         run: sbt scalafmtCheck test
 
+      # Skips any module whose version is already published - sbt-purekafka-docs'
+      # version is fixed and only bumped when the plugin changes.
       - name: Publish purerest
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: sbt purerestlib/publish pureKafka/publish sbtPureKafkaDocs/publish
+        run: ./scripts/publish-unpublished.sh
 
   deploy-docs:
     needs: release
