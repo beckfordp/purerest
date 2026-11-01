@@ -290,6 +290,32 @@ class AsyncApiDocSuite extends FunSuite {
     )
   }
 
+  test(
+    "a Both(Cdc) message carries the CDC note once, referenced by both its send and receive operations"
+  ) {
+    val doc = generate(
+      AsyncApiChannel[DemoPayload](
+        topic = "both-cdc-topic",
+        eventType = "DemoEvent",
+        direction = ChannelDirection.Both(PublisherKind.Cdc)
+      )
+    )
+    val description = message(doc, "both-cdc-topic", "DemoEvent")
+      .downField("description")
+      .as[String]
+      .toOption
+
+    assert(description.exists(_.contains("CDC")), s"got $description")
+    assertEquals(
+      operationMessages(doc, "both-cdc-topic-send"),
+      List("DemoEvent")
+    )
+    assertEquals(
+      operationMessages(doc, "both-cdc-topic-receive"),
+      List("DemoEvent")
+    )
+  }
+
   test("Publish(Direct) and Subscribe messages have no CDC description") {
     val doc = generate(
       AsyncApiChannel[DemoPayload](

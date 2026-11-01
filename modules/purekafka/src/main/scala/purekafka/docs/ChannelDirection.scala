@@ -12,10 +12,11 @@ object PublisherKind {
   case object Cdc extends PublisherKind
 }
 
-/** Which operations (publish/subscribe) an [[AsyncApiChannel]] contributes to
-  * its topic's generated AsyncAPI document. `publisher` is only expressible on
-  * the two variants that actually publish, so a `Subscribe`-only channel can't
-  * carry meaningless publisher metadata.
+/** Which operations an [[AsyncApiChannel]] contributes to in its topic's
+  * generated AsyncAPI 3.0 document, from the service's own side: `Publish` →
+  * `send`, `Subscribe` → `receive`, `Both` → both. `publisher` is only
+  * expressible on the two variants that actually publish, so a `Subscribe`-only
+  * channel can't carry meaningless publisher metadata.
   */
 sealed trait ChannelDirection
 object ChannelDirection {

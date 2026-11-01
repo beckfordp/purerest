@@ -54,6 +54,9 @@ object AsyncApiDoc {
 
   /** AsyncAPI 3.0 restricts channel/operation/message keys to
     * `^[A-Za-z0-9_\-]+$`; a topic's real name stays in the channel's `address`.
+    * Names differing only in replaced characters (`a.b` / `a_b`) would share a
+    * key and the later one would win — no gluon topic or event type needs
+    * replacing today.
     */
   private def key(name: String): String =
     name.map(c => if (c.isLetterOrDigit || c == '_' || c == '-') c else '_')
