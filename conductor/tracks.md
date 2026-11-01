@@ -5,9 +5,6 @@ This file tracks all major tracks for the project.
 - [x] **Track: `purekafka`: Kafka resilience + observability module (ADR 0010)**
   *Link: [./tracks/purekafka_20261015/](./tracks/purekafka_20261015/)*
 
-- [x] **Track: TD-20.1 — REST docs: convention + purerestlib coverage check, release v0.7.0**
-  *Link: [./tracks/rest-docs_20261101/](./tracks/rest-docs_20261101/)*
-
 ---
 
 ## Backlog
