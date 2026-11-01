@@ -58,3 +58,6 @@
   check both
 - sbt-purekafka-docs republish failure (old backlog item) if its version is fixed — recent
   v0.5–0.6.1 runs green, likely moot
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions ec5868a (enum/const exemplified + test; schemas.get; build.sbt comment order)
