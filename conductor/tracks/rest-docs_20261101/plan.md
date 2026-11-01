@@ -32,7 +32,8 @@
       endpoint + DTO snippet, one-test coverage example
       (`assertEquals(Docs.undocumented(...).map(_.render), Nil)`), owning-service rule, client
       mirrors exempt. Snippet mirrors the test fixture so it stays honest. cc95c85
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md).
+      `scripts/verify-td20-1-phase2.sh`: README section present, snippet lines match the suite fixture.
 
 ## Phase 3: Release v0.7.0
 - [ ] Task: Push main, tag `v0.7.0`, push tag; watch release.yml to green.
