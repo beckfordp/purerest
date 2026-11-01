@@ -34,6 +34,65 @@ API docs (Scaladoc) for the latest release are browsable at
 Pages by the same release workflow. A `-javadoc.jar` with the same content is also published
 alongside the main jar on GitHub Packages.
 
+## Documenting endpoints
+
+`Docs.routes` serves each service's OpenAPI spec and Swagger UI at `/docs`. The spec only
+explains what the tapir endpoints and their case classes describe, so every service follows
+this convention:
+
+- **Endpoint:** `.summary` (one line), `.description` (behaviour, idempotency, notable
+  errors), and a `.tag` per resource.
+- **Path/query/header input:** `.description`, plus `.example` where the value has a format
+  (ids, enums, dates).
+- **Request/response case class:** `@description` on the class and on every field, and an
+  example, either `@encodedExample` on every field (Swagger UI builds the payload from them)
+  or one on the class or body.
+- **Error variant:** a description of when it happens (on its body, or its status code when
+  there is no body), with an example body.
+- The service that owns an endpoint documents it. Client-side mirrors of another service's
+  DTOs (e.g. order-service's `InventoryClient` types) aren't in any OpenAPI doc and need
+  none.
+
+```scala
+import sttp.tapir.Schema.annotations.{description, encodedExample}
+
+@description("An order as stored.")
+final case class OrderView(
+    @description("Order id.") @encodedExample("ord-1") id: String,
+    @description("Lines ordered.") lines: List[Line] // Line's fields carry examples
+)
+
+val getOrder =
+  endpoint.get
+    .in(
+      "orders" / path[String]("id").description("Order id.").example("ord-1")
+    )
+    .errorOut(
+      statusCode(StatusCode.NotFound)
+        .and(jsonBody[OrderNotFound].description("No order with this id."))
+    )
+    .out(jsonBody[OrderView])
+    .summary("Get an order")
+    .description("Returns the order with its lines. Read-only.")
+    .tag("orders")
+```
+
+`Docs.undocumented` checks the generated spec against this convention. It lists operations
+without a summary or description, parameters and non-2xx responses without a description,
+body schema fields without a `@description`, and body schemas without an example. One test per
+service keeps it at zero:
+
+```scala
+test("every endpoint is documented") {
+  assertEquals(Docs.undocumented(serverEndpoints.map(_.endpoint)).map(_.render), Nil)
+}
+```
+
+Mapping to `render` makes a failure read as `GET /orders/{id}: path parameter 'id' has no
+description` or `schema OrderView.status: no description`. A parameter's `.example` and the
+`.tag` aren't checked. `DocsCoverageSuite` has the fully documented example the snippet above
+comes from.
+
 ## Build, run, and observe this system
 
 This is the main reference for exercising the whole system end to end — building both services,
