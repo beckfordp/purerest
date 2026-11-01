@@ -60,4 +60,4 @@
   v0.5–0.6.1 runs green, likely moot
 
 ## Phase: Review Fixes
-- [x] Task: Apply review suggestions ec5868a (enum/const exemplified + test; schemas.get; build.sbt comment order)
+- [x] Task: Apply review suggestions ec5868a (enum/const exemplified + test; schemas.get; build.sbt comment order). Released v0.7.3 (run 41316737516, verify-td20-1-phase3.sh 0.7.3 PASS); TD-20.2+ use 0.7.3.
