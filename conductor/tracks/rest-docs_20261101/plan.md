@@ -35,7 +35,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md).
       `scripts/verify-td20-1-phase2.sh`: README section present, snippet lines match the suite fixture. 550c626
 
-## Phase 3: Release v0.7.0 (shipped as v0.7.2)
+## Phase 3: Release v0.7.0 (shipped as v0.7.2) [checkpoint: b7efc39]
 - [x] Task: Push main, tag `v0.7.0`, push tag; watch release.yml to green.
       Deviation: v0.7.0 (run 41312137555) published purerestlib/purekafka 0.7.0, then failed
       re-publishing the fixed sbt-purekafka-docs 0.6.1-dev, skipping deploy-docs (the
@@ -47,7 +47,7 @@
       plugin skipped, deploy-docs ran. Services use 0.7.2 (0.7.0 is the same library code).
 - [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md).
       `scripts/verify-td20-1-phase3.sh`: purerestlib 0.7.2 resolves from GitHub Packages, jar
-      contains `purerest/docs/DocGap`; Scaladoc site shows `Docs.undocumented`.
+      contains `purerest/docs/DocGap`; Scaladoc site shows `Docs.undocumented`. b7efc39
 
 ## Wrap-up (outside the track)
 - gluon TECHNICAL_DEBT.md TD-20.1 ticked, CHANGELOG entry
