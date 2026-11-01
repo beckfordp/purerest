@@ -2,138 +2,116 @@ package purekafka.docs
 
 import io.circe.Json
 import io.circe.syntax._
-import sttp.apispec.asyncapi._
 import sttp.apispec.asyncapi.circe._
 import sttp.tapir.docs.apispec.schema.TapirSchemaToJsonSchema
 
 import scala.collection.immutable.ListMap
 
-/** Builds an AsyncAPI 2.6.0 document (as circe `Json`) from a list of
+/** Builds an AsyncAPI 3.0.0 document (as circe `Json`) from a list of
   * registered [[AsyncApiChannel]]s — the Kafka-side analogue of
   * `purerest.docs.Docs.routes`'s tapir-endpoints-to-OpenAPI generation.
   *
-  * Deliberately *not* hand-rolled circe `Json` construction, despite this
-  * track's own spec.md assuming "no good library fit exists" for AsyncAPI
-  * generation on the JVM: found while implementing this phase that
-  * `tapir-apispec-docs` (already a `purekafka` dependency, for
-  * [[sttp.tapir.docs.apispec.schema.TapirSchemaToJsonSchema]]) transitively
-  * depends on `com.softwaremill.sttp.apispec:asyncapi-model` — the same library
-  * family tapir's own OpenAPI generation is built on already ships a real,
-  * typed AsyncAPI 2.6.0 document model (`sttp.apispec.asyncapi.AsyncAPI` et
-  * al.) plus circe codecs (`asyncapi-circe`, pinned to the exact version
-  * `tapir-apispec-docs` itself resolves). Building against that typed model
-  * instead of hand-assembling JSON removes an entire class of document-shape
-  * bugs this module would otherwise have to get (and keep) right by hand.
+  * 3.0, not 2.x: 2.x's `publish`/`subscribe` describe what a *client* does, so
+  * a service's produced events sit under `publish` — the docs read as if the
+  * service receives what it produces (gluon TD-19). 3.0's `send`/`receive`
+  * actions are from the service's own side. sttp-apispec's `asyncapi-model`
+  * only models 2.6.0 (checked up to 0.12.1), so the document is assembled as
+  * plain circe `Json`; only the payload schemas still come from tapir's
+  * `TapirSchemaToJsonSchema`, the same derivation `purerest.docs.Docs` uses for
+  * REST.
   *
-  * Each channel's [[AsyncApiChannel.direction]] decides which of a topic's
-  * `publish`/`subscribe` operations it contributes a message to — a
-  * `Subscribe`-only channel never appears under `publish`, and vice versa (ADR
-  * 0010's AsyncAPI follow-up, direction-aware generation track). An operation
-  * is omitted entirely from a `ChannelItem` (not an empty `oneOf`) when no
-  * registered channel on that topic qualifies for it.
+  * Layout: one channel per topic (`address` = topic) holding its messages
+  * inline, keyed by `eventType`; one operation per action per topic,
+  * referencing the channel and its messages. Each channel's
+  * [[AsyncApiChannel.direction]] decides which operation(s) its message joins —
+  * `Publish` → `send`, `Subscribe` → `receive`, `Both` → both. An operation is
+  * omitted when no channel on the topic qualifies for it.
   */
 object AsyncApiDoc {
 
   private val CdcDescription =
     "Published via Debezium CDC from an outbox table (ADR 0008 in gluon) - no direct producer call."
 
-  private def includesPublish(direction: ChannelDirection): Boolean =
+  private def sends(direction: ChannelDirection): Boolean =
     direction match {
       case ChannelDirection.Publish(_) | ChannelDirection.Both(_) => true
       case ChannelDirection.Subscribe                             => false
     }
 
-  private def includesSubscribe(direction: ChannelDirection): Boolean =
+  private def receives(direction: ChannelDirection): Boolean =
     direction match {
       case ChannelDirection.Subscribe | ChannelDirection.Both(_) => true
       case ChannelDirection.Publish(_)                           => false
     }
 
-  private def publisherOf(direction: ChannelDirection): Option[PublisherKind] =
+  private def isCdc(direction: ChannelDirection): Boolean =
     direction match {
-      case ChannelDirection.Publish(publisher) => Some(publisher)
-      case ChannelDirection.Both(publisher)    => Some(publisher)
-      case ChannelDirection.Subscribe          => None
+      case ChannelDirection.Publish(PublisherKind.Cdc) |
+          ChannelDirection.Both(PublisherKind.Cdc) =>
+        true
+      case _ => false
     }
 
-  /** Converts one [[AsyncApiChannel]] into a `SingleMessage` named after the
-    * channel's `eventType`, with its payload schema derived from the channel's
-    * own tapir `Schema[A]` via `TapirSchemaToJsonSchema`, the same
-    * JSON-Schema-shaped derivation `purerest.docs.Docs` already uses for REST,
-    * not a second schema story. `withCdcNote` is set only when this message is
-    * being placed in a *publish* operation for a channel whose publisher is
-    * `Cdc` — the subscribe side of a `Both(Cdc)` channel never claims a publish
-    * provenance it doesn't have.
+  /** AsyncAPI 3.0 restricts channel/operation/message keys to
+    * `^[A-Za-z0-9_\-]+$`; a topic's real name stays in the channel's `address`.
     */
-  private def toMessage(
-      channel: AsyncApiChannel[?],
-      withCdcNote: Boolean
-  ): SingleMessage = {
-    val payloadSchema =
+  private def key(name: String): String =
+    name.map(c => if (c.isLetterOrDigit || c == '_' || c == '-') c else '_')
+
+  /** One inline message, named after the channel's `eventType`. `title` carries
+    * the same value as `name`: html-template shows `title` above each message,
+    * and this module has no separate human-friendly label. The CDC note is a
+    * property of how the message is published, so a `Both(Cdc)` message carries
+    * it for readers too.
+    */
+  private def toMessage(channel: AsyncApiChannel[?]): Json = {
+    val payload =
       TapirSchemaToJsonSchema(channel.schema, markOptionsAsNullable = true)
-    SingleMessage(
-      name = Some(channel.eventType),
-      // AsyncAPI distinguishes `name` (machine-friendly identifier) from
-      // `title` (human-friendly display name) - the rendered html-template
-      // reads `title` for the label shown above each message's payload (a
-      // oneOf with 2+ alternatives otherwise shows every one as a bare "#0"/
-      // "#1" with no visible way to tell which event is which without
-      // expanding its payload and reading field names). Set to the same
-      // eventType value as `name`, since this module has no separate
-      // human-friendly label to offer - same value, different AsyncAPI field.
-      title = Some(channel.eventType),
-      payload = Some(Right(payloadSchema)),
-      description = if (withCdcNote) Some(CdcDescription) else None
+    Json.obj(
+      "name" -> channel.eventType.asJson,
+      "title" -> channel.eventType.asJson,
+      "payload" -> payload.asJson,
+      "description" ->
+        (if (isCdc(channel.direction)) CdcDescription.asJson else Json.Null)
     )
   }
 
-  private def toOperationMessage(
-      messages: List[SingleMessage]
-  ): Option[Message] =
-    messages match {
-      case Nil           => None
-      case single :: Nil => Some(single)
-      case many          => Some(OneOfMessage(oneOf = many))
-    }
-
-  /** Converts all [[AsyncApiChannel]]s registered on one topic into an AsyncAPI
-    * `ChannelItem`, splitting them into the `publish`/`subscribe` operations
-    * each is eligible for per its own `direction`.
-    *
-    * `toMessage` (and the `TapirSchemaToJsonSchema` derivation inside it) runs
-    * at most once per channel here, not once per operation — a `Both`-direction
-    * channel (the common case) is eligible for *both* `publish` and
-    * `subscribe`, so its publish-side message (built once, with the CDC note if
-    * applicable) is reused directly as its subscribe-side message, stripping
-    * the note via a cheap `.copy` rather than re-deriving the schema a second
-    * time when one needs to differ from the other.
-    */
-  private def toChannelItem(
-      channelsForTopic: List[AsyncApiChannel[?]]
-  ): ChannelItem = {
-    val messagesByChannel = channelsForTopic.map { channel =>
-      val withCdcNote =
-        publisherOf(channel.direction).contains(PublisherKind.Cdc)
-      val publishMessage = toMessage(channel, withCdcNote)
-      val subscribeMessage =
-        if (withCdcNote) publishMessage.copy(description = None)
-        else publishMessage
-      (channel, publishMessage, subscribeMessage)
-    }
-
-    val publishMessage = toOperationMessage(messagesByChannel.collect {
-      case (channel, message, _) if includesPublish(channel.direction) =>
-        message
-    })
-    val subscribeMessage = toOperationMessage(messagesByChannel.collect {
-      case (channel, _, message) if includesSubscribe(channel.direction) =>
-        message
-    })
-
-    ChannelItem(
-      publish = publishMessage.map(Operation.inlineMessage),
-      subscribe = subscribeMessage.map(Operation.inlineMessage)
+  private def toOperation(
+      action: String,
+      channelKey: String,
+      eventTypes: List[String]
+  ): Json =
+    Json.obj(
+      "action" -> action.asJson,
+      "channel" -> Json.obj("$ref" -> s"#/channels/$channelKey".asJson),
+      "messages" -> eventTypes
+        .map(eventType =>
+          Json.obj(
+            "$ref" -> s"#/channels/$channelKey/messages/${key(eventType)}".asJson
+          )
+        )
+        .asJson
     )
+
+  /** A topic's operations, keyed by the topic name — or `<topic>-send` /
+    * `<topic>-receive` when the topic has both, since keys must be unique.
+    */
+  private def toOperations(
+      channelKey: String,
+      channelsForTopic: List[AsyncApiChannel[?]]
+  ): List[(String, Json)] = {
+    val sent = channelsForTopic.filter(c => sends(c.direction))
+    val received = channelsForTopic.filter(c => receives(c.direction))
+    val both = sent.nonEmpty && received.nonEmpty
+    def opKey(action: String) = if (both) s"$channelKey-$action" else channelKey
+    List("send" -> sent, "receive" -> received).collect {
+      case (action, channels) if channels.nonEmpty =>
+        opKey(action) -> toOperation(
+          action,
+          channelKey,
+          channels.map(_.eventType)
+        )
+    }
   }
 
   /** Builds the full AsyncAPI document for `channels`, as circe `Json`. */
@@ -150,22 +128,32 @@ object AsyncApiDoc {
             acc.getOrElse(channel.topic, Nil) :+ channel
           )
       }
-    val channelEntries: ListMap[String, ReferenceOr[ChannelItem]] =
-      channelsByTopic.map { case (topic, channelsForTopic) =>
-        topic -> Right(toChannelItem(channelsForTopic))
-      }
-    val doc = AsyncAPI(
-      info = Info(title = title, version = version),
-      channels = channelEntries
-    )
-    // asyncapi-circe's derived Encoder serializes every unset Option field
-    // as a literal JSON `null` rather than omitting the key - harmless to
-    // circe itself, but AsyncAPI's own spec validator (used by
-    // scripts/generate-kafka-asyncapi-docs.sh's `@asyncapi/cli` downstream)
-    // rejects `null` for fields typed as array/object ("examples" property
-    // type must be array", etc. - found while building Phase 5, a real
-    // generation failure, not a false validator complaint). Found via
-    // deepDropNullValues, circe's standard fix for exactly this.
-    doc.asJson.deepDropNullValues
+    val channelEntries = channelsByTopic.toList.map {
+      case (topic, channelsForTopic) =>
+        key(topic) -> Json.obj(
+          "address" -> topic.asJson,
+          "messages" -> Json.fromFields(
+            channelsForTopic.map(c => key(c.eventType) -> toMessage(c))
+          )
+        )
+    }
+    val operationEntries = channelsByTopic.toList.flatMap {
+      case (topic, channelsForTopic) =>
+        toOperations(key(topic), channelsForTopic)
+    }
+    // Unset fields are written as `null` above (and by the apispec schema
+    // encoder) and dropped here: AsyncAPI's validator rejects `null` for
+    // array/object-typed fields.
+    Json
+      .obj(
+        "asyncapi" -> "3.0.0".asJson,
+        "info" -> Json.obj(
+          "title" -> title.asJson,
+          "version" -> version.asJson
+        ),
+        "channels" -> Json.fromFields(channelEntries),
+        "operations" -> Json.fromFields(operationEntries)
+      )
+      .deepDropNullValues
   }
 }
