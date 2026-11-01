@@ -35,7 +35,9 @@ private[docs] object DocsCoverage {
       schemas
     )
     operations.flatMap { case (name, op) => operationGaps(name, op) } ++
-      reachable.flatMap(name => propertyGaps(name, schemas(name), schemas)) ++
+      reachable.flatMap(name =>
+        schemas.get(name).toList.flatMap(propertyGaps(name, _, schemas))
+      ) ++
       exampleGaps(bodies, schemas)
   }
 
@@ -193,8 +195,8 @@ private[docs] object DocsCoverage {
       case _: AnySchema => None
     }
 
-  /** Whether Swagger can show a full example for `node`: one is given on it, or
-    * on everything inside it.
+  /** Whether Swagger can show a full example for `node`: one is given on it, it
+    * is an enum, or everything inside it is exemplified.
     */
   private def exemplified(
       node: SchemaLike,
@@ -203,7 +205,9 @@ private[docs] object DocsCoverage {
   ): Boolean = node match {
     case s: Schema if s.examples.exists(_.nonEmpty)            => true
     case s: Schema if s.`type`.contains(List(SchemaType.Null)) => true
-    case s: Schema                                             =>
+    // Swagger UI shows an enum's first value (or a const) as its example.
+    case s: Schema if s.`enum`.exists(_.nonEmpty) || s.const.isDefined => true
+    case s: Schema                                                     =>
       refName(s) match {
         case Some(name) if seen.contains(name) => true
         case Some(name)                        =>

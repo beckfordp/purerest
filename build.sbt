@@ -488,14 +488,14 @@ lazy val loadTest = project
     )
   )
 
-// root: aggregates the modules so `sbt compile`/`sbt test` run across all of
-// them; not published itself.
 // Read by scripts/publish-unpublished.sh (release.yml), so it needn't parse
 // versions out of sbt's stdout.
 lazy val writePublishVersions = taskKey[File](
   "Writes '<project> <version>' per published module to target/publish-versions.txt"
 )
 
+// root: aggregates the modules so `sbt compile`/`sbt test` run across all of
+// them; not published itself.
 lazy val root = project
   .in(file("."))
   .aggregate(

@@ -86,6 +86,11 @@ class DocsCoverageSuite extends FunSuite {
     assertEquals(gaps(bare), List(DocGap.MissingExample("NoExample")))
   }
 
+  test("accepts an enum field without an example") {
+    val withEnum = described(endpoint.get.in("ping").out(jsonBody[WithStatus]))
+    assertEquals(gaps(withEnum), Nil)
+  }
+
   test("accepts a body example given on the endpoint instead of the schema") {
     val exemplified = described(
       endpoint.post
@@ -190,6 +195,30 @@ object DocsCoverageSuite {
   object Outer {
     implicit val codec: Codec[Outer] = deriveCodec
     implicit val schema: Schema[Outer] = Schema.derived
+  }
+
+  enum Status {
+    case Open, Closed
+  }
+  object Status {
+    implicit val codec: Codec[Status] = Codec.from(
+      io.circe.Decoder.decodeString.emap(s =>
+        Status.values.find(_.toString == s).toRight(s"unknown status $s")
+      ),
+      io.circe.Encoder.encodeString.contramap(_.toString)
+    )
+    implicit val schema: Schema[Status] =
+      Schema.derivedEnumeration[Status].defaultStringBased
+  }
+
+  @description("A thing with a status.")
+  final case class WithStatus(
+      @description("Thing id.") @encodedExample("t-1") id: String,
+      @description("Current status.") status: Status
+  )
+  object WithStatus {
+    implicit val codec: Codec[WithStatus] = deriveCodec
+    implicit val schema: Schema[WithStatus] = Schema.derived
   }
 
   final case class NoExample(@description("Some text.") text: String)
