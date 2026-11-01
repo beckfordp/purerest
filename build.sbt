@@ -229,15 +229,10 @@ lazy val pureKafka = project
       // it's format-agnostic (OpenAPI and AsyncAPI both build on the same
       // sttp.apispec.Schema). Deliberate deviation from this track's own
       // spec.md, which assumed "no good library fit exists" for AsyncAPI
-      // generation and planned to hand-roll circe Json directly — found
-      // while implementing Phase 2 that tapir-apispec-docs already
-      // transitively depends on asyncapi-model (see its own published POM),
-      // meaning the sttp/tapir ecosystem already ships a real, typed
-      // AsyncAPI 2.6.0 document model + circe codecs (asyncapi-circe,
-      // pinned to the exact same 0.11.9 tapir-apispec-docs itself uses, to
-      // avoid a version mismatch) - using those instead of hand-rolling is
-      // strictly better: type-safe document construction instead of
-      // manually-assembled JSON, and no new JSON-shape bugs to maintain.
+      // generation. asyncapi-circe (pinned to the 0.11.9 tapir-apispec-docs
+      // itself uses) now only supplies the JSON Schema circe encoder for
+      // payloads: its typed document model is AsyncAPI 2.6.0 only, so
+      // AsyncApiDoc builds the 3.0 document as circe Json (gluon TD-19).
       "com.softwaremill.sttp.tapir" %% "tapir-apispec-docs" % tapirVersion,
       "com.softwaremill.sttp.apispec" %% "asyncapi-circe" % "0.11.9",
       // http4s-dsl/-circe: just enough to serve the AsyncApiDoc.generate
@@ -340,7 +335,7 @@ lazy val sbtPureKafkaDocs = project
     // only discoverable from a consuming build's own meta-build classpath, so
     // external consumers pin a normal addSbtPlugin coordinate. Bump this by
     // hand (and re-run publishLocal) whenever the plugin itself changes.
-    version := "0.5.0-dev",
+    version := "0.6.0-dev",
     // Same GitHub Packages registry/credentials as pureKafka above - this is
     // its first real publish (release.yml now runs sbtPureKafkaDocs/publish
     // alongside it).

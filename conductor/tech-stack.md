@@ -42,15 +42,19 @@
 ## Kafka Documentation (AsyncAPI)
 - **purekafka.docs** (`modules/purekafka`): services register their Kafka topics/eventTypes/payload
   schemas as `AsyncApiChannel[A]` values (reusing tapir's own `Schema[A]` derivation), then
-  `AsyncApiDoc.generate` builds a real AsyncAPI 2.6.0 document via `sttp.apispec.asyncapi` — the same
-  model family tapir's own OpenAPI generation is built on, and the Kafka-side analogue of
-  `purerest.docs`'s OpenAPI/Swagger generation. `purekafka.docs.Docs.routes` serves the generated
-  spec as JSON; `kafka-harness` additionally serves the generated static HTML at a sibling route.
+  `AsyncApiDoc.generate` builds an AsyncAPI 3.0.0 document as circe `Json` (sttp-apispec only models
+  2.6.0), with payload schemas from tapir's `TapirSchemaToJsonSchema` — the Kafka-side analogue of
+  `purerest.docs`'s OpenAPI/Swagger generation. 3.0's `send`/`receive` actions describe the service's
+  own side (2.x's `publish`/`subscribe` describe the client's, which read inverted — gluon TD-19).
+  One channel per topic with messages inline; operations keyed by topic name, or `<topic>-send` /
+  `<topic>-receive` when a topic has both. `purekafka.docs.Docs.routes` serves the generated spec as
+  JSON and redirects `/docs/asyncapi` to `/docs/asyncapi/`; services serve the static HTML under that
+  prefix.
 - **Direction-aware generation**: `AsyncApiChannel[A]` carries a `direction: ChannelDirection`
   (`Publish(publisher) | Subscribe | Both(publisher)`, defaulting to `Both(PublisherKind.Direct)` for
   backward compatibility) so the generated document only claims the publish/subscribe operations a
-  channel actually has — a `Subscribe`-only channel never gets a spurious `publish` entry.
-  `PublisherKind` (`Direct | Cdc`) further distinguishes, on the publish side, a direct producer call
+  channel actually has — a `Subscribe`-only channel never gets a spurious `send` operation.
+  `PublisherKind` (`Direct | Cdc`) further distinguishes, on the send side, a direct producer call
   from delivery via Debezium CDC from an outbox table (ADR 0008 in gluon) — a CDC-published channel's
   generated message carries a description noting that provenance. The outbox row's `payload` column
   already holds the same inner domain-event shape a direct `AsyncApiChannel[A]` registration uses

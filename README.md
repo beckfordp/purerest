@@ -144,7 +144,7 @@ tradeoffs.
 
 `purekafka` (this repo's Kafka resilience module — retry, circuit-breaker, stream supervision,
 dead-letter routing, consumer lag, tracing) also generates
-[AsyncAPI](https://www.asyncapi.com/) documentation for the topics/event types a service
+[AsyncAPI](https://www.asyncapi.com/) 3.0 documentation (`send`/`receive` from the service's side) for the topics/event types a service
 registers, the same way tapir generates OpenAPI docs for HTTP endpoints. `kafka-harness` (this
 repo's standalone Kafka demo app, used for the Grafana resilience dashboards above) registers one
 such channel and serves both the raw spec and a rendered static-HTML viewer:
