@@ -26,6 +26,11 @@ import scala.collection.immutable.ListMap
   * [[AsyncApiChannel.direction]] decides which operation(s) its message joins —
   * `Publish` → `send`, `Subscribe` → `receive`, `Both` → both. An operation is
   * omitted when no channel on the topic qualifies for it.
+  *
+  * Order (html-template renders document order): every `send` operation before
+  * every `receive` one, so a service's own events come first; within each
+  * group, registration order — list channels in lifecycle order. Channels
+  * follow the same order: topics with a `send` first, then receive-only ones.
   */
 object AsyncApiDoc {
 
@@ -96,23 +101,24 @@ object AsyncApiDoc {
         .asJson
     )
 
-  /** A topic's operations, keyed by the topic name — or `<topic>-send` /
-    * `<topic>-receive` when the topic has both, since keys must be unique.
+  /** A topic's operations as `(key, action, operation)`, keyed by the topic
+    * name — or `<topic>-send` / `<topic>-receive` when the topic has both,
+    * since keys must be unique. The action lets `generate` put sends first.
     */
   private def toOperations(
       channelKey: String,
       channelsForTopic: List[AsyncApiChannel[?]]
-  ): List[(String, Json)] = {
+  ): List[(String, String, Json)] = {
     val sent = channelsForTopic.filter(c => sends(c.direction))
     val received = channelsForTopic.filter(c => receives(c.direction))
     val both = sent.nonEmpty && received.nonEmpty
     def opKey(action: String) = if (both) s"$channelKey-$action" else channelKey
     List("send" -> sent, "receive" -> received).collect {
       case (action, channels) if channels.nonEmpty =>
-        opKey(action) -> toOperation(
+        (
+          opKey(action),
           action,
-          channelKey,
-          channels.map(_.eventType)
+          toOperation(action, channelKey, channels.map(_.eventType))
         )
     }
   }
@@ -131,7 +137,11 @@ object AsyncApiDoc {
             acc.getOrElse(channel.topic, Nil) :+ channel
           )
       }
-    val channelEntries = channelsByTopic.toList.map {
+    val (sendingTopics, receiveOnlyTopics) = channelsByTopic.toList.partition {
+      case (_, channelsForTopic) =>
+        channelsForTopic.exists(c => sends(c.direction))
+    }
+    val channelEntries = (sendingTopics ++ receiveOnlyTopics).map {
       case (topic, channelsForTopic) =>
         key(topic) -> Json.obj(
           "address" -> topic.asJson,
@@ -140,9 +150,13 @@ object AsyncApiDoc {
           )
         )
     }
-    val operationEntries = channelsByTopic.toList.flatMap {
-      case (topic, channelsForTopic) =>
+    val (sendOperations, receiveOperations) = channelsByTopic.toList
+      .flatMap { case (topic, channelsForTopic) =>
         toOperations(key(topic), channelsForTopic)
+      }
+      .partition { case (_, action, _) => action == "send" }
+    val operationEntries = (sendOperations ++ receiveOperations).map {
+      case (operationKey, _, operation) => operationKey -> operation
     }
     // Unset fields are written as `null` above (and by the apispec schema
     // encoder) and dropped here: AsyncAPI's validator rejects `null` for

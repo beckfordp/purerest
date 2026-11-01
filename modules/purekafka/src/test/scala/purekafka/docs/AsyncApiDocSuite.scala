@@ -340,6 +340,58 @@ class AsyncApiDocSuite extends FunSuite {
     )
   }
 
+  test(
+    "send operations come before receive operations, each in registration order, and channels follow the same order"
+  ) {
+    val doc = generate(
+      AsyncApiChannel[DemoPayload](
+        topic = "consumed-a",
+        eventType = "A",
+        direction = ChannelDirection.Subscribe
+      ),
+      AsyncApiChannel[DemoPayload](
+        topic = "produced-b",
+        eventType = "B",
+        direction = ChannelDirection.Publish(PublisherKind.Direct)
+      ),
+      AsyncApiChannel[DemoPayload](
+        topic = "consumed-c",
+        eventType = "C",
+        direction = ChannelDirection.Subscribe
+      ),
+      AsyncApiChannel[DemoPayload](
+        topic = "both-d",
+        eventType = "D",
+        direction = ChannelDirection.Both(PublisherKind.Direct)
+      ),
+      AsyncApiChannel[DemoPayload](
+        topic = "produced-e",
+        eventType = "E",
+        direction = ChannelDirection.Publish(PublisherKind.Direct)
+      )
+    )
+
+    assertEquals(
+      doc.hcursor.downField("operations").keys.map(_.toList),
+      Some(
+        List(
+          "produced-b",
+          "both-d-send",
+          "produced-e",
+          "consumed-a",
+          "consumed-c",
+          "both-d-receive"
+        )
+      )
+    )
+    assertEquals(
+      doc.hcursor.downField("channels").keys.map(_.toList),
+      Some(
+        List("produced-b", "both-d", "produced-e", "consumed-a", "consumed-c")
+      )
+    )
+  }
+
   test("the document contains no null values") {
     val doc = generate(
       AsyncApiChannel[DemoPayload](topic = "t", eventType = "DemoEvent")
