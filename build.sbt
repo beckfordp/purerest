@@ -490,6 +490,12 @@ lazy val loadTest = project
 
 // root: aggregates the modules so `sbt compile`/`sbt test` run across all of
 // them; not published itself.
+// Read by scripts/publish-unpublished.sh (release.yml), so it needn't parse
+// versions out of sbt's stdout.
+lazy val writePublishVersions = taskKey[File](
+  "Writes '<project> <version>' per published module to target/publish-versions.txt"
+)
+
 lazy val root = project
   .in(file("."))
   .aggregate(
@@ -501,5 +507,17 @@ lazy val root = project
   )
   .settings(
     name := "purerest",
-    publish / skip := true
+    publish / skip := true,
+    writePublishVersions := {
+      val out = target.value / "publish-versions.txt"
+      IO.writeLines(
+        out,
+        Seq(
+          s"purerestlib ${(purerestlib / version).value}",
+          s"pureKafka ${(pureKafka / version).value}",
+          s"sbtPureKafkaDocs ${(sbtPureKafkaDocs / version).value}"
+        )
+      )
+      out
+    }
   )

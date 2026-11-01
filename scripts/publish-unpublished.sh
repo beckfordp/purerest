@@ -15,20 +15,24 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 REGISTRY="https://maven.pkg.github.com/beckfordp/purerest/io/github/beckfordp"
 
-# sbt project -> published artifact id (Scala 3 / sbt-plugin cross suffixes).
-PROJECTS=(purerestlib pureKafka sbtPureKafkaDocs)
-ARTIFACTS=(purerestlib_3 purekafka_3 sbt-purekafka-docs_2.12_1.0)
+# Published artifact id per sbt project (Scala 3 / sbt-plugin cross suffixes).
+artifact_of() {
+  case "$1" in
+    purerestlib) echo purerestlib_3 ;;
+    pureKafka) echo purekafka_3 ;;
+    sbtPureKafkaDocs) echo sbt-purekafka-docs_2.12_1.0 ;;
+    *) echo "FAIL: no artifact id for sbt project $1" >&2; return 1 ;;
+  esac
+}
 
-prints=()
-for project in "${PROJECTS[@]}"; do prints+=("print $project/version"); done
-VERSIONS=()
-while IFS= read -r v; do VERSIONS+=("$v"); done < <(
-  sbt -batch -error "${prints[@]}" < /dev/null | tail -n "${#PROJECTS[@]}"
-)
+VERSIONS_FILE=target/publish-versions.txt
+rm -f "$VERSIONS_FILE"
+sbt -batch writePublishVersions < /dev/null
+[ -s "$VERSIONS_FILE" ] || { echo "FAIL: $VERSIONS_FILE not written" >&2; exit 1; }
 
 to_publish=()
-for i in "${!PROJECTS[@]}"; do
-  project="${PROJECTS[$i]}" artifact="${ARTIFACTS[$i]}" version="${VERSIONS[$i]}"
+while read -r project version; do
+  artifact=$(artifact_of "$project")
   pom="$REGISTRY/$artifact/$version/$artifact-$version.pom"
   status=$(curl -s -o /dev/null -w '%{http_code}' -u "$GITHUB_ACTOR:$GITHUB_TOKEN" "$pom")
   case "$status" in
@@ -36,7 +40,7 @@ for i in "${!PROJECTS[@]}"; do
     404) echo "publish $project $version"; to_publish+=("$project/publish") ;;
     *) echo "FAIL: $pom returned HTTP $status" >&2; exit 1 ;;
   esac
-done
+done < "$VERSIONS_FILE"
 
 if [ "${#to_publish[@]}" -eq 0 ]; then
   echo "nothing to publish"
