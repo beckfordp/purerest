@@ -2,6 +2,7 @@ package purekafka.docs
 
 import cats.effect.IO
 import munit.CatsEffectSuite
+import org.http4s.headers.Location
 import org.http4s.implicits._
 import org.http4s.{Method, Request, Status}
 import sttp.tapir.Schema
@@ -38,6 +39,32 @@ class DocsSuite extends CatsEffectSuite {
       assert(body.contains("purekafka demo"))
       assert(body.contains("kafka-harness-demo"))
     }
+  }
+
+  test(
+    "redirects /docs/asyncapi to /docs/asyncapi/, so the HTML's relative css/js paths resolve"
+  ) {
+    for {
+      response <- routes.orNotFound.run(
+        Request[IO](Method.GET, uri"/docs/asyncapi")
+      )
+    } yield {
+      assertEquals(response.status, Status.MovedPermanently)
+      assertEquals(
+        response.headers.get[Location].map(_.uri.renderString),
+        Some("/docs/asyncapi/")
+      )
+    }
+  }
+
+  test(
+    "leaves /docs/asyncapi/ to the service's static HTML route (no redirect loop)"
+  ) {
+    for {
+      response <- routes.orNotFound.run(
+        Request[IO](Method.GET, uri"/docs/asyncapi/")
+      )
+    } yield assertEquals(response.status, Status.NotFound)
   }
 
   test("404s on an unrelated path") {
