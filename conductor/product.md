@@ -41,7 +41,9 @@ toward a real storefront, but out of current scope.
 1. **purerest** (library) — tracing/propagation (OpenTelemetry), structured contextual logging
    (log4cats), metrics (Prometheus-compatible RED + resilience signals), a resilient HTTP
    client (retry + circuit breaker), and self-documenting endpoints (tapir: real routes + an
-   always-in-sync OpenAPI spec/Swagger UI from one definition).
+   always-in-sync OpenAPI spec/Swagger UI from one definition, plus
+   `Docs.undocumented`, a coverage check against the README's "Documenting
+   endpoints" convention).
 2. **order-service** — http4s REST API backed by PostgreSQL/Skunk; orchestrates order
    placement via purerest's resilient client.
 3. **inventory-service** — http4s REST API exposing stock reservation; a second, independent

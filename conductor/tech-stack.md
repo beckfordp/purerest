@@ -18,8 +18,10 @@
   "early-semver"` on `purerestlib`. A `v1.2.3` tag publishes as `1.2.3`; untagged builds carry
   `0.0.0+<commit-count>-<sha>` versions.
 - **Release pipeline**: `.github/workflows/release.yml` triggers on push of any `v*` tag. The
-  `release` job runs `sbt scalafmtCheck test` as a gate, then (only on success) `sbt
-  purerestlib/publish` to GitHub Packages (which also publishes a real Scaladoc `-javadoc.jar`
+  `release` job runs `sbt scalafmtCheck test` as a gate, then (only on success) `scripts/publish-unpublished.sh`: publishes
+  purerestlib/pureKafka/sbtPureKafkaDocs to GitHub Packages, skipping any whose version
+  is already there (sbt-purekafka-docs' version is fixed and hand-bumped; versions come
+  from the root `writePublishVersions` task). That also publishes a real Scaladoc `-javadoc.jar`
   automatically, via sbt's default publish artifacts — no extra config needed for that half).
   A second `deploy-docs` job (`needs: release`) then runs `sbt purerestlib/doc` and deploys the
   rendered HTML to GitHub Pages at a stable "latest" URL, overwritten on every release — see
