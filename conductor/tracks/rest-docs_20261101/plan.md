@@ -28,10 +28,10 @@
       `scripts/verify-td20-1-phase1.sh`: fmt, test, coverage. d82a744
 
 ## Phase 2: README convention
-- [ ] Task: README "Documenting endpoints" section: convention bullets (from spec), worked
+- [x] Task: README "Documenting endpoints" section: convention bullets (from spec), worked
       endpoint + DTO snippet, one-test coverage example
       (`assertEquals(Docs.undocumented(...).map(_.render), Nil)`), owning-service rule, client
-      mirrors exempt. Snippet mirrors the test fixture so it stays honest.
+      mirrors exempt. Snippet mirrors the test fixture so it stays honest. cc95c85
 - [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md).
 
 ## Phase 3: Release v0.7.0
