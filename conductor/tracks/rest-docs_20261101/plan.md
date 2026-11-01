@@ -1,6 +1,6 @@
 # Plan: TD-20.1 — REST docs convention + coverage check
 
-## Phase 1: Coverage check in purerestlib
+## Phase 1: Coverage check in purerestlib [checkpoint: d82a744]
 - [x] Task: Write failing tests `DocsCoverageSuite`: fully documented fixture (summary,
       description, tag, described path/query/header params, `@description`/`@encodedExample`
       DTO with nested DTO, described 404 error variant) → `Nil`; one bare fixture per gap kind
@@ -25,7 +25,7 @@
 - [x] Task: `sbt scalafmtCheck test` + `coverage test coverageReport` (>80% new code).
       purerestlib 80.4% stmt / 85.2% branch; DocsCoverage 87%, DocGap/Docs 100%. 1bf8b08
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md).
-      `scripts/verify-td20-1-phase1.sh`: fmt, test, coverage.
+      `scripts/verify-td20-1-phase1.sh`: fmt, test, coverage. d82a744
 
 ## Phase 2: README convention
 - [ ] Task: README "Documenting endpoints" section: convention bullets (from spec), worked
