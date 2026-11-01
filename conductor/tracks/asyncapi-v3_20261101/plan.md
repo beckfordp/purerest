@@ -7,6 +7,6 @@
 - [x] Task: `scripts/verify-asyncapi-v3.sh` — kafka-harness spec validates as 3.0, HTML has send/receive operations, redirect 8b2b50a
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Document and route' (Protocol in workflow.md)
 
-## Phase 2: Release
+## Phase 2: Release [checkpoint: 2ef68a9]
 - [x] Task: tag `v0.6.0`, release workflow green (run 41293902769)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Release' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Release' (Protocol in workflow.md)
