@@ -6,5 +6,5 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Ordering' (Protocol in workflow.md)
 
 ## Phase 2: Release
-- [ ] Task: tag `v0.6.1`, release workflow green
+- [x] Task: tag `v0.6.1`, release workflow green (run 41302983584)
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Release' (Protocol in workflow.md)
