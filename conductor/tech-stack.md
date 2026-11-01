@@ -47,7 +47,8 @@
   `purerest.docs`'s OpenAPI/Swagger generation. 3.0's `send`/`receive` actions describe the service's
   own side (2.x's `publish`/`subscribe` describe the client's, which read inverted — gluon TD-19).
   One channel per topic with messages inline; operations keyed by topic name, or `<topic>-send` /
-  `<topic>-receive` when a topic has both. `purekafka.docs.Docs.routes` serves the generated spec as
+  `<topic>-receive` when a topic has both. Sends are listed before receives
+  (registration order within each), and channels follow the same order. `purekafka.docs.Docs.routes` serves the generated spec as
   JSON and redirects `/docs/asyncapi` to `/docs/asyncapi/`; services serve the static HTML under that
   prefix.
 - **Direction-aware generation**: `AsyncApiChannel[A]` carries a `direction: ChannelDirection`
