@@ -1,7 +1,7 @@
 # Plan — AsyncAPI 3.0 send/receive docs
 
 ## Phase 1: Document and route
-- [ ] Task: `AsyncApiDoc` — emit AsyncAPI 3.0 (`send`/`receive` operations, inline channel messages, topic-named keys), munit tests first
+- [x] Task: `AsyncApiDoc` — emit AsyncAPI 3.0 (`send`/`receive` operations, inline channel messages, topic-named keys), munit tests first e6bbb76
 - [ ] Task: `Docs.routes` — redirect `/docs/asyncapi` → `/docs/asyncapi/`, tests first
 - [ ] Task: plugin `0.6.0-dev`, build.sbt comment, tech-stack.md
 - [ ] Task: `scripts/verify-asyncapi-v3.sh` — kafka-harness spec validates as 3.0, HTML has send/receive operations, redirect
