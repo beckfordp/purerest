@@ -2,7 +2,7 @@
 
 ## Phase 1: Ordering
 - [x] Task: `AsyncApiDoc` — sends before receives, channels in operation order, tests first b8e26d8
-- [ ] Task: plugin `0.6.1-dev`, tech-stack.md
+- [x] Task: plugin `0.6.1-dev`, tech-stack.md bbe12db
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Ordering' (Protocol in workflow.md)
 
 ## Phase 2: Release
