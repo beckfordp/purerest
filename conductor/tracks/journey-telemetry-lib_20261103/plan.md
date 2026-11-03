@@ -24,3 +24,6 @@
   (NoClassDefFoundError BoundLongCounter) — pinned `opentelemetry-api-incubator` 1.66 as a
   direct dependency so services inherit it
 - IORuntimeMetrics needs `IORuntime.metrics`; tests use `cats.effect.unsafe.implicits.global`
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 228c3d2 (PoolMetrics pending_requests stayed incremented while a connection was held; unused import). Released as v0.8.1
