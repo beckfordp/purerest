@@ -14,11 +14,13 @@
 - [x] Task: Implement `purekafka.consumer.EventAge` ab07cbb
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md) `scripts/verify-perf4a.sh` 5000026
 
-## Phase 3: Release v0.8.0
-- [ ] Task: Push main, tag `v0.8.0`, watch release.yml green
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+## Phase 3: Release v0.8.0 [checkpoint: 90a65b8]
+- [x] Task: Push main, tag `v0.8.0`, watch release.yml green (run 41622779042: release + deploy-docs green)
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md) `scripts/verify-perf4a-release.sh` 90a65b8
 
 ## Risks
 - runtime-telemetry 2.27.0-alpha targets OTel API 1.61; build pins SDK 1.66 (upward
-  eviction, API compatible). evictionErrorLevel may need a pin
+  eviction, API compatible). Hit: api-incubator 1.61 lacks classes the 1.66 SDK needs
+  (NoClassDefFoundError BoundLongCounter) — pinned `opentelemetry-api-incubator` 1.66 as a
+  direct dependency so services inherit it
 - IORuntimeMetrics needs `IORuntime.metrics`; tests use `cats.effect.unsafe.implicits.global`
