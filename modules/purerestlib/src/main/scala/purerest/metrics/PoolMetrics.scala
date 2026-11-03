@@ -41,31 +41,21 @@ object PoolMetrics {
         .upDownCounter[Long]("db.client.connection.pending_requests")
         .create
     ).mapN { (waitTime, used, pending) =>
-      val acquire: Resource[F, A] =
-        Resource
-          .make(pending.inc(poolAttr))(_ => pending.dec(poolAttr))
-          .flatMap(_ => Resource.eval(Async[F].monotonic))
-          .flatMap(start =>
-            pool.evalTap(_ =>
-              Async[F].monotonic.flatMap(end =>
-                waitTime.record((end - start).toUnit(SECONDS), poolAttr)
-              )
-            )
-          )
-      // Pending ends once acquisition does, so the acquire resource above is
-      // allocated and its pending finalizer run before the used span opens.
-      Resource
-        .applyFull[F, A] { poll =>
-          poll(acquire.allocated).flatMap { case (a, releaseConnection) =>
-            used
-              .inc(usedAttrs)
-              .as(
-                a -> ((_: Resource.ExitCase) =>
-                  releaseConnection.guarantee(used.dec(usedAttrs))
-                )
-              )
-          }
-        }
+      // Pending covers acquisition only; used covers the time the connection
+      // is held, released even if `use` fails or is cancelled.
+      Resource.applyFull[F, A] { poll =>
+        for {
+          _ <- pending.inc(poolAttr)
+          start <- Async[F].monotonic
+          allocated <- poll(pool.allocated).guarantee(pending.dec(poolAttr))
+          (a, releaseConnection) = allocated
+          end <- Async[F].monotonic
+          _ <- waitTime.record((end - start).toUnit(SECONDS), poolAttr)
+          _ <- used.inc(usedAttrs)
+        } yield a -> ((_: Resource.ExitCase) =>
+          releaseConnection.guarantee(used.dec(usedAttrs))
+        )
+      }
     }
   }
 }

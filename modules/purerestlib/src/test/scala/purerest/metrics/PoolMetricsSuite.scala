@@ -30,6 +30,10 @@ class PoolMetricsSuite extends CatsEffectSuite {
         after <- tm.collectMetrics
       } yield {
         assertEquals(longSum(during, "db.client.connection.count"), 1L)
+        assertEquals(
+          longSum(during, "db.client.connection.pending_requests"),
+          0L
+        )
         assertEquals(longSum(after, "db.client.connection.count"), 0L)
         assertEquals(
           longSum(after, "db.client.connection.pending_requests"),

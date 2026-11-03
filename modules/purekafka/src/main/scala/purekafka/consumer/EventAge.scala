@@ -2,7 +2,7 @@ package purekafka.consumer
 
 import cats.effect.Clock
 import cats.syntax.all._
-import cats.{Functor, Monad}
+import cats.Monad
 import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.metrics.{BucketBoundaries, Histogram, Meter}
 
