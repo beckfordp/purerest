@@ -72,6 +72,10 @@ object Metrics {
     * given, otel4s cats-effect runtime metrics (`cats.effect.runtime.*`:
     * compute pool, worker threads, CPU starvation) — gluon PERF-4.1. Both are
     * unregistered when the resource is released.
+    *
+    * JMX metrics only (heap, GC, threads, CPU, classes): every JFR feature is
+    * disabled, because JFR streaming throttled and OOM-killed 500m/384Mi
+    * service pods at rest (gluon TD-28).
     */
   def runtimeMetrics[F[_]: Async](
       otel: OtelJava[F],
@@ -80,7 +84,9 @@ object Metrics {
     given MeterProvider[F] = otel.meterProvider
     Resource
       .fromAutoCloseable(
-        Async[F].delay(RuntimeMetrics.builder(otel.underlying).build())
+        Async[F].delay(
+          RuntimeMetrics.builder(otel.underlying).disableAllFeatures().build()
+        )
       )
       .void >>
       ioRuntimeMetrics.traverse_(
