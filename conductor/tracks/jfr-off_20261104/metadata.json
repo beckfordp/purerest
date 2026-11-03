@@ -1,0 +1,8 @@
+{
+  "track_id": "jfr-off_20261104",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-11-03T13:00:00Z",
+  "updated_at": "2026-11-03T13:00:00Z",
+  "description": "TD-28: JFR runtime telemetry off"
+}

@@ -2,6 +2,9 @@
 
 This file tracks all major tracks for the project.
 
+- [ ] **Track: TD-28: JFR runtime telemetry off**
+  *Link: [./tracks/jfr-off_20261104/](./tracks/jfr-off_20261104/)*
+
 ---
 
 ## Backlog
