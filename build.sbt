@@ -10,6 +10,9 @@ val munitVersion = "1.3.6"
 val munitCatsEffectVersion = "2.2.1"
 val otel4sVersion = "1.1.0"
 val openTelemetryVersion = "1.66.0"
+// OTel Java instrumentation (runtime telemetry) is released on its own train;
+// 2.27.0-alpha targets API 1.61, evicted upward to openTelemetryVersion.
+val openTelemetryInstrumentationVersion = "2.27.0-alpha"
 val log4catsVersion = "2.8.0"
 val tapirVersion = "1.11.25"
 val skunkVersion = "1.0.0"
@@ -150,7 +153,17 @@ lazy val purerestlib = project
       // Prometheus scrape-endpoint exporter for otel4s/OTel SDK metrics — still an
       // incubating OTel component, hence the "-alpha" qualifier tracking the main
       // opentelemetry-java release train.
-      "io.opentelemetry" % "opentelemetry-exporter-prometheus" % s"$openTelemetryVersion-alpha"
+      "io.opentelemetry" % "opentelemetry-exporter-prometheus" % s"$openTelemetryVersion-alpha",
+      // JVM runtime metrics (heap, GC, threads, CPU, classes) registered on the
+      // SDK Metrics.oteljava builds (gluon PERF-4.1).
+      "io.opentelemetry.instrumentation" % "opentelemetry-runtime-telemetry-java17" % openTelemetryInstrumentationVersion,
+      // runtime-telemetry pulls api-incubator 1.61; the 1.66 SDK needs the
+      // matching incubator (BoundLongCounter etc.), so pin it explicitly —
+      // a direct dependency, so consuming services resolve it too.
+      "io.opentelemetry" % "opentelemetry-api-incubator" % s"$openTelemetryVersion-alpha",
+      // cats-effect IORuntime metrics (compute pool, worker threads, CPU
+      // starvation), same otel4s release train (gluon PERF-4.1).
+      "org.typelevel" %% "otel4s-instrumentation-metrics" % otel4sVersion
     )
   )
 
