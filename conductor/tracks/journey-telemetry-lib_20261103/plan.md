@@ -1,18 +1,18 @@
 # Plan: Perf 4a — Cross-cutting journey telemetry
 
-## Phase 1: purerestlib runtime + pool metrics + milestones
-- [ ] Task: Write failing tests: `RuntimeMetricsSuite` (JVM + IORuntime metric names via a
+## Phase 1: purerestlib runtime + pool metrics + milestones [checkpoint: 5000026]
+- [x] Task: Write failing tests: `RuntimeMetricsSuite` (JVM + IORuntime metric names via a
       `Metrics.oteljava`-equivalent test path), `PoolMetricsSuite` (used/pending counts,
-      wait-time histogram, release on error), `MilestonesSuite` (log fields)
-- [ ] Task: Implement: add runtime-telemetry + otel4s-instrumentation-metrics deps,
-      `Metrics.oteljava(…, ioRuntimeMetrics)`, `PoolMetrics.instrument`, `Milestones.log`
-- [ ] Task: Demo `order-service` module wraps its pool with `PoolMetrics`
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+      wait-time histogram, release on error), `MilestonesSuite` (log fields) c3c0bce
+- [x] Task: Implement: add runtime-telemetry + otel4s-instrumentation-metrics deps,
+      `Metrics.oteljava(…, ioRuntimeMetrics)`, `PoolMetrics.instrument`, `Milestones.log` c3c0bce
+- [x] Task: Demo `order-service` module wraps its pool with `PoolMetrics` 6bccc33
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md) `scripts/verify-perf4a.sh` 5000026
 
-## Phase 2: purekafka event age
-- [ ] Task: Write failing test `EventAgeSuite` (value, clamp, attributes, boundaries)
-- [ ] Task: Implement `purekafka.consumer.EventAge`
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+## Phase 2: purekafka event age [checkpoint: 5000026]
+- [x] Task: Write failing test `EventAgeSuite` (value, clamp, attributes, boundaries) ab07cbb
+- [x] Task: Implement `purekafka.consumer.EventAge` ab07cbb
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md) `scripts/verify-perf4a.sh` 5000026
 
 ## Phase 3: Release v0.8.0
 - [ ] Task: Push main, tag `v0.8.0`, watch release.yml green
