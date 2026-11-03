@@ -2,6 +2,9 @@
 
 This file tracks all major tracks for the project.
 
+- [ ] **Track: Perf 4a: cross-cutting journey telemetry (PERF-4.1–4.3, 4.11 helper)**
+  *Link: [./tracks/journey-telemetry-lib_20261103/](./tracks/journey-telemetry-lib_20261103/)*
+
 ---
 
 ## Backlog
