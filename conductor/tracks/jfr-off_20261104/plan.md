@@ -6,5 +6,5 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md) `scripts/verify-perf4a.sh` PASS
 
 ## Phase 2: Release v0.8.2
-- [ ] Task: Push main, tag `v0.8.2`, watch release.yml green
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task: Push main, tag `v0.8.2`, watch release.yml green (run 41658593082: release + deploy-docs green)
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md) `scripts/verify-perf4a-release.sh 0.8.2` PASS
