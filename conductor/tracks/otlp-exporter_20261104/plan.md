@@ -6,10 +6,10 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md) TracingConfigSuite 5/5 (prompt-off; covered again by verify-perf5-otlp.sh)
 
 ## Phase 2: OTLP exporter
-- [x] Task: Add `opentelemetry-exporter-otlp` + `opentelemetry-exporter-sender-jdk` (okhttp excluded); eviction guard green 0fd9aed
-- [ ] Task: Write failing tests: `TracingSuite` sampler (ratio 0 / 1) + `service.name` resource
-- [ ] Task: Implement `Tracing.resource`; `console` delegates; `main` reads env
-- [ ] Task: README tracing section
+- [x] Task: Add `opentelemetry-exporter-otlp` + `opentelemetry-exporter-sender-jdk` (okhttp excluded); eviction guard green 08acd63
+- [x] Task: Write failing tests: `TracingSuite` sampler (ratio 0 / 1) + `service.name` resource 70b8bc3
+- [x] Task: Implement `Tracing.resource`; `console` delegates; `main` reads env 70b8bc3 (deviation: OTLP/HTTP :4318, not gRPC — JDK sender has no gRPC)
+- [~] Task: README tracing section
 - [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md) `scripts/verify-perf5-otlp.sh` (local collector receives `demo-span`)
 
 ## Phase 3: Release v0.9.0
