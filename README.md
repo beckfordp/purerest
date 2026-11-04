@@ -34,6 +34,19 @@ API docs (Scaladoc) for the latest release are browsable at
 Pages by the same release workflow. A `-javadoc.jar` with the same content is also published
 alongside the main jar on GitHub Packages.
 
+## Exporting traces
+
+`Tracing.resource(serviceName, config)` builds the service's tracer. Read the config from
+the standard OTel env vars with `TracingConfig.fromEnv(sys.env)`:
+
+| Env var | Default | Effect |
+|---|---|---|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | OTLP/HTTP base URL (e.g. `http://tempo:4318`); spans are batched to `<url>/v1/traces`. Unset → spans logged to stdout. |
+| `OTEL_TRACES_SAMPLER_ARG` | `1.0` | Root-span sampling ratio in [0, 1]; child spans follow the parent. Anything else is a startup error. |
+
+Spans carry `service.name = serviceName`. `Tracing.console(name)` is the unset-endpoint
+case. HTTP, not gRPC: the JDK HttpClient sender (no okhttp) has no gRPC support.
+
 ## Documenting endpoints
 
 `Docs.routes` serves each service's OpenAPI spec and Swagger UI at `/docs`. The spec only
