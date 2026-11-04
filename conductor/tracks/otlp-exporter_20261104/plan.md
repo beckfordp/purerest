@@ -1,8 +1,8 @@
 # Plan: PERF-5.2 — OTLP span exporter
 
 ## Phase 1: TracingConfig
-- [ ] Task: Write failing tests: `TracingConfigSuite` (unset, endpoint, ratios, invalid → Left)
-- [ ] Task: Implement `TracingConfig` + `fromEnv`
+- [x] Task: Write failing tests: `TracingConfigSuite` (unset, endpoint, ratios, invalid → Left) 7fb80cd
+- [x] Task: Implement `TracingConfig` + `fromEnv` 7fb80cd
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: OTLP exporter
