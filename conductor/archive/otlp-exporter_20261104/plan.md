@@ -18,4 +18,4 @@
 
 ## Phase: Review Fixes
 - [x] Task: Apply review suggestions f237df2 (High: `SamplingRatio` smart constructor, scala-fp §5; Low: blank ratio = unset)
-- [~] Task: Release v0.10.0 (`SamplingRatio` changes the public field type)
+- [x] Task: Release v0.10.0 (`SamplingRatio` changes the public field type) run 41905503940 green; verify-perf5-release.sh 0.10.0 PASS
