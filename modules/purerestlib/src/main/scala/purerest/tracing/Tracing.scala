@@ -90,7 +90,7 @@ object Tracing {
     */
   private[tracing] def sdk(
       serviceName: String,
-      samplingRatio: Double,
+      samplingRatio: SamplingRatio,
       processor: SpanProcessor
   ): OpenTelemetrySdk = {
     val tracerProvider = SdkTracerProvider
@@ -104,7 +104,9 @@ object Tracing {
             )
           )
       )
-      .setSampler(Sampler.parentBased(Sampler.traceIdRatioBased(samplingRatio)))
+      .setSampler(
+        Sampler.parentBased(Sampler.traceIdRatioBased(samplingRatio.value))
+      )
       .addSpanProcessor(processor)
       .build()
     OpenTelemetrySdk

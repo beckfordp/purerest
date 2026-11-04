@@ -6,8 +6,8 @@ configurable sampling ratio, for Tempo (PERF-5.3). Today `Tracing.console` only 
 (`LoggingSpanExporter`); that stays the default when no endpoint is set.
 
 ## Functional Requirements
-1. `TracingConfig(otlpEndpoint: Option[String], samplingRatio: Double)`, default
-   `(None, 1.0)`. `TracingConfig.fromEnv` parses `OTEL_EXPORTER_OTLP_ENDPOINT` and
+1. `TracingConfig(otlpEndpoint: Option[String], samplingRatio: SamplingRatio)` (opaque, smart constructor `SamplingRatio.from`), default
+   `(None, SamplingRatio.Always)`. `TracingConfig.fromEnv` parses `OTEL_EXPORTER_OTLP_ENDPOINT` and
    `OTEL_TRACES_SAMPLER_ARG` from a `Map[String, String]`; a ratio that isn't a number in
    [0, 1] is an error (`Either`), not silently defaulted.
 2. `Tracing.resource[F](serviceName, config)`:
@@ -17,7 +17,7 @@ configurable sampling ratio, for Tempo (PERF-5.3). Today `Tracing.console` only 
    - SDK resource carries `service.name = serviceName`
    - W3C trace-context propagator, as now
 3. `Tracing.console(name)` kept, = `resource(name, TracingConfig.default)`.
-4. Release v0.9.0 (new API; early-semver minor).
+4. Release v0.9.0 (new API; early-semver minor); v0.10.0 after review (`SamplingRatio` type).
 
 ## Acceptance Criteria
 - `TracingConfigSuite`: unset, endpoint set, ratios 0/0.5/1, non-numeric / out-of-range → Left.

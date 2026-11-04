@@ -13,33 +13,54 @@ import cats.syntax.all._
   */
 final case class TracingConfig(
     otlpEndpoint: Option[String],
-    samplingRatio: Double
+    samplingRatio: SamplingRatio
 )
+
+/** Fraction of root traces sampled: a `Double` in [0, 1], checked once here
+  * (the OTel SDK's ratio sampler throws on anything else).
+  */
+opaque type SamplingRatio = Double
+
+object SamplingRatio {
+  val Always: SamplingRatio = 1.0
+  val Never: SamplingRatio = 0.0
+
+  def from(ratio: Double): Either[String, SamplingRatio] =
+    Either.cond(
+      ratio >= 0.0 && ratio <= 1.0,
+      ratio,
+      s"sampling ratio must be in [0, 1], got $ratio"
+    )
+
+  extension (ratio: SamplingRatio) def value: Double = ratio
+}
 
 object TracingConfig {
 
   /** Logging exporter, every trace sampled. */
-  val default: TracingConfig = TracingConfig(None, 1.0)
+  val default: TracingConfig = TracingConfig(None, SamplingRatio.Always)
 
   val EndpointVar = "OTEL_EXPORTER_OTLP_ENDPOINT"
   val SamplerArgVar = "OTEL_TRACES_SAMPLER_ARG"
 
-  /** Reads the standard OTel env vars ([[EndpointVar]], [[SamplerArgVar]]). A
-    * blank endpoint counts as unset; a ratio that isn't a number in [0, 1] is
-    * an error rather than silently defaulted.
+  /** Reads the standard OTel env vars ([[EndpointVar]], [[SamplerArgVar]]).
+    * Blank counts as unset (as in the OTel spec); a ratio that isn't a number
+    * in [0, 1] is an error rather than silently defaulted.
     */
   def fromEnv(env: Map[String, String]): Either[String, TracingConfig] = {
-    val endpoint = env.get(EndpointVar).map(_.trim).filter(_.nonEmpty)
-    env
-      .get(SamplerArgVar)
+    def nonBlank(name: String) = env.get(name).map(_.trim).filter(_.nonEmpty)
+    nonBlank(SamplerArgVar)
       .traverse(parseRatio)
       .map(ratio =>
-        TracingConfig(endpoint, ratio.getOrElse(default.samplingRatio))
+        TracingConfig(
+          nonBlank(EndpointVar),
+          ratio.getOrElse(SamplingRatio.Always)
+        )
       )
   }
 
-  private def parseRatio(raw: String): Either[String, Double] =
-    raw.trim.toDoubleOption
-      .filter(r => r >= 0.0 && r <= 1.0)
-      .toRight(s"$SamplerArgVar must be a number in [0, 1], got '$raw'")
+  private def parseRatio(raw: String): Either[String, SamplingRatio] =
+    raw.toDoubleOption
+      .toRight(s"$SamplerArgVar must be a number, got '$raw'")
+      .flatMap(SamplingRatio.from(_).leftMap(e => s"$SamplerArgVar: $e"))
 }

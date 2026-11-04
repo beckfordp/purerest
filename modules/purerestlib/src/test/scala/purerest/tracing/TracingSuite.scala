@@ -26,7 +26,7 @@ class TracingSuite extends CatsEffectSuite {
   /** Runs one span through the SDK `Tracing.resource` builds, captured by an
     * in-memory exporter in place of the configured one.
     */
-  private def exportedSpan(samplingRatio: Double) = {
+  private def exportedSpan(samplingRatio: SamplingRatio) = {
     val exporter = InMemorySpanExporter.create()
     OtelJava
       .resource[IO](
@@ -47,17 +47,17 @@ class TracingSuite extends CatsEffectSuite {
   }
 
   test("ratio 1 samples every root span") {
-    exportedSpan(1.0).map(spans =>
+    exportedSpan(SamplingRatio.Always).map(spans =>
       assertEquals(spans.map(_.getName), List("my-operation"))
     )
   }
 
   test("ratio 0 samples no root span") {
-    exportedSpan(0.0).map(spans => assertEquals(spans, Nil))
+    exportedSpan(SamplingRatio.Never).map(spans => assertEquals(spans, Nil))
   }
 
   test("spans carry service.name, so Tempo can group them by service") {
-    exportedSpan(1.0).map(spans =>
+    exportedSpan(SamplingRatio.Always).map(spans =>
       assertEquals(
         spans.map(
           _.getResource.getAttribute(AttributeKey.stringKey("service.name"))
@@ -84,7 +84,9 @@ class TracingSuite extends CatsEffectSuite {
 
   test("an OTLP endpoint selects a batch processor, none the logging one") {
     val otlp =
-      Tracing.processor(TracingConfig(Some("http://localhost:4318"), 1.0))
+      Tracing.processor(
+        TracingConfig(Some("http://localhost:4318"), SamplingRatio.Always)
+      )
     val logging = Tracing.processor(TracingConfig.default)
     try {
       assert(otlp.isInstanceOf[BatchSpanProcessor], otlp.toString)
