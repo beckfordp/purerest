@@ -13,5 +13,5 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md) `scripts/verify-perf5-otlp.sh` (local collector receives `demo-span`) PASS 3389724
 
 ## Phase 3: Release v0.9.0
-- [ ] Task: Push main, tag `v0.9.0`, watch release.yml green
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md) `scripts/verify-perf5-release.sh 0.9.0`
+- [x] Task: Push main, tag `v0.9.0`, watch release.yml green (run 41904280584: release + deploy-docs green)
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md) `scripts/verify-perf5-release.sh 0.9.0` PASS a4a3cc7
