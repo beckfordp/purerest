@@ -100,4 +100,12 @@ class TracingSuite extends CatsEffectSuite {
       .resource[IO]("purerest-test", TracingConfig.default)
       .use(_.span("my-operation").use(_ => IO.unit))
   }
+
+  test("main runs the manual check on the env's config") {
+    assume(
+      !sys.env.contains(TracingConfig.EndpointVar),
+      "OTLP endpoint set; covered by verify-perf5-otlp.sh"
+    )
+    IO.blocking(Tracing.main(Array.empty))
+  }
 }
