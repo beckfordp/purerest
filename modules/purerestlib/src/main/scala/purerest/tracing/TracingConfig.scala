@@ -5,8 +5,8 @@ import cats.syntax.all._
 /** Config for [[Tracing.resource]]: where spans go and how many are kept.
   *
   * @param otlpEndpoint
-  *   OTLP gRPC endpoint (e.g. Tempo's `http://tempo:4317`); `None` logs spans
-  *   to stdout instead, so a service still runs without a trace backend.
+  *   OTLP/HTTP base endpoint (e.g. Tempo's `http://tempo:4318`); `None` logs
+  *   spans to stdout instead, so a service still runs without a trace backend.
   * @param samplingRatio
   *   fraction of new (root) traces sampled, in [0, 1]; child spans follow the
   *   parent's decision.

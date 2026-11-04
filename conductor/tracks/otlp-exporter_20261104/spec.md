@@ -11,7 +11,7 @@ configurable sampling ratio, for Tempo (PERF-5.3). Today `Tracing.console` only 
    `OTEL_TRACES_SAMPLER_ARG` from a `Map[String, String]`; a ratio that isn't a number in
    [0, 1] is an error (`Either`), not silently defaulted.
 2. `Tracing.resource[F](serviceName, config)`:
-   - endpoint set → OTLP gRPC exporter (JDK HTTP sender, no okhttp) + `BatchSpanProcessor`
+   - endpoint set → OTLP/HTTP exporter (JDK HttpClient sender, no okhttp; it has no gRPC) + `BatchSpanProcessor`; endpoint is a base URL, `/v1/traces` appended
    - no endpoint → `LoggingSpanExporter` + `SimpleSpanProcessor` (today's behaviour)
    - sampler `parentBased(traceIdRatioBased(ratio))`
    - SDK resource carries `service.name = serviceName`

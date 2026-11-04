@@ -4,7 +4,7 @@ import munit.FunSuite
 
 class TracingConfigSuite extends FunSuite {
 
-  private val endpoint = "http://tempo.observability:4317"
+  private val endpoint = "http://tempo.observability:4318"
 
   test("no env vars → logging exporter, sample everything") {
     assertEquals(TracingConfig.fromEnv(Map.empty), Right(TracingConfig.default))
