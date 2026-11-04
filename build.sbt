@@ -107,6 +107,12 @@ lazy val purerestlib = project
       // Console/logging span exporter, for manual verification when running a
       // service locally.
       "io.opentelemetry" % "opentelemetry-exporter-logging" % openTelemetryVersion,
+      // OTLP span exporter, used when OTEL_EXPORTER_OTLP_ENDPOINT is set (gluon
+      // PERF-5.2, ADR 0021: Tempo). The JDK HttpClient sender replaces the
+      // default okhttp one, so no okhttp/kotlin-stdlib on service classpaths.
+      ("io.opentelemetry" % "opentelemetry-exporter-otlp" % openTelemetryVersion)
+        .exclude("io.opentelemetry", "opentelemetry-exporter-sender-okhttp"),
+      "io.opentelemetry" % "opentelemetry-exporter-sender-jdk" % openTelemetryVersion,
       // In-memory span exporter/testkit. Deliberately a normal compile dependency
       // (not Test-scoped): purerest.tracing.Tracing.test is a public testing helper
       // consumed by order-service's and inventory-service's own test suites, not

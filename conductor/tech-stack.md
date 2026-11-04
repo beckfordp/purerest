@@ -131,7 +131,10 @@
 ## Observability
 - **Tracing**: OpenTelemetry via **otel4s** (`oteljava` backend) — W3C trace context
   propagated across service-to-service calls. Console exporter for local dev; in-memory
-  testkit for automated tests. Real OTLP/collector export deferred.
+  testkit for automated tests. OTLP gRPC export (`opentelemetry-exporter-otlp`, JDK
+  HttpClient sender, okhttp excluded) when `OTEL_EXPORTER_OTLP_ENDPOINT` is set;
+  parent-based ratio sampling from `OTEL_TRACES_SAMPLER_ARG` (2026-11-04, gluon
+  PERF-5.2 / ADR 0021: Tempo).
 - **Logging**: **log4cats** (slf4j backend) + **Logback** (needed to render MDC
   `trace_id`/`span_id` via its pattern layout) — structured logs correlated by trace id.
 - **Metrics**: otel4s's `Meter[F]` — RED metrics (request rate/errors/duration) plus
