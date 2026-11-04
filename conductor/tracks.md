@@ -13,3 +13,6 @@ through the spec/plan questions and promote it into a real track below.
 
 
 ---
+
+- [ ] **Track: PERF-5.2: OTLP span exporter**
+  *Link: [./tracks/otlp-exporter_20261104/](./tracks/otlp-exporter_20261104/)*
