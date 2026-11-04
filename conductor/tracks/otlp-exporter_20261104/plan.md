@@ -15,3 +15,7 @@
 ## Phase 3: Release v0.9.0
 - [x] Task: Push main, tag `v0.9.0`, watch release.yml green (run 41904280584: release + deploy-docs green)
 - [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md) `scripts/verify-perf5-release.sh 0.9.0` PASS a4a3cc7
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions f237df2 (High: `SamplingRatio` smart constructor, scala-fp §5; Low: blank ratio = unset)
+- [~] Task: Release v0.10.0 (`SamplingRatio` changes the public field type)
