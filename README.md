@@ -47,6 +47,11 @@ the standard OTel env vars with `TracingConfig.fromEnv(sys.env)`:
 Spans carry `service.name = serviceName`. `Tracing.console(name)` is the unset-endpoint
 case. HTTP, not gRPC: the JDK HttpClient sender (no okhttp) has no gRPC support.
 
+Across Kafka, `purekafka.tracing.KafkaTracing` carries the trace: `injectHeaders` on a
+`ProducerRecord`, `traced` around consuming. With a transactional outbox, store
+`KafkaTracing.traceParent(tracer)` (the active W3C `traceparent`, `None` outside a span) in
+the row's `trace_parent` column and have the relay put it in a `traceparent` header.
+
 ## Documenting endpoints
 
 `Docs.routes` serves each service's OpenAPI spec and Swagger UI at `/docs`. The spec only

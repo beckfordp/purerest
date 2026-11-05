@@ -100,4 +100,34 @@ class KafkaTracingSuite extends CatsEffectSuite {
       }
     }
   }
+
+  test(
+    "traceParent is the active span's W3C traceparent (for an outbox row)"
+  ) {
+    testTracer.use { testkit =>
+      for {
+        tracer <- testkit.tracerProvider.get("kafka-tracing-test")
+        result <- tracer.span("outbox-write").use { span =>
+          KafkaTracing.traceParent(tracer).map(_ -> span.context.traceIdHex)
+        }
+      } yield {
+        val (traceParent, traceId) = result
+        assert(
+          traceParent.exists(
+            _.matches(s"00-$traceId-[0-9a-f]{16}-[0-9a-f]{2}")
+          ),
+          s"expected 00-$traceId-<span>-<flags>, got: $traceParent"
+        )
+      }
+    }
+  }
+
+  test("traceParent is None when no span is active") {
+    testTracer.use { testkit =>
+      testkit.tracerProvider
+        .get("kafka-tracing-test")
+        .flatMap(KafkaTracing.traceParent(_))
+        .assertEquals(None)
+    }
+  }
 }

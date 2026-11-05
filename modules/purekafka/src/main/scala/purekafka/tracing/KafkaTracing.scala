@@ -1,5 +1,6 @@
 package purekafka.tracing
 
+import cats.Functor
 import cats.effect.Concurrent
 import cats.syntax.all._
 import fs2.kafka.{Header, HeaderDeserializer, HeaderSerializer, Headers}
@@ -39,6 +40,15 @@ object KafkaTracing {
         acc.append(key, value)(using stringSerializer)
       }
     }
+
+  /** The active span's W3C `traceparent` value, `None` when no span is active.
+    * For a transactional outbox (gluon ADR 0008), where the producer writes a
+    * row rather than a `ProducerRecord`: store it in the row's `trace_parent`
+    * column and let the relay (Debezium) lift it to a `traceparent` header,
+    * which [[traced]] then joins.
+    */
+  def traceParent[F[_]: Functor](tracer: Tracer[F]): F[Option[String]] =
+    tracer.propagate(Map.empty[String, String]).map(_.get("traceparent"))
 
   /** Reads back whatever W3C trace-context carrier [[injectHeaders]] wrote,
     * skipping any header this deserializer can't decode as a UTF-8 string
