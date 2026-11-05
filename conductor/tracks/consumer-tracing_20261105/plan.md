@@ -6,5 +6,8 @@
 - [x] Task: Full `sbt scalafmtCheck test` (green)
 
 ## Phase 2: Release
-- [ ] Task: Tag v0.12.0, workflow green, jar downloadable
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task: Tag v0.12.0, workflow green, jar downloadable (run 42022052887; jar has SpanKind)
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+
+## Review
+- No findings. The null-header case already worked (UTF-8 decode of null bytes fails and is skipped); the test pins it.
