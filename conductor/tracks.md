@@ -2,6 +2,9 @@
 
 This file tracks all major tracks for the project.
 
+- [ ] **Track: PERF-5.4: KafkaTracing.traceParent for outbox rows**
+  *Link: [./tracks/outbox-traceparent_20261105/](./tracks/outbox-traceparent_20261105/)*
+
 ---
 
 ## Backlog
