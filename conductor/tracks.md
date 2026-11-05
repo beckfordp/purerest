@@ -2,6 +2,9 @@
 
 This file tracks all major tracks for the project.
 
+- [ ] **Track: PERF-5.5: KafkaTracing.traced consumer kind + null traceparent**
+  *Link: [./tracks/consumer-tracing_20261105/](./tracks/consumer-tracing_20261105/)*
+
 ---
 
 ## Backlog
