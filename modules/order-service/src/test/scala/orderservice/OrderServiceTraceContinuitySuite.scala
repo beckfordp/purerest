@@ -74,8 +74,11 @@ class OrderServiceTraceContinuitySuite extends CatsEffectSuite {
           val expected = TraceForestExpectation.ordered(
             TraceExpectation.ordered(
               SpanExpectation.any.name("POST /orders"),
-              TraceExpectation
-                .leaf(SpanExpectation.any.name("POST /inventory/reserve"))
+              TraceExpectation.ordered(
+                SpanExpectation.any.name("POST 127.0.0.1"),
+                TraceExpectation
+                  .leaf(SpanExpectation.any.name("POST /inventory/reserve"))
+              )
             )
           )
           TraceExpectations.check(spans, expected) match {

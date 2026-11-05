@@ -12,7 +12,7 @@ HTTP server spans are kind INTERNAL.
    `http.response.status_code`; 5xx / raised error → span status Error. The
    injected `traceparent` is that client span's. No active span → passthrough.
 2. `ServerTracing.middleware`: span kind `Server`; attributes
-   `http.request.method`, `url.path`, `http.response.status_code`.
+   `http.request.method`, `url.path`, `http.response.status_code`; 5xx → Error.
 
 ## Acceptance Criteria
 - Suites assert kinds, parenting, attributes; `sbt scalafmtCheck test` green.
