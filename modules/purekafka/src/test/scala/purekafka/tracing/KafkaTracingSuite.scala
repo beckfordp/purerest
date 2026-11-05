@@ -1,7 +1,8 @@
 package purekafka.tracing
 
 import cats.effect.IO
-import fs2.kafka.Headers
+import cats.syntax.all._
+import fs2.kafka.{Header, Headers}
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import munit.CatsEffectSuite
 import org.typelevel.otel4s.oteljava.testkit.trace.TracesTestkit
@@ -128,6 +129,42 @@ class KafkaTracingSuite extends CatsEffectSuite {
         .get("kafka-tracing-test")
         .flatMap(KafkaTracing.traceParent(_))
         .assertEquals(None)
+    }
+  }
+
+  test("traced() builds a Consumer-kind span") {
+    testTracer.use { testkit =>
+      for {
+        tracer <- testkit.tracerProvider.get("kafka-tracing-test")
+        _ <- KafkaTracing.traced(tracer)(Headers.empty, "consume", "t")(IO.unit)
+        spans <- testkit.finishedSpans
+      } yield assertEquals(
+        spans.map(_.getKind),
+        List(io.opentelemetry.api.trace.SpanKind.CONSUMER)
+      )
+    }
+  }
+
+  test(
+    "traced() treats a null- or blank-valued traceparent header (a NULL outbox column) as absent"
+  ) {
+    testTracer.use { testkit =>
+      val nullValued = Headers(Header("traceparent", null: Array[Byte]))
+      val blank = Headers(Header("traceparent", Array.emptyByteArray))
+      for {
+        tracer <- testkit.tracerProvider.get("kafka-tracing-test")
+        ran <- List(nullValued, blank).traverse(headers =>
+          KafkaTracing.traced(tracer)(headers, "consume", "t")(IO.pure(true))
+        )
+        spans <- testkit.finishedSpans
+      } yield {
+        assertEquals(ran, List(true, true))
+        assertEquals(spans.size, 2)
+        assert(
+          spans.forall(s => !s.getParentSpanContext.isValid),
+          s"expected root spans, got parents: ${spans.map(_.getParentSpanContext)}"
+        )
+      }
     }
   }
 }

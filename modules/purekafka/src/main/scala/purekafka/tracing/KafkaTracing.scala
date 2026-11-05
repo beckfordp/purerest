@@ -5,7 +5,7 @@ import cats.effect.Concurrent
 import cats.syntax.all._
 import fs2.kafka.{Header, HeaderDeserializer, HeaderSerializer, Headers}
 import org.typelevel.otel4s.Attribute
-import org.typelevel.otel4s.trace.Tracer
+import org.typelevel.otel4s.trace.{SpanKind, Tracer}
 
 import java.nio.charset.StandardCharsets
 
@@ -52,7 +52,8 @@ object KafkaTracing {
 
   /** Reads back whatever W3C trace-context carrier [[injectHeaders]] wrote,
     * skipping any header this deserializer can't decode as a UTF-8 string
-    * (non-tracing headers a caller's own code may have set).
+    * (non-tracing headers a caller's own code may have set), and null-valued
+    * ones (Debezium writes a NULL outbox `trace_parent` that way).
     */
   private def extractCarrier(headers: Headers): Map[String, String] =
     headers.toChain.foldLeft(Map.empty[String, String]) { (acc, header) =>
@@ -65,8 +66,9 @@ object KafkaTracing {
   /** Runs `fa` inside a span named `spanName`, joining the trace carried in
     * `headers` if one is present (otherwise starting a new root trace) — the
     * Kafka-consume-side mirror of `ServerTracing.middleware`'s inbound-request
-    * handling. Tags the span with OpenTelemetry's messaging semantic convention
-    * attributes (`messaging.system`/`messaging.destination.name`).
+    * handling, as a `Consumer`-kind span. Tags it with OpenTelemetry's
+    * messaging semantic convention attributes
+    * (`messaging.system`/`messaging.destination.name`).
     */
   def traced[F[_]: Concurrent, A](
       tracer: Tracer[F]
@@ -75,6 +77,7 @@ object KafkaTracing {
     tracer.joinOrRoot(carrier) {
       tracer
         .spanBuilder(spanName)
+        .withSpanKind(SpanKind.Consumer)
         .addAttributes(
           Attribute("messaging.system", "kafka"),
           Attribute("messaging.destination.name", topic)
