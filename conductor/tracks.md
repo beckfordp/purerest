@@ -4,6 +4,11 @@ This file tracks all major tracks for the project.
 
 ---
 
+- [ ] **Track: PERF-5.6 — Milestones drops correlation_id**
+  *Link: [./tracks/milestones-no-correlation_20261105/](./tracks/milestones-no-correlation_20261105/)*
+
+---
+
 ## Backlog
 
 Title-only placeholders for future tracks — not yet detailed (no spec/plan, no linked
