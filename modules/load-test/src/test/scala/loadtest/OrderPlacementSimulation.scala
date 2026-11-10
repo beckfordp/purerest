@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package loadtest
 
 import io.gatling.core.Predef._

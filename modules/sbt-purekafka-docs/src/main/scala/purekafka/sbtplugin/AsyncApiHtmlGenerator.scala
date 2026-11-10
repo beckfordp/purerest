@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purekafka.sbtplugin
 
 import sbt._

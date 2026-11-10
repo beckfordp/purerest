@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purerest.resilience
 
 import cats.effect.{IO, Ref, Resource}

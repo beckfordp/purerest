@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purerest.logging
 
 import org.typelevel.log4cats.StructuredLogger

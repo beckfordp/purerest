@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // Scala 3 version used to compile this project.
 val scala3Version = "3.9.0"
 
@@ -35,6 +36,7 @@ val logstashLogbackEncoderVersion = "9.0"
 // ecosystem consistency.
 val fs2KafkaVersion = "3.6.0"
 
+ThisBuild / licenses := Seq(License.MIT)
 ThisBuild / evictionErrorLevel := Level.Error
 
 // Skunk 1.0.0 depends on otel4s-core/-core-common/-core-metrics 0.16.0 (its own

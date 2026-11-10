@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purekafka.sbtplugin
 
 /** A Node.js version as `node -v` prints it, e.g. `v26.13.0`. Lets

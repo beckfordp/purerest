@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purekafka.tracing
 
 import cats.Functor

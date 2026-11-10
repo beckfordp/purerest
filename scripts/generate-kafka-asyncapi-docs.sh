@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+
 set -euo pipefail
 
 # Generates static AsyncAPI HTML docs for kafka-harness's registered topic —

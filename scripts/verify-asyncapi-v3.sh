@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
 # Verifies asyncapi-v3_20261101 (gluon TD-19.1/19.2): purekafka's tests and
 # formatting, then kafka-harness live — its served spec is AsyncAPI 3.0.0 and
 # passes `asyncapi validate`, the rendered HTML shows send and receive

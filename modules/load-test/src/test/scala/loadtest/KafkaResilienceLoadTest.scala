@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package loadtest
 
 import cats.effect.{IO, Ref}

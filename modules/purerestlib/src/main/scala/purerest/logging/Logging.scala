@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purerest.logging
 
 import cats.effect.Sync

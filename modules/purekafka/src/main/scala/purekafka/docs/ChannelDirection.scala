@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purekafka.docs
 
 /** Whether a channel's publish side is a direct Kafka producer call or

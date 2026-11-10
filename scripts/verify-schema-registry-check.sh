@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+
 set -euo pipefail
 
 # Verifies the schemaRegistryCheck sbt task end-to-end (Rework 5 step 2, ADR

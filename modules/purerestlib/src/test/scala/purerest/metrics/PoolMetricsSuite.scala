@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purerest.metrics
 
 import cats.effect.{IO, Resource}

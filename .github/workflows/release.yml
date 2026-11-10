@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+
 name: Release
 
 # Publishes purerest to this repo's GitHub Packages Maven registry when a

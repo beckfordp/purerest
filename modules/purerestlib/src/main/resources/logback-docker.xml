@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT -->
+
 <configuration>
   <!-- Used only inside the observability-stack Docker images, selected via
        -Dlogback.configurationFile=logback-docker.xml (see build.sbt's

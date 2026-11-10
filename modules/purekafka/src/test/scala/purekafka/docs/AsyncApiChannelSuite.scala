@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purekafka.docs
 
 import munit.FunSuite

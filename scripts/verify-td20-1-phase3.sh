@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+
 set -euo pipefail
 
 # Phase 3 verification for rest-docs_20261101 (gluon TECHNICAL_DEBT.md TD-20.1):

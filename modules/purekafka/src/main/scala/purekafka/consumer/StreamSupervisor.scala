@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purekafka.consumer
 
 import cats.effect.{Async, Ref}

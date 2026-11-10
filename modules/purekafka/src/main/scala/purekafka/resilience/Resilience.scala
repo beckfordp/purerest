@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purekafka.resilience
 
 import cats.effect.Async

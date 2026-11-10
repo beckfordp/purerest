@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purekafka.docs
 
 import java.nio.charset.StandardCharsets

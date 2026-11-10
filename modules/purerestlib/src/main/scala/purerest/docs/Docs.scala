@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purerest.docs
 
 import cats.effect.Async

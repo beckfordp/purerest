@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package kafkaharness
 
 import sttp.tapir.Schema

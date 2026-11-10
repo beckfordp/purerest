@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+
 set -euo pipefail
 
 # Phases 1-2 verification for otlp-exporter_20261104 (gluon PLAN.md PERF-5.2):

@@ -1,9 +1,12 @@
+// SPDX-License-Identifier: MIT
 // A genuinely standalone sbt build — deliberately NOT referenced anywhere in the
 // root purerest build.sbt, so `sbt projects`/`sbt compile`/`sbt test` at the
 // repo root never sweeps this in. Its whole point is to simulate a real external
 // consumer of purerest: a jar resolved from the local Ivy2 cache via an ordinary
 // libraryDependencies entry, not the internal .dependsOn(purerestlib) project
 // reference the main build's own order-service/inventory-service fixtures use.
+
+ThisBuild / licenses := Seq(License.MIT)
 
 // Read from -DpurerestVersion=<version>, never hardcoded: purerest's version is
 // derived from git (sbt-dynver) in the main build and changes on every commit.

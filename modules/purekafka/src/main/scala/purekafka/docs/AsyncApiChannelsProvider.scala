@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purekafka.docs
 
 /** A consuming service's own list of registered [[AsyncApiChannel]]s, as a

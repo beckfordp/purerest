@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+
 set -euo pipefail
 
 # Phase 3 verification for journey-telemetry-lib_20261103: purerestlib and

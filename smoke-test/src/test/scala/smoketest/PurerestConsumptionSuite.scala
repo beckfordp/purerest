@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package smoketest
 
 import cats.data.OptionT

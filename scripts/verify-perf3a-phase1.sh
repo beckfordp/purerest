@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+
 set -euo pipefail
 
 # Phase 1 verification for latency-buckets_20261030 (gluon PLAN.md PERF-3.0):

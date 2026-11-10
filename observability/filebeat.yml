@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # Tails order-service/inventory-service's container logs (both JSON, via
 # logback-docker.xml — see conductor/tech-stack.md), parses the app's JSON
 # payload as real fields, and ships to Elasticsearch for Kibana to search on

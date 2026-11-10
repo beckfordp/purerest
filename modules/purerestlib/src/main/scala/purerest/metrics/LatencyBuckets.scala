@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purerest.metrics
 
 import org.typelevel.otel4s.metrics.BucketBoundaries

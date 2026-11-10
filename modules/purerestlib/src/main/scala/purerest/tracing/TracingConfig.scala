@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purerest.tracing
 
 import cats.syntax.all._

@@ -1,3 +1,5 @@
+-- SPDX-License-Identifier: MIT
+
 CREATE TABLE orders (
     id UUID PRIMARY KEY,
     item TEXT NOT NULL,

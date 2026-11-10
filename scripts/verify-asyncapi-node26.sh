@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
 # Verifies asyncapi-node26_20261031: the plugin's unit tests and formatting,
 # kafka-harness's AsyncAPI HTML rendered end to end by cli 6.2.2 +
 # html-template 3.5.6 on Node >= 24.11, and a clear failure on older Node.

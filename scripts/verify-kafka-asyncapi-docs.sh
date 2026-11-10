@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+
 set -euo pipefail
 
 # Verifies kafka-harness's AsyncAPI documentation end-to-end (ADR 0010's

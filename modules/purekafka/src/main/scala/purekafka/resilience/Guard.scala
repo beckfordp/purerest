@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purekafka.resilience
 
 /** A reusable guard around a generic `F[A]` call — constructed once (binding

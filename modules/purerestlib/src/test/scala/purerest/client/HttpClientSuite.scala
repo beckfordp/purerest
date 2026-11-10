@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purerest.client
 
 import cats.effect.IO

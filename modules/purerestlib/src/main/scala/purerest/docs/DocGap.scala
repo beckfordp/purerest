@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 package purerest.docs
 
 /** One piece of missing REST documentation, found by [[Docs.undocumented]]. */
